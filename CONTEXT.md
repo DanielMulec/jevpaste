@@ -28,6 +28,12 @@ _Avoid_: Ordinary paste (which inserts clipboard contents without this transform
 One exact, contiguous, verbatim excerpt of the Active Item chosen for the Target. Never rewritten, reformatted, combined, or generated.
 _Avoid_: Transformation, rewrite, generated text
 
+**Candidate**:
+An exact contiguous substring of the Active Item, derived locally, that Jev may choose as the Paste Result.
+
+**No Suitable Match**:
+The visible outcome when no Candidate belongs in the Target; nothing is inserted.
+
 **Candidate Chooser**:
 The small in-app prompt shown when several excerpts are plausible for the Target; the app never guesses silently.
 
