@@ -21,11 +21,15 @@ The focused editable destination into which a Paste Result is intended to be ins
 Information about the Target and its surroundings that helps establish what text belongs there.
 
 **Smart Paste**:
-An explicitly requested transformation of the Active Item into text appropriate for the Target, followed by insertion.
+An explicitly requested selection of the excerpt of the Active Item that belongs in the Target, followed by insertion. Insert only; never sends or executes.
 _Avoid_: Ordinary paste (which inserts clipboard contents without this transformation)
 
 **Paste Result**:
-The text produced by a Smart Paste transformation for its Target.
+One exact, contiguous, verbatim excerpt of the Active Item chosen for the Target. Never rewritten, reformatted, combined, or generated.
+_Avoid_: Transformation, rewrite, generated text
+
+**Candidate Chooser**:
+The small in-app prompt shown when several excerpts are plausible for the Target; the app never guesses silently.
 
 **Rejev-paste**:
 A Smart Paste using an older Clipboard Item selected from Clipboard History, interpreted afresh for its Target.
