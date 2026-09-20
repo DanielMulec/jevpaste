@@ -4,8 +4,7 @@ Ticket: [Find simple local Swift quality and testing controls](https://github.co
 Map: [Build Daniel's Jev-powered macOS smart-paste app](https://github.com/DanielMulec/jevpaste/issues/1)
 Branch: `research/local-quality`, base commit `cd99be3`. Written by the research subagent for the parent's review.
 
-> **Status: research only.** Every numeric threshold (400 lines, complexity, line length) and every stack
-> choice below is a *recommendation for a later human decision*, not adopted policy. Nothing was installed,
+> **Status: research only.** The 400-line maximum is an adopted hard requirement from Daniel, not a recommendation. Other numeric thresholds and stack choices below are recommendations for a later decision. Nothing was installed,
 > nothing was provisioned, no CI or runner infrastructure was added, no app code was written. The only repo
 > change from this session is this file.
 
@@ -86,8 +85,7 @@ and the same core tests keep running.
   helpers). So XCTest is simply not part of a CLT-only install.
 - **Inferred**: the documented CLT distribution of Swift Testing is present on disk but is not on the test
   bundle's runtime search path here; the failure is environment/toolchain-layout specific and its root cause
-  was **not** determined. Practical consequences: (a) XCTest and Swift Testing are unavailable until Xcode is
-  installed; (b) declaring `swiftlang/swift-testing` as a *package* dependency is the documented Xcode-free
+  was **not** determined. Practical consequences: (a) XCTest and Swift Testing did not run under the tested default configuration; this does not prove Xcode installation is the only remedy; (b) declaring `swiftlang/swift-testing` as a *package* dependency is the documented Xcode-free
   fallback [S5], but it needs network fetch + local build and carries documented caveats; (c) a
   framework-free checks executable works today (see §4.5 and §8) — verified to run and to exit non-zero on
   failure.
@@ -242,7 +240,7 @@ only_rules: [file_length, function_body_length, type_body_length, cyclomatic_com
 file_length:
   warning: 400        # same as error so 400 is a hard ceiling, not advice
   error: 400
-  ignore_comment_only_lines: true   # excludes comment-only AND whitespace-only lines
+  ignore_comment_only_lines: false  # count comments and blank lines; preserve the owner's hard ceiling
 cyclomatic_complexity:
   warning: 10
   error: 10
@@ -258,16 +256,13 @@ Exit-code contract that the single command must preserve (all observed): clean r
 
 ## 5. Decision implications (for the parent/human, not decided here)
 
-1. **Install Xcode, or not.** It is the single gate for XCTest, Swift Testing, XCUITest and `xcodebuild`; it
-   also likely removes the `--disable-sourcekit` requirement. Without it, "automated tests" means framework-free
-   checks executables plus (later) possibly a swift-testing package dependency.
+1. **Choose test/toolchain setup.** Xcode provides the standard XCTest/XCUITest and xcodebuild route. The observed Swift Testing framework loader failure does not establish that Xcode is mandatory: resolve or explicitly rule out framework search/runtime paths and supported toolchain alternatives before recommending a custom checks harness. Whether Xcode resolves the SwiftLint failure remains untested.
 2. **Stack**: SwiftPM-only (Route B) vs hybrid (Route C) vs Xcode project (Route A). Route C preserves the most
-   testable surface today; Route A is required whenever UI/acceptance automation becomes a goal.
+   testable surface today; Route A provides Apple's standard XCUITest path, but is not proven necessary for every form of UI/acceptance automation.
 3. **Ceiling scope and counting mode**: which paths the 400-line limit covers (app sources only? tests?
    scripts?) and whether `ignore_comment_only_lines` is on (it changes the effective budget by blank/comment
    lines).
-4. **Numeric thresholds**: 400 (given), complexity 10, body lengths, line length 100 (swift-format default) vs
-   120 — all recommendations above.
+4. **Numeric thresholds**: 400 lines is already mandatory. Complexity 10, body lengths, and line length 100 versus 120 remain recommendations.
 5. **Duplication tooling**: adopt a pinned `jscpd` (or PMD CPD with a JRE) as a separate, approved step, or
    accept the gap in v1 and rely on review.
 6. **Acceptance suite form**: XCUITest (needs Xcode + UI-testing permission) vs a scripted smoke harness plus a
