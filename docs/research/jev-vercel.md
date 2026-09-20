@@ -1,6 +1,6 @@
 # Jev by TypeSafe AI through Vercel — primary-source research
 
-- Ticket: [Establish Jev's supported integration through Vercel](https://github.com/DanielMulec/jevpaste/issues/2) (map: [#1](https://github.com/DanielMulec/jevpaste/issues/1))
+- Ticket: [Establish Jev's supported integration through Vercel](https://github.com/DanielMulec/jevpaste/issues/2) (map: [Build Daniel’s Jev-powered macOS smart-paste app](https://github.com/DanielMulec/jevpaste/issues/1))
 - Branch: `research/jev-vercel`, base `cd99be3` (report committed as `docs/research/jev-vercel.md`)
 - Research date: 2026-09-20. All sources retrieved live in this session; version-sensitive numbers (prices, limits, aliases) can change.
 - Scope: establish Jev's identity, the actual Vercel route (gateway vs deployment), API/SDK contract, auth, limits, prices, documented latency, access prerequisites. No provisioning, no paid calls, no credentials. This is research, not an architecture decision.
@@ -10,7 +10,7 @@
 
 1. **[fact]** Jev is a real, documented product of **TypeSafe AI** (`typesafe.ai`, docs at `docs.typesafe.ai`): "System One" decision/evaluation models. Jev is the flagship model, current version **`jev-1.13.0`**, aliases `jev-latest` and `jev-preview` (both resolve to `jev-1.13.0`). It does **not** generate text — it returns typed decisions (Noul/yes-no probability, Choice, Score) with probabilities and confidence.
 2. **[fact]** The supported Vercel route is **AI Gateway, not deployment**. Jev is not deployed to or hosted on Vercel; Gateway brokers calls to TypeSafe's service. Gateway model ID: **`typesafe-ai/jev`** — confirmed live in the Gateway's model catalog (`GET https://ai-gateway.vercel.sh/v1/models`, 376 models; Jev is the only model of `"type": "evaluation"`).
-3. **[fact]** Two Gateway surfaces work, both plain HTTP and both authenticated with a **Vercel AI Gateway credential** (API key or Vercel OIDC):
+3. **[fact, documented; authenticated calls untested]** Two Gateway surfaces are documented, both plain HTTP and authenticated with a **Vercel AI Gateway credential** (API key or Vercel OIDC):
    - Gateway-native: `POST https://ai-gateway.vercel.sh/v1/evaluate`
    - TypeSafe-compatible passthrough: `POST https://ai-gateway.vercel.sh/typesafe/v1/systemone`
    The AI SDK's `experimental_evaluate` (TypeScript, `ai@7.0.105+`) is a third, TS-only client for the native surface.
@@ -180,7 +180,7 @@ Question types **[fact]** (TypeSafe names; Gateway-native renames `noul` → `bo
 
 1. **"Jev through Vercel" is now a verified capability**, not a hope: `typesafe-ai/jev` exists on AI Gateway with documented pricing, auth, and schemas. The remaining risk is product fit, not availability.
 2. **No Vercel deployment is required.** A local macOS app can call Gateway over HTTPS with one long-lived API key (`AI_GATEWAY_API_KEY`). OIDC is only useful for code running on Vercel. Node.js 22.18+ is only required if the AI SDK path is chosen — a Swift client would use HTTP directly and needs neither Node nor the AI SDK.
-3. **Choose the TypeSafe-compatible surface for a Swift client if you want the stable contract** (TypeSafe's own field names, documented 401/422/429/529 semantics, official SDKs for reference), or the Gateway-native `/v1/evaluate` if you prefer Gateway naming and Gateway-side validation. Whichever is chosen, write it behind a narrow client seam so the other can be swapped — the two differ in field names.
+3. **Vercel recommends the native evaluation API for new integrations** (explicitly stated in its TypeSafe API documentation). The compatible surface exists for TypeSafe clients; its naming does not establish stronger stability guarantees. Choose the surface in the contract ticket, accounting for experimental/versioning risks and Swift HTTP access; no route is adopted by this report.
 4. **The transformation gap is the real design risk:** Jev can judge (which field, is it a name/email/url, does this span match, how confident), but it cannot write the "Professional summary" style text. Either the Paste Result is composed locally (span selection + deterministic formatting, matching what the demo shows), or a second generative model is introduced — which would need its own decision, and the map currently names Jev as the intended engine.
 5. **Budget is negligible, latency is the UX risk:** ~$0.042/M input tokens means cost is not a constraint for personal use; the open question is typical end-to-end latency through Gateway (unmeasured here) and how that interacts with the map's requirement for a visible indicator on failure/slowness.
 6. **Access prerequisites to plan for (no provisioning done):** a Vercel team with AI Gateway enabled; either free-tier eligibility (Jev is flagged eligible) or purchased credits; one API key delivered to the app's secret store (never in source); optional BYOK TypeSafe key only if direct provider billing is wanted.
