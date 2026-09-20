@@ -46,7 +46,7 @@ signing are then hand-rolled). This is a tooling decision for the parent, not a 
   reports which process wrote the item** — the community convention `org.nspasteboard.source` only works if the writer
   cooperates. [S5][S6]
 - **[D]** `NSWorkspace.frontmostApplication` is "the application that will receive key events" (KVO-observable). [S7]
-  **[I]** Combining it with a `changeCount` change is the only way to attribute a copy to a source app on this platform.
+  **[I]** Combining it with a `changeCount` change is a heuristic attribution, not reliable provenance: a background app or Universal Clipboard can write while another app is frontmost. Cooperative source markers provide another signal.
 - **[I]** Polling means history starts when the watcher starts and can miss a copy that is overwritten inside one poll
   interval; there is no retroactive history. Interval is a latency/cost trade-off; 500 ms is a widely used default
   (Maccy's is configurable, default 500 ms). [S8]
@@ -192,7 +192,7 @@ Insertion paths, with evidence and cost:
 | Path | Evidence | Cost / limitation |
 |---|---|---|
 | (a) Write result to pasteboard + synthesize ⌘V | **[D]** documented APIs (`CGEvent(keyboardEventSource:virtualKey:keyDown:)`, flags, `.post(tap:)`); Maccy/Clipy implement exactly this (Maccy checks Accessibility first) [S44][S8] | Needs Accessibility/PostEvent; mutates the user's clipboard temporarily |
-| (b) AX write (`kAXValueAttribute` / `kAXSelectedTextAttribute`) | **[D]** `AXUIElementSetAttributeValue`; check `AXUIElementIsAttributeSettable` [S26] | **[D]** Programmatic value changes do not fire the web `input` event, and React's `value` prop is the source of truth → framework-controlled inputs can silently revert [S45]; per-target support varies |
+| (b) AX write (`kAXValueAttribute` / `kAXSelectedTextAttribute`) | **[D]** `AXUIElementSetAttributeValue`; check `AXUIElementIsAttributeSettable` [S26] | **[U]** AX writes need browser-specific verification. [S45] describes DOM programmatic changes, not the browser's AX setter implementation, so it does not prove AX writes omit input events or fail React-controlled fields; per-target support varies |
 | (c) Synthesized Unicode typing (`CGEventKeyboardSetUnicodeString`) | **[D]** Apple warns "application frameworks may ignore the Unicode string in a keyboard event and do their own translation based on the virtual keycode" [S46] | **[U]** Community-reported ~20 UTF-16-unit truncation requiring chunking and slow for long text [S47]; bypasses the clipboard entirely |
 
 - **[D]** Ownership/interference check: record the change count returned by `clearContents()` and compare later — Apple
@@ -211,8 +211,7 @@ Insertion paths, with evidence and cost:
   4. Universal Clipboard / Handoff traffic can add or replace items mid-window (`com.apple.is-remote-clipboard`). [S6]
   5. Non-text payloads (images, file URLs) are out of v1 scope, but they can still be *on* the pasteboard when we
      snapshot; fidelity of file-URL items across a restore is **[U]**.
-- **[I]** Only path (a) is known-uniform across native and web text fields, precisely because it is a real paste;
-  (b) and (c) are fallbacks with the documented gaps above. This trade-off is a parent decision.
+- **[I]** Path (a) is a common clipboard-manager approach, not a universal compatibility guarantee. All three paths require tests against actual targets, including paste handlers and focus/clipboard races. This trade-off is a parent decision.
 
 ### 3.8 Required permissions
 
@@ -256,14 +255,12 @@ Insertion paths, with evidence and cost:
 
 ## 4. Decision implications (options, not decisions)
 
-1. **Onboarding must include a pasteboard-access grant step** (Always Allow in System Settings) or background capture
-   degrades to alert-per-read/denial. The app can detect the state and must show it. [S10][S11]
+1. **Prototype pasteboard privacy before finalizing onboarding.** The API documents ask/allow/deny behavior, but enforcement on this Mac remains untested. If capture is denied or prompts apply, provide visible guidance toward the appropriate grant rather than assuming alert-per-read behavior. [S10][S11]
 2. **⌘⇧V via Carbon hot key is the permission-light path**; Accessibility is still required for context and for
    synthesized ⌘V insertion. [S17][S24][S19]
 3. **Insertion strategy is a real fork**: clipboard-swap+⌘V (uniform, needs ownership/race handling) vs AX write
-   (clean, breaks framework-controlled web fields) vs Unicode typing (no clipboard risk, slow/unreliable).
-4. **Browser context is a separate sub-project**: it requires waking Chromium/Safari AX trees with an undocumented
-   attribute, with known side effects elsewhere and no guaranteed exposure of the focused input. [S28][S31][S36][S37]
+   (avoids clipboard mutation, browser/framework behavior unverified) vs Unicode typing (clipboard-free, compatibility unverified).
+4. **Prototype browser AX activation and context.** Sources establish on-demand activation and special attributes, not that every target requires an undocumented attribute. Try ordinary AX access first; test activation and side effects only where necessary. [S28][S31][S36][S37]
 5. **Secure-target blocking must be best-effort and multi-signal**, with an explicit statement that some secure targets
    are undetectable. Never read values from suspected secure fields. [S33][S40][S41]
 6. **Toolchain**: no Xcode on this machine; decide install-Xcode vs hand-rolled bundle+codesign before implementation. [§2]
