@@ -1,0 +1,19 @@
+# Ticket #13: self-signed code-signing certificate for the signing-identity spike.
+#   openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+#     -config scripts/codesign-cert.cnf -keyout jevpaste-dev.key.pem -out jevpaste-dev.cert.pem
+[ req ]
+default_md         = sha256
+distinguished_name = dn
+x509_extensions    = v3_codesign
+prompt             = no
+
+[ dn ]
+CN = jevpaste-dev
+O  = jevpaste spike (throwaway)
+C  = DE
+
+[ v3_codesign ]
+basicConstraints     = critical,CA:FALSE
+keyUsage             = critical,digitalSignature
+extendedKeyUsage     = critical,codeSigning
+subjectKeyIdentifier = hash

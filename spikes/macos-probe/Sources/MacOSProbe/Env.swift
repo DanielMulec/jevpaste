@@ -3,6 +3,9 @@ import ApplicationServices
 import Carbon.HIToolbox
 
 enum ProbeIdentity {
+    /// Ticket #13: a real content change, so a rebuild produces different code and a new cdhash.
+    /// Bump this string to make a build distinguishable at runtime.
+    static let buildTag = "B"
     static var bundleID: String { Bundle.main.bundleIdentifier ?? "com.jevpaste.macos-probe.unbundled" }
     static var bundlePath: String { Bundle.main.bundlePath }
     static var isBundled: Bool { Bundle.main.bundleIdentifier != nil }
@@ -12,7 +15,8 @@ enum Env {
     static func report() {
         let info = ProcessInfo.processInfo
         Log.line("ENV os=\(info.operatingSystemVersionString) host=\(info.hostName)")
-        Log.line("ENV bundleID=\(ProbeIdentity.bundleID) bundled=\(ProbeIdentity.isBundled)")
+        Log.line("ENV bundleID=\(ProbeIdentity.bundleID) bundled=\(ProbeIdentity.isBundled) "
+                 + "buildTag=\(ProbeIdentity.buildTag)")
         Log.line("ENV bundlePath=\(ProbeIdentity.bundlePath)")
         Log.line("ENV executable=\(Bundle.main.executablePath ?? "nil")")
         Log.line("ENV activationPolicy=\(NSApp.activationPolicy().rawValue) pid=\(info.processIdentifier)")
