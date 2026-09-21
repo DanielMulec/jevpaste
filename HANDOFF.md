@@ -17,10 +17,18 @@ Nine decisions closed, each with a resolution comment. The most recent:
 
 **Frontier (open, unblocked):**
 - [Establish a signing identity that keeps the Accessibility grant across rebuilds](https://github.com/DanielMulec/jevpaste/issues/13)
-  — task, **claimed** (assigned) but **not started**: no identity exists yet
-  (`security find-identity -v -p codesigning` → 0), nothing built. Worker brief committed at
-  `spikes/macos-probe/SIGNING-BRIEF.md` on branch `spike/signing-identity`
-  (worktree `~/.pi/worktrees/jevpaste/signing`, forked from `spike/macos-probe`).
+  — task, **claimed**, **parked at the one human click** (steps 1–3 done, commit `bf1ee9d`
+  on `spike/signing-identity`, worktree `~/.pi/worktrees/jevpaste/signing`, pushed;
+  [progress comment](https://github.com/DanielMulec/jevpaste/issues/13#issuecomment-5768220154)).
+  Identity `jevpaste-dev` lives in a dedicated keychain `~/Library/Keychains/jevpaste-signing.keychain-db`
+  (not login; rollback = `security delete-keychain`). `~/Desktop/SigningProbe.app` is installed,
+  cert-anchored DR, probe quit. **Next: Daniel flips System Settings → Privacy & Security →
+  Accessibility → "jevpaste signing probe" ON**, then run §6 "Resume" of
+  `spikes/macos-probe/SIGNING-RESULTS.md` (steps 5–8) — either by hand or by re-prompting the
+  worker pane (`wC:pA`, agent `signing-worker`, Opus 5 high, idle, still has full context:
+  `herdr agent prompt signing-worker "granted — run §6 Resume steps 4-verify through 7/8, update SIGNING-RESULTS.md, commit, push, intercom send the supervisor"`).
+  Then resolve the ticket: verdict + fallback decision, close, gist on the map, and unblock
+  the multi-line ticket.
 - [Choose native module boundaries and local quality checks](https://github.com/DanielMulec/jevpaste/issues/10) — grilling, HITL, uses `codebase-design`.
 - [Validate history selection and visible paste feedback](https://github.com/DanielMulec/jevpaste/issues/9) — prototype, HITL.
 
@@ -79,7 +87,7 @@ its partial `SIGNING-RESULTS.md`.
 ## Loose ends on the Mac (non-blocking)
 
 - Worktrees under `~/.pi/worktrees/jevpaste/{jev,macos,quality,spike-contract,macos-probe,signing}` — all branches pushed.
-- Herdr: pane `wC:p9` hosted the aborted `signing-worker` (Opus 5); `wC:p5` the finished probe session. Both closable.
+- Herdr: pane `wC:pA` hosts the live, parked `signing-worker` (Opus 5) — keep until the spike finishes. `wC:p7` is an older idle pi (grok) in the repo cwd; closable. Supervisor intercom id for this session was `01a0c5fd`; a new supervisor must give the worker its new id explicitly (two pis share the cwd, so "find by cwd" is ambiguous — and `intercom send` will silently attach to a pending ask, so answer asks with `reply`).
 - Clipboard may hold a synthetic marker; unsaved TextEdit scratch doc; `test-page.html` open in Chrome.
 
 ## Suggested skills
