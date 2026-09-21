@@ -16,26 +16,13 @@ Nine decisions closed, each with a resolution comment. The most recent:
 — the full Paste Attempt state model, invariants and test list live there.
 
 **Frontier (open, unblocked):**
-- [Establish a signing identity that keeps the Accessibility grant across rebuilds](https://github.com/DanielMulec/jevpaste/issues/13)
-  — task, **claimed**, **parked at the one human click** (steps 1–3 done, commit `bf1ee9d`
-  on `spike/signing-identity`, worktree `~/.pi/worktrees/jevpaste/signing`, pushed;
-  [progress comment](https://github.com/DanielMulec/jevpaste/issues/13#issuecomment-5768220154)).
-  Identity `jevpaste-dev` lives in a dedicated keychain `~/Library/Keychains/jevpaste-signing.keychain-db`
-  (not login; rollback = `security delete-keychain`). `~/Desktop/SigningProbe.app` is installed,
-  cert-anchored DR, probe quit. **Next: Daniel flips System Settings → Privacy & Security →
-  Accessibility → "jevpaste signing probe" ON**, then run §6 "Resume" of
-  `spikes/macos-probe/SIGNING-RESULTS.md` (steps 5–8) — either by hand or by re-prompting the
-  worker pane (`wC:pA`, agent `signing-worker`, Opus 5 high, idle, still has full context:
-  `herdr agent prompt signing-worker "granted — run §6 Resume steps 4-verify through 7/8, update SIGNING-RESULTS.md, commit, push, intercom send the supervisor"`).
-  Then resolve the ticket: verdict + fallback decision, close, gist on the map, and unblock
-  the multi-line ticket.
 - [Choose native module boundaries and local quality checks](https://github.com/DanielMulec/jevpaste/issues/10) — grilling, HITL, uses `codebase-design`.
+- [Verify multi-line Paste Results insert line breaks without sending](https://github.com/DanielMulec/jevpaste/issues/14) — prototype; now unblocked (signing identity resolved). Sign the probe with `jevpaste-dev` (see `spikes/macos-probe/scripts/make-signed-app.sh` on `spike/signing-identity`) so the grant persists.
 - [Validate history selection and visible paste feedback](https://github.com/DanielMulec/jevpaste/issues/9) — prototype, HITL.
 
-Blocked: [Verify multi-line Paste Results insert line breaks without sending](https://github.com/DanielMulec/jevpaste/issues/14) waits on the signing identity.
+Most recent closed: [Establish a signing identity that keeps the Accessibility grant across rebuilds](https://github.com/DanielMulec/jevpaste/issues/13#issuecomment-5768392720) — resolved; evidence `spikes/macos-probe/SIGNING-RESULTS.md` on `spike/signing-identity` (b68154d). Identity + keychain retained; `~/Desktop/SigningProbe.app` installed and granted.
 
-Suggested order: signing identity first (AFK, unblocks two things, may change the install
-story), architecture grilling in parallel in a separate session, history prototype last.
+Suggested order: architecture grilling next (HITL), multi-line verification (mostly AFK, one real-app paste per target — synthetic payloads only), history prototype last.
 
 ## Running a worker pane (do this exactly; the previous attempt failed twice)
 
@@ -68,9 +55,10 @@ its partial `SIGNING-RESULTS.md`.
 - Free-tier Jev ~1 call/s account-wide. 400 lines/file ceiling. No hosted CI.
 - Toolchain: no Xcode, CLT only, Swift 6.3.3; `swift build` works, `swift test` does not;
   SwiftLint needs `--disable-sourcekit`.
-- Ad-hoc-signed rebuilds silently orphan the Accessibility grant (that is what the signing
-  ticket measures). `~/Desktop/MacOSProbe.app` (ad-hoc, `com.jevpaste.macos-probe`) still holds
-  a grant — leave it as evidence; the signing spike uses bundle id `com.jevpaste.signing-probe`.
+- Signing: every installed build is signed with `jevpaste-dev` (dedicated keychain
+  `~/Library/Keychains/jevpaste-signing.keychain-db`); ad-hoc builds orphan the grant and are
+  never installed. `~/Desktop/MacOSProbe.app` (ad-hoc) and `~/Desktop/SigningProbe.app`
+  (identity-signed, granted) are evidence — leave them.
 - Daniel has given **blanket approval** for Keychain changes, Accessibility grants, toolchain
   installs. Still: synthetic payloads only when pasting into real apps (a probe once wrote into
   his real Notes). Don't nag him with reminders he has dismissed.
@@ -87,7 +75,7 @@ its partial `SIGNING-RESULTS.md`.
 ## Loose ends on the Mac (non-blocking)
 
 - Worktrees under `~/.pi/worktrees/jevpaste/{jev,macos,quality,spike-contract,macos-probe,signing}` — all branches pushed.
-- Herdr: pane `wC:pA` hosts the live, parked `signing-worker` (Opus 5) — keep until the spike finishes. `wC:p7` is an older idle pi (grok) in the repo cwd; closable. Supervisor intercom id for this session was `01a0c5fd`; a new supervisor must give the worker its new id explicitly (two pis share the cwd, so "find by cwd" is ambiguous — and `intercom send` will silently attach to a pending ask, so answer asks with `reply`).
+- Herdr: pane `wC:pA` hosts the finished `signing-worker` (Opus 5) — closable, or reuse for the multi-line probe (it knows the probe harness). `wC:p7` is an older idle pi (grok) in the repo cwd; closable. Supervisor intercom id for this session was `01a0c5fd`; a new supervisor must give the worker its new id explicitly (two pis share the cwd, so "find by cwd" is ambiguous — and `intercom send` will silently attach to a pending ask, so answer asks with `reply`).
 - Clipboard may hold a synthetic marker; unsaved TextEdit scratch doc; `test-page.html` open in Chrome.
 
 ## Suggested skills

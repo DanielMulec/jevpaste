@@ -51,3 +51,6 @@ A local refusal evaluated before any Paste Attempt leaves the machine: no editab
 
 **Restore Window**:
 The brief interval after insertion during which the clipboard temporarily holds the Paste Result before the original contents are restored. A copy made by the user in this window is kept in preference to restoring.
+
+**Signing Identity**:
+The self-signed code-signing certificate `jevpaste-dev` (dedicated keychain) that every installed build is signed with. macOS Accessibility trust keys on it, not on the build's hash, so rebuilds keep the grant; ad-hoc builds are never installed and changing the identity is a migration event.
