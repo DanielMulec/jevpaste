@@ -39,3 +39,15 @@ The small in-app prompt shown when several excerpts are plausible for the Target
 
 **Rejev-paste**:
 A Smart Paste using an older Clipboard Item selected from Clipboard History, interpreted afresh for its Target.
+
+**Paste Attempt**:
+One Smart Paste from ⌘⇧V to its visible outcome (inserted, no suitable match, refused, cancelled, or failed). Only one exists at a time; a repeated ⌘⇧V during an attempt is ignored. The Active Item and Bound Target are pinned when it starts.
+
+**Bound Target**:
+The Target pinned at the start of a Paste Attempt and re-verified immediately before insertion. If it no longer matches, nothing is inserted.
+
+**Pre-check**:
+A local refusal evaluated before any Paste Attempt leaves the machine: no editable Target, secure field, or a concealed or suspected-secret Active Item. Refusals are visible and never contact Jev.
+
+**Restore Window**:
+The brief interval after insertion during which the clipboard temporarily holds the Paste Result before the original contents are restored. A copy made by the user in this window is kept in preference to restoring.
