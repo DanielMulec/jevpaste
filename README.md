@@ -1,5 +1,17 @@
 # Smart Copy/Paste Analysis (Jev)
 
+## Platform feasibility
+
+A throwaway macOS probe (ticket #11) established what the platform actually permits and costs
+for Smart Paste: the ⌘⇧V hotkey needs **no** permission at all, and everything else — reading
+the Target via accessibility, posting a synthetic ⌘V, listening for events — needs exactly
+**one** Accessibility grant, with no separate Input Monitoring row. Insertion via pasteboard
+swap works on every Target tested (Chrome, Ghostty/Herdr, TextEdit, WhatsApp, ChatGPT); the
+accessibility setter works only on native AppKit and *falsely reports success* on three of five
+apps. The restore delay is a safety boundary rather than a tuning knob: set too short, the
+Target receives the user's previous clipboard instead of the chosen Paste Result. See
+[`spikes/macos-probe/RESULTS.md`](spikes/macos-probe/RESULTS.md).
+
 ## Tweet Reference
 
 - **Tweet URL**: [https://x.com/marcus_lowe/status/2101476399488160013](https://x.com/marcus_lowe/status/2101476399488160013)

@@ -1,0 +1,61 @@
+<!doctype html>
+<!-- Local test page for the throwaway probe. No network, no real accounts. -->
+<html lang="en">
+<head><meta charset="utf-8"><title>jevpaste probe targets</title>
+<style>
+ body { font: 15px -apple-system, sans-serif; margin: 40px; max-width: 640px; }
+ label { display:block; margin: 18px 0 4px; font-weight: 600; }
+ input, textarea { width: 100%; padding: 8px; font-size: 15px; }
+ .hint { color: #666; font-size: 13px; }
+ fieldset { margin-top: 24px; }
+</style></head>
+<body>
+<h1>jevpaste probe targets</h1>
+<p class="hint">Synthetic fields only. Nothing here is submitted anywhere.</p>
+
+<fieldset><legend>Synthetic copy source &mdash; select it and press &#8984;C</legend>
+ <pre id="source" style="user-select:text; background:#f4f4f4; padding:10px; white-space:pre-wrap;">JEVPROBE-SOURCE-BLOCK
+Name: Ada Probe
+Email: ada.probe@example.invalid
+City: Rotterdam
+Phone: +31 10 555 0100
+Notes: leave at the side door</pre>
+ <p class="hint">This block is fake test data. Copying it gives the probe a synthetic Active Item,
+ so nothing real of yours is ever on the clipboard during the pasteboard tests.</p>
+</fieldset>
+
+<fieldset><legend>Shipping details</legend>
+ <label for="email">Email address</label>
+ <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="off">
+
+ <label for="city">City</label>
+ <input id="city" name="city" type="text" placeholder="City" autocomplete="off">
+
+ <label for="notes">Delivery notes</label>
+ <textarea id="notes" name="notes" rows="4" placeholder="Anything the courier should know"></textarea>
+</fieldset>
+
+<fieldset><legend>Secure field (for secure-event-input testing)</legend>
+ <label for="pw">Password</label>
+ <input id="pw" name="pw" type="password" placeholder="password" autocomplete="off">
+ <p class="hint">Do not type a real password. This exists only to switch the browser into
+ secure event input and to expose AXSecureTextField.</p>
+</fieldset>
+
+<fieldset><legend>Framework-controlled field</legend>
+ <label for="react">Controlled input (mirrors below on <code>input</code> events only)</label>
+ <input id="react" type="text" placeholder="controlled">
+ <p class="hint">Mirror: <b id="mirror">(empty)</b> — if an AX write updates the box but not the
+ mirror, the app's own state never saw the change.</p>
+</fieldset>
+
+<script>
+  // Minimal stand-in for a controlled component: state updates only from real input events.
+  const input = document.getElementById('react');
+  const mirror = document.getElementById('mirror');
+  input.addEventListener('input', () => {
+    mirror.textContent = input.value.length ? `${input.value.length} chars seen by JS` : '(empty)';
+  });
+</script>
+</body>
+</html>
