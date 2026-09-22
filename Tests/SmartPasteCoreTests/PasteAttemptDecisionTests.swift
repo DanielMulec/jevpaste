@@ -69,4 +69,15 @@ struct PasteAttemptDecisionTests {
         #expect(harness.presenter.outcomes == [.failed(.invalidResult)])
         #expect(harness.log.steps.isEmpty)
     }
+
+    @Test func differentlyEncodedFormOfAnOfferedCandidateFailsEvenWhenTheSourceContainsIt() {
+        let harness = PasteAttemptHarness(
+            candidates: [Candidate(text: "Z\u{FC}rich")], sourceText: "City: Z\u{FC}rich / Zu\u{308}rich"
+        )
+
+        harness.pasteChoosing("Zu\u{308}rich")
+
+        #expect(harness.presenter.outcomes == [.failed(.invalidResult)])
+        #expect(harness.log.steps.isEmpty)
+    }
 }

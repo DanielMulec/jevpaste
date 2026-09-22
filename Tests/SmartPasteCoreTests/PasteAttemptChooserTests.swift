@@ -60,4 +60,18 @@ struct PasteAttemptChooserTests {
         #expect(harness.presenter.outcomes == [.failed(.invalidResult)])
         #expect(harness.log.steps.isEmpty)
     }
+
+    @Test func chooserReplyInADifferentEncodingOfAnOfferedAlternativeFails() {
+        let composed = Candidate(text: "Z\u{FC}rich")
+        let alternatives = [composed, Candidate(text: "Bern")]
+        let harness = PasteAttemptHarness(
+            candidates: alternatives, sameTypeGroup: alternatives, sourceText: "Z\u{FC}rich, Zu\u{308}rich, Bern"
+        )
+        harness.pasteChoosing(composed.text)
+
+        harness.chooser.choose("Zu\u{308}rich")
+
+        #expect(harness.presenter.outcomes == [.failed(.invalidResult)])
+        #expect(harness.log.steps.isEmpty)
+    }
 }
