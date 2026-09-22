@@ -1,10 +1,11 @@
 import SmartPasteCore
 
-/// The `Hotkey` adapter: ⌘⇧V system-wide, reported when the shortcut is **released**.
+/// The `Hotkey` adapter: ⌘⇧V system-wide, reported on Carbon's hot-key **release**, which comes when V goes up.
 ///
-/// Starting a Paste Attempt on release means no key of the shortcut is still held when the attempt later posts
-/// its ⌘V: Chrome drops a synthetic ⌘V while ⌘⇧V is physically down (signed probe run). Waiting at delivery
-/// instead would open a gap after the Bound Target was re-verified, in which focus could move.
+/// ⌘ and ⇧ may still be held then; the signed re-probe pasted into Chrome with both down, so that is harmless.
+/// What Chrome drops is a synthetic ⌘V while V is physically down (signed probe run), and starting the Paste
+/// Attempt on V-up avoids it. Waiting at delivery instead would open a gap after the Bound Target was re-verified,
+/// in which focus could move.
 @MainActor
 public final class GlobalHotkey: Hotkey {
     private let registrar: any HotKeyRegistrar

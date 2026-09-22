@@ -2,7 +2,9 @@ import SmartPasteCore
 
 /// Reads the Target Context around a focused element: the label contract (field label, placeholder, section
 /// heading, sibling field labels) plus bounded surrounding text. The walks for sibling labels and surrounding
-/// text share one time budget, which starts before any ancestor is looked up.
+/// text share one time budget, which starts before any ancestor is looked up. The budget bounds walk iterations
+/// only: it is checked between elements, so a single synchronous AX call (and the label, placeholder and heading
+/// reads, which ignore it) can overrun it, each up to the AX messaging timeout.
 @MainActor
 struct TargetContextReader<Node: AccessibilityNode> {
     private let timeLimit: Duration

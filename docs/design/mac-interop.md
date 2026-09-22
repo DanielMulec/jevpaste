@@ -56,7 +56,8 @@ decisions sit in small internal value types so they are unit-testable without AX
 - **Walk bounds (review fix).** Trees come from other apps and can be deep, cyclic or huge: ancestor climbs stop
   after 32 levels; each element yields at most its first 100 children (`AXUIElementCopyAttributeValues` range), also
   in the wake walk; sibling scan and surrounding text share one 250 ms deadline that starts before any ancestor
-  lookup. Labels, placeholder and heading are always read.
+  lookup. The budget bounds walk iterations only: it is checked between elements, so one synchronous AX call can
+  overrun it (up to the 1 s messaging timeout), and the label, placeholder and heading reads ignore it.
 - **Threading.** Main actor; AX calls are synchronous (probe: 0.3–9 ms lookup, ≤ 68 ms context on Chrome).
 - **Unit-tested:** editable/secure classification, context assembly and bounding (head for pages, tail for
   terminals, grapheme-safe, fragment joining), token bookkeeping (unknown/stale token → not focused) — all over plain

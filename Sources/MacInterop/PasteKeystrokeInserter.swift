@@ -3,8 +3,8 @@ import CoreGraphics
 import SmartPasteCore
 
 /// The `Inserter` adapter: posts one synthetic ⌘V to the frontmost app, which then pastes the clipboard that the
-/// Paste Attempt has just swapped in. It posts at once: the Paste Attempt starts on the hotkey's release, so no
-/// key of ⌘⇧V is still held (see `GlobalHotkey`).
+/// Paste Attempt has just swapped in. It posts at once: the Paste Attempt starts when V of ⌘⇧V goes up; ⌘ and ⇧
+/// may still be held, which the re-probe showed to be harmless (see `GlobalHotkey`).
 ///
 /// Insert only: this is the one keystroke jevpaste ever synthesizes. Never Return (which submits chats), never
 /// a key sequence typing the text, never an AX setter (which lies outside AppKit).
