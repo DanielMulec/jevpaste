@@ -51,4 +51,14 @@ struct PasteAttemptClipboardTests {
         #expect(harness.history.items == [source])
         #expect(harness.capture.activeItem == source)
     }
+
+    @Test func concealedCopyBecomesActiveButIsNeverRecorded() {
+        let harness = PasteAttemptHarness()
+        let password = ClipboardItem(text: "correct horse battery staple", isConcealed: true)
+
+        harness.clipboard.simulateForeignCopy(password.text, isConcealed: true)
+
+        #expect(harness.capture.activeItem == password)
+        #expect(harness.history.items == [ClipboardItem(text: PasteAttemptHarness.sourceText)])
+    }
 }

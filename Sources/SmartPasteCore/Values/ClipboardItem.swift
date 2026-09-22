@@ -3,9 +3,14 @@ import Foundation
 /// A captured piece of copied text that can serve as the source of a Smart Paste.
 public struct ClipboardItem: Equatable, Sendable {
     public let text: String
+    /// The copy carried a concealed or transient marker (for example `org.nspasteboard.ConcealedType`), checked
+    /// by the `Clipboard` adapter before reading content. Such an item still becomes the Active Item, is never
+    /// stored in Clipboard History, and the Pre-check refuses to smart-paste it.
+    public let isConcealed: Bool
 
-    public init(text: String) {
+    public init(text: String, isConcealed: Bool = false) {
         self.text = text
+        self.isConcealed = isConcealed
     }
 }
 

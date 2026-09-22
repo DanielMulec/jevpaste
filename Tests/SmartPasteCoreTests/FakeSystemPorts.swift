@@ -82,8 +82,8 @@ final class FakeClipboard: Clipboard {
     }
 
     /// Someone else copies `text`; observers hear about it immediately.
-    func simulateForeignCopy(_ text: String) {
-        _ = replaceContents(with: Self.snapshot(of: text), text)
+    func simulateForeignCopy(_ text: String, isConcealed: Bool = false) {
+        _ = replaceContents(with: Self.snapshot(of: text), text, isConcealed: isConcealed)
         deliverPendingChanges()
     }
 
@@ -95,10 +95,11 @@ final class FakeClipboard: Clipboard {
         }
     }
 
-    private func replaceContents(with snapshot: ClipboardSnapshot, _ text: String?) -> Int {
+    private func replaceContents(with snapshot: ClipboardSnapshot, _ text: String?, isConcealed: Bool = false) -> Int {
         contents = snapshot
         changeCount += 1
-        pendingChanges.append(ClipboardChange(changeCount: changeCount, item: text.map(ClipboardItem.init(text:))))
+        let item = text.map { ClipboardItem(text: $0, isConcealed: isConcealed) }
+        pendingChanges.append(ClipboardChange(changeCount: changeCount, item: item))
         return changeCount
     }
 }

@@ -1,5 +1,5 @@
 /// Turns clipboard changes into Clipboard Items: the newest foreign copy becomes the Active Item and is recorded
-/// in Clipboard History. Changes produced by our own pasteboard writes are invisible.
+/// in Clipboard History unless it is concealed. Changes produced by our own pasteboard writes are invisible.
 @MainActor
 public final class CopyCapture {
     public private(set) var activeItem: ClipboardItem?
@@ -22,6 +22,8 @@ public final class CopyCapture {
     private func clipboardChanged(_ change: ClipboardChange) {
         guard ownChangeCounts.remove(change.changeCount) == nil, let item = change.item else { return }
         activeItem = item
-        history.record(item)
+        if !item.isConcealed {
+            history.record(item)
+        }
     }
 }
