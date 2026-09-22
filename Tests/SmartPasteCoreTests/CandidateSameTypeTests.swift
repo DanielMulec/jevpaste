@@ -3,7 +3,7 @@ import Testing
 
 /// The same-type alternatives to `chosen` among `texts`, as plain strings.
 private func sameTypeTexts(to chosen: String, among texts: [String]) -> [String] {
-    LineAndLabelCandidateExtraction()
+    StructuralCandidateExtraction()
         .sameTypeAlternatives(to: Candidate(text: chosen), among: texts.map(Candidate.init(text:)))
         .map(\.text)
 }

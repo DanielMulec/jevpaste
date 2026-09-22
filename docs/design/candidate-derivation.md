@@ -22,8 +22,9 @@ plus the 2026-09-22 amendment) and the granularity spike findings (`spikes/granu
 5. **Multi-line kinds** — each only when it spans two or more non-blank lines, so it never equals a single-line
    Candidate (it contains a line break):
    - **Paragraph:** a maximal run of consecutive non-blank lines.
-   - **Section:** a heading-like line plus its body: the following lines up to, not including, the first line
-     that is blank, heading-like, or indented less than the first body line. A heading without a body yields none.
+   - **Section:** a heading-like line plus its body. The body starts with the next line, which must be non-blank
+     (else no section), and always includes it (so `EXPERIENCE` / `CEO` works although `CEO` is heading-like);
+     it ends before the first later line that is blank, heading-like, or indented less than the first body line.
    - **Whole item:** from the first to the last non-blank line, blank lines inside included.
 6. **Heading-like line** (trimmed text `t`, not labelled), any of: (a) `t` starts with 1–6 `#` and a space
    (Markdown); (b) `t` ends with `:` and has at most 60 characters; (c) `t` has at least two letters, no
@@ -72,8 +73,8 @@ Single-line tests look only at the Candidates without a line break. Derivation:
 - `exactly254CandidatesAreAllKeptAnd255LoseTheLast`; `overCapDropsWholeLabelledLinesBeforeValuesAndPlainLines`;
   `whenValuesAndPlainLinesAloneExceedTheCapTheDocumentEndIsDropped`
 - `everyCandidateOfAMixedSourceIsAcceptedByPasteResultValidation` — each Candidate goes through a Paste Attempt
-  (`PasteAttemptHarness`, fake Jev choosing it) and ends `.inserted`, i.e. passes Core's verbatim check; plus a
-  UTF-8 `firstRange` check for all 254 Candidates of the 1 000-line source.
+  (`PasteAttemptHarness`, fake Jev choosing it) and ends `.inserted`, i.e. passes Core's verbatim check; plus
+  `everyCandidateOfAThousandLineSourceIsAByteExactSubstring` (UTF-8 `firstRange` for all 254 Candidates).
 - `derivationIsDeterministic` (same input twice → identical output).
 
 Multi-line kinds:
@@ -81,7 +82,7 @@ Multi-line kinds:
 - `singleLineParagraphsAddNothing`; `singleLineItemHasNoWholeItemCandidate`
 - `wholeItemSpansBlankLinesAndIsTrimmedOfOuterBlankLines`; `singleParagraphItemIsOfferedOnce`
 - `colonHeadingLeadsASectionUntilTheNextBlankLine`; `markdownHeadingLeadsASection`;
-  `upperCaseHeadingLeadsASection`; `lineFollowedByDeeperIndentedLinesLeadsASection`;
+  `upperCaseHeadingLeadsASectionEvenWhenItsFirstBodyLineIsUpperCase`; `lineFollowedByDeeperIndentedLinesLeadsASection`;
   `shortLineAfterABlankLineLeadsASection`
 - `sectionEndsBeforeTheNextHeadingLikeLine`; `sectionEndsBeforeALineIndentedLessThanItsBody`
 - `headingWithoutBodyYieldsNoSection`; `labelledLinesAndShortLinesInsideAParagraphAreNotHeadingLike`

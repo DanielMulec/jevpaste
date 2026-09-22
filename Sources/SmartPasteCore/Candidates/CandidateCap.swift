@@ -5,13 +5,19 @@ extension Array where Element == Excerpt {
 
     /// These excerpts cut down to `candidateCap`, still in document order.
     ///
-    /// Whole `Label: value` lines go first, the last ones first, because their value stays offered and is what a
-    /// field wants. If that is not enough, the excerpts at the end of the document go.
+    /// Kinds go in `Excerpt.Kind.dropRank` order — the whole item, sections, paragraphs, whole `Label: value`
+    /// lines — and within a kind the last one in the document first. Coarse and labelled excerpts go first because
+    /// finer excerpts inside them stay offered. If that is not enough, the excerpts at the end of the document go.
     func cappedForJev() -> [Excerpt] {
-        let surplus = count - Self.candidateCap
+        var surplus = count - Self.candidateCap
         guard surplus > 0 else { return self }
-        let droppedWholeLines = Set(indices.filter { self[$0].origin == .wholeLabelledLine }.suffix(surplus))
-        let kept = indices.filter { !droppedWholeLines.contains($0) }.map { self[$0] }
+        var dropped: Set<Int> = []
+        for rank in Set(compactMap(\.kind.dropRank)).sorted() where surplus > 0 {
+            let dropping = indices.filter { self[$0].kind.dropRank == rank }.suffix(surplus)
+            dropped.formUnion(dropping)
+            surplus -= dropping.count
+        }
+        let kept = indices.filter { !dropped.contains($0) }.map { self[$0] }
         return Array(kept.prefix(Self.candidateCap))
     }
 }
