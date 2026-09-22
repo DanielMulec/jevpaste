@@ -28,19 +28,35 @@ final class FakeDecisionService: DecisionService {
     }
 }
 
+/// Keeps every recorded item in call order; no dedup, refusal or retention (the SQLite adapter's tests own those).
 final class FakeHistoryRepository: HistoryRepository {
     private let state = MainActorState()
 
     @MainActor
     private final class MainActorState {
-        var items: [ClipboardItem] = []
+        var recordedItems: [ClipboardItem] = []
     }
 
     func record(_ item: ClipboardItem) {
-        MainActor.assumeIsolated { state.items.append(item) }
+        MainActor.assumeIsolated { state.recordedItems.append(item) }
     }
 
-    @MainActor var items: [ClipboardItem] { state.items }
+    func items() -> [ClipboardItem] {
+        MainActor.assumeIsolated { state.recordedItems.reversed() }
+    }
+
+    func delete(_ item: ClipboardItem) {
+        MainActor.assumeIsolated { state.recordedItems.removeAll { $0.text == item.text } }
+    }
+
+    func clearAll() {
+        MainActor.assumeIsolated { state.recordedItems.removeAll() }
+    }
+
+    func changeRetentionLimit(to limit: Int) {}
+
+    /// Every item passed to `record`, oldest first.
+    @MainActor var recordedItems: [ClipboardItem] { state.recordedItems }
 }
 
 @MainActor

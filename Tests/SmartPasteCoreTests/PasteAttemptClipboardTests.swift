@@ -48,7 +48,7 @@ struct PasteAttemptClipboardTests {
         harness.clipboard.deliverPendingChanges()
 
         #expect(harness.presenter.outcomes == [.inserted])
-        #expect(harness.history.items == [source])
+        #expect(harness.history.recordedItems == [source])
         #expect(harness.capture.activeItem == source)
     }
 
@@ -59,6 +59,6 @@ struct PasteAttemptClipboardTests {
         harness.clipboard.simulateForeignCopy(password.text, isConcealed: true)
 
         #expect(harness.capture.activeItem == password)
-        #expect(harness.history.items == [ClipboardItem(text: PasteAttemptHarness.sourceText)])
+        #expect(harness.history.recordedItems == [ClipboardItem(text: PasteAttemptHarness.sourceText)])
     }
 }
