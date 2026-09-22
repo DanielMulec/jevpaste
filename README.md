@@ -114,3 +114,10 @@ All 22 extracted frames (1 fps sampling across the 21.78s recording) are stored 
 
 ![Frame 021](frames/frame_021.png)
 ![Frame 022](frames/frame_022.png)
+
+---
+
+## Pre-commit hook
+
+Run `scripts/install-hooks.sh` once per clone. It installs a git pre-commit hook that runs `make check` and
+blocks the commit if any step fails. The hook checks the working tree, not only the staged changes.
