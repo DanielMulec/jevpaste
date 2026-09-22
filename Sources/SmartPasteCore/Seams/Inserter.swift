@@ -1,4 +1,8 @@
-/// Inserts the Paste Result into the Bound Target. Insert only; never sends or executes.
+/// Makes the frontmost app paste the clipboard into the Bound Target. Insert only; never sends or executes.
 ///
-/// The real adapter lives in `MacInterop` (pasteboard swap); tests supply an in-memory fake.
-public protocol Inserter: Sendable {}
+/// The Paste Attempt swaps the clipboard around this call. The real adapter lives in `MacInterop`
+/// (synthetic ⌘V; never Return, never a key-sequence insertion); tests supply an in-memory fake.
+@MainActor
+public protocol Inserter {
+    func postPasteKeystroke()
+}
