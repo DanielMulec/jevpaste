@@ -16,13 +16,11 @@ Nine decisions closed, each with a resolution comment. The most recent:
 — the full Paste Attempt state model, invariants and test list live there.
 
 **Frontier (open, unblocked):**
-- [Scaffold the package, quality gate and signed bundle](https://github.com/DanielMulec/jevpaste/issues/15) — task, AFK (Opus 5.5 medium worker pane). Spec is the resolution of the architecture ticket + ADR 0001. Recommended next.
-- [Verify multi-line Paste Results insert line breaks without sending](https://github.com/DanielMulec/jevpaste/issues/14) — prototype; sign the probe with `jevpaste-dev`.
+- [Define the implementation slices and their order](https://github.com/DanielMulec/jevpaste/issues/16) — grilling, HITL. Recommended next: it turns the scaffold into a build plan. Consult the two prototype tickets' questions before fixing the shell slice.
+- [Verify multi-line Paste Results insert line breaks without sending](https://github.com/DanielMulec/jevpaste/issues/14) — prototype; can now be done against the real `JevPaste.app` skeleton or the old probe signed with `jevpaste-dev`.
 - [Validate history selection and visible paste feedback](https://github.com/DanielMulec/jevpaste/issues/9) — prototype, HITL.
 
-Blocked: [Define the implementation slices and their order](https://github.com/DanielMulec/jevpaste/issues/16) waits on the scaffold.
-
-Most recent closed: [Choose native module boundaries and local quality checks](https://github.com/DanielMulec/jevpaste/issues/10#issuecomment-5781286644) — five targets, Core owns seams, `make check` composition, SwiftLint policy, reviewer routing chain. ADR: `docs/adr/0001-…md`. Key fact: `swift test` works on CLT with the swift-testing package + `-Xlinker -L/Library/Developer/CommandLineTools/Library/Developer/usr/lib -Xlinker -rpath -Xlinker <same>` (probe in `/tmp/jevtestprobe`, disposable).
+Most recent closed: [Scaffold the package, quality gate and signed bundle](https://github.com/DanielMulec/jevpaste/issues/15#issuecomment-5781770345) — merged to `main` (8ba350d). `make check` is the gate (read `docs/quality-gate.md`), `make install` produces the signed app, pre-commit hook is installed in the shared `.git/hooks` (applies to every worktree). Signing keychain: password in `~/.config/jevpaste/signing-keychain-password`, key+cert in `~/.config/jevpaste/signing/`; if `make app` fails on unlock, run `scripts/restore-signing-keychain.sh`. The app has **no Accessibility grant yet**.
 
 **Models (Daniel's standing preference, 2026-09-22):** workers/prototypes `anthropic/claude-opus-5-5:medium` — **Opus 5 is retired, do not use**. Research `deepseek/deepseek-flash`. Pre-merge semantic-duplication reviewer chain: `openai-codex/gpt-5.6-sol:medium` → `xai/grok-4.7` (highest thinking accepted; supervisor reviews Grok's reviews until proven) → `anthropic/claude-opus-5-5:medium`, always a fresh instance separate from the author.
 
@@ -45,7 +43,7 @@ Herdr pane**, not a subagent. Research: DeepSeek Flash.
 7. Communication protocol Daniel likes: the worker owns one channel to Daniel (its pane), asks
    him for one-word answers (`done`/`nothing`/`failed`); gated steps via blocking intercom
    `ask` to the supervisor; matrix-row reports after each; ask before anything unexpected.
-   Review the worker's code early.
+   Review the worker's code early. **Never block in a long `sleep`** while a worker runs — its intercom asks only land when this session has a free turn; poll ≤ 60 s or just wait for messages.
 
 The one human step in the signing spike is the Accessibility toggle in System Settings
 (no CLI path without disabling SIP). If Daniel is away, the worker parks there and commits
@@ -78,8 +76,8 @@ its partial `SIGNING-RESULTS.md`.
 
 ## Loose ends on the Mac (non-blocking)
 
-- Worktrees under `~/.pi/worktrees/jevpaste/{jev,macos,quality,spike-contract,macos-probe,signing}` — all branches pushed.
-- Herdr: pane `wC:pA` hosts the finished `signing-worker` (Opus 5, retired model) — closable. `wC:p7` is an older idle pi (grok) in the repo cwd; closable. Supervisor intercom id for this session was `01a0c5fd`; a new supervisor must give the worker its new id explicitly (two pis share the cwd, so "find by cwd" is ambiguous — and `intercom send` will silently attach to a pending ask, so answer asks with `reply`).
+- Worktrees under `~/.pi/worktrees/jevpaste/{jev,macos,quality,spike-contract,macos-probe,signing,scaffold}` — all branches pushed; `scaffold` is merged and removable.
+- Herdr: `wC:pA` (`signing-worker`, Opus 5, done) and `wC:pC` (`scaffold-worker`, Opus 5.5, done) — closable. `wC:pB` is the `/teach` session — keep. `wC:p7` is an older idle pi (grok) in the repo cwd; closable. Supervisor intercom id for this session was `01a0c5fd`; a new supervisor must give the worker its new id explicitly (two pis share the cwd, so "find by cwd" is ambiguous — and `intercom send` will silently attach to a pending ask, so answer asks with `reply`).
 - Clipboard may hold a synthetic marker; unsaved TextEdit scratch doc; `test-page.html` open in Chrome.
 
 ## Suggested skills
