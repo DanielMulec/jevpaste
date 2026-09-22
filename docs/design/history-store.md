@@ -69,11 +69,11 @@ caller's thread (main actor included). `items()` uses `queue.sync` and may block
 - No at-rest encryption (resolution: single-user Mac, FileVault).
 
 ## Failures (visible, never silent)
-- `init(fileURL:retentionLimit:) throws HistoryStoreFailure`: directory not creatable, file not openable,
-  not a database (corrupt), unsupported schema version. The shell shows the indicator; Core is unaffected.
-- After a successful open, a failing statement is logged (operation + SQLite result code) and the write is
-  lost; `items()` returns what it could read (empty on failure). Surfacing runtime write failures in the UI
-  is an open question for the capture+history slice.
+- `init(fileURL:retentionLimit:onFailure:) throws HistoryStoreFailure`: directory not creatable, file not
+  creatable (`fileNotCreated`), not openable, not a database (corrupt), unsupported schema version.
+- After a successful open, a failing statement is logged (operation + SQLite result code) and reported once
+  through `onFailure` (called on the repository queue; default no-op); the write is lost and `items()` returns
+  empty. The seam stays unchanged; the shell routes `onFailure` to the visible indicator.
 - Diagnostics: `os.Logger` subsystem `jevpaste`, category `HistoryStore`: operation, row counts, SQLite
   result codes and the file *name*. Never item text or keys.
 
