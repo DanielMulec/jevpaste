@@ -63,10 +63,11 @@ final class AdapterProbe: NSObject, NSApplicationDelegate {
     private func deliver(_ marker: String) {
         let original = clipboard.snapshot()
         let ownCount = clipboard.write(marker)
-        let keyReleaseWait = ContinuousClock().measure { inserter.postPasteKeystroke() }
+        let heldModifiers = CGEventSource.flagsState(.hidSystemState).intersection([.maskCommand, .maskShift])
+        inserter.postPasteKeystroke()
         log.write(
             "press \(presses): wrote marker chars=\(marker.count) ownChangeCount=\(ownCount), "
-                + "posted ⌘V after waiting \(keyReleaseWait) for key release"
+                + "posted ⌘V with ⌘/⇧ held=\(!heldModifiers.isEmpty)"
         )
         let press = presses
         Task { @MainActor in
