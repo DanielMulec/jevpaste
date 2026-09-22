@@ -14,15 +14,20 @@ public final class SQLiteHistoryRepository: HistoryRepository {
     private let queue = DispatchQueue(label: "jevpaste.HistoryStore")
     private let table: ClipboardItemTable
     private let fileName: String
+    private let onFailure: @Sendable (HistoryStoreFailure) -> Void
 
     /// Opens the history file, creating it and its directory if absent.
+    /// - Parameter onFailure: Called on the repository's queue, once per operation that fails after a successful
+    ///   open (a lost write, or a read that returned nothing), so the shell can show a visible indicator.
     /// - Throws: `HistoryStoreFailure` when the directory or file is unusable, the file is not a database, or its
     ///   schema is newer than this build. The caller shows the failure; nothing is retried here.
     public init(
         fileURL: URL = HistoryStoreLocation.defaultFileURL,
-        retentionLimit: Int = defaultRetentionLimit
+        retentionLimit: Int = defaultRetentionLimit,
+        onFailure: @escaping @Sendable (HistoryStoreFailure) -> Void = { _ in }
     ) throws(HistoryStoreFailure) {
         fileName = fileURL.lastPathComponent
+        self.onFailure = onFailure
         do {
             try HistoryStoreLocation.prepareFile(at: fileURL)
             let connection = try SQLiteConnection(fileURL: fileURL)
@@ -96,7 +101,8 @@ public final class SQLiteHistoryRepository: HistoryRepository {
         log.info("evicted \(evictedCount, privacy: .public) oldest items beyond the retention limit")
     }
 
-    /// Runs one table operation on the queue; a failure is logged with its result code and yields `nil`.
+    /// Runs one table operation on the queue; a failure is logged with its result code, reported through
+    /// `onFailure`, and yields `nil`.
     private func perform<Result>(
         _ operation: String,
         _ body: () throws(HistoryStoreFailure) -> Result
@@ -105,6 +111,7 @@ public final class SQLiteHistoryRepository: HistoryRepository {
             return try body()
         } catch {
             Self.logFailure(of: operation, on: fileName, error)
+            onFailure(error)
             return nil
         }
     }

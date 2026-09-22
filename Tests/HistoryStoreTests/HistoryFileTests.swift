@@ -97,3 +97,17 @@ import Testing
         }
     }
 }
+
+@Suite struct HistoryFileCreationTests {
+    @Test func fileThatCannotBeCreatedMakesOpeningThrowFileNotCreated() throws {
+        let file = try TemporaryHistoryFile()
+        try FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: file.directory.path)
+        defer {
+            try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: file.directory.path)
+        }
+
+        #expect(throws: HistoryStoreFailure.fileNotCreated) {
+            try file.openRepository()
+        }
+    }
+}

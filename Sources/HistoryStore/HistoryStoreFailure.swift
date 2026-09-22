@@ -2,6 +2,8 @@
 public enum HistoryStoreFailure: Error, Equatable {
     /// The directory that should hold the history file does not exist and could not be created.
     case directoryUnavailable
+    /// The history file did not exist and could not be created.
+    case fileNotCreated
     /// The history file's permissions could not be restricted to the user.
     case permissionsNotRestricted
     /// SQLite returned `resultCode` during `operation` (for example 26 = `SQLITE_NOTADB` for a corrupt file).

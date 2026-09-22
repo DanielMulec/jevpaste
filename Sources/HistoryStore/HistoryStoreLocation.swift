@@ -23,9 +23,10 @@ public enum HistoryStoreLocation {
         } catch {
             throw .directoryUnavailable
         }
-        if !fileManager.fileExists(atPath: fileURL.path) {
-            fileManager.createFile(atPath: fileURL.path, contents: nil, attributes: [.posixPermissions: fileMode])
-        }
+        guard !fileManager.fileExists(atPath: fileURL.path) else { return }
+        let created = fileManager.createFile(
+            atPath: fileURL.path, contents: nil, attributes: [.posixPermissions: fileMode])
+        guard created else { throw .fileNotCreated }
     }
 
     /// Sets mode 0600 on the file, which also tightens a file created earlier with looser permissions.
