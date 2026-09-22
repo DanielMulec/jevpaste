@@ -1,3 +1,4 @@
+import Foundation
 import SmartPasteCore
 
 /// Records every request; a test answers the latest one with `reply(_:)`.
@@ -28,34 +29,68 @@ final class FakeDecisionService: DecisionService {
     }
 }
 
-/// Keeps every recorded item in call order; no dedup, refusal or retention (the SQLite adapter's tests own those).
+/// In-memory Clipboard History that follows the `HistoryRepository` contract (refusals, trimmed-text identity,
+/// move-to-top, retention), and also logs every `record` call in `recordedItems`.
 final class FakeHistoryRepository: HistoryRepository {
-    private let state = MainActorState()
+    private let state: MainActorState
 
     @MainActor
     private final class MainActorState {
         var recordedItems: [ClipboardItem] = []
+        /// Newest first.
+        var history: [ClipboardItem] = []
+        var retentionLimit: Int
+
+        init(retentionLimit: Int) {
+            self.retentionLimit = retentionLimit
+        }
+
+        func evictBeyondRetentionLimit() {
+            history = Array(history.prefix(retentionLimit))
+        }
+    }
+
+    init(retentionLimit: Int = 500) {
+        state = MainActor.assumeIsolated { MainActorState(retentionLimit: max(retentionLimit, 1)) }
+    }
+
+    /// The contract's identity: the text's UTF-8 bytes after trimming; `nil` for blank text.
+    private static func identity(of item: ClipboardItem) -> [UInt8]? {
+        let trimmed = item.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : Array(trimmed.utf8)
     }
 
     func record(_ item: ClipboardItem) {
-        MainActor.assumeIsolated { state.recordedItems.append(item) }
+        MainActor.assumeIsolated {
+            state.recordedItems.append(item)
+            guard !item.isConcealed, let identity = Self.identity(of: item) else { return }
+            state.history.removeAll { Self.identity(of: $0) == identity }
+            state.history.insert(item, at: 0)
+            state.evictBeyondRetentionLimit()
+        }
     }
 
     func items() -> [ClipboardItem] {
-        MainActor.assumeIsolated { state.recordedItems.reversed() }
+        MainActor.assumeIsolated { state.history }
     }
 
     func delete(_ item: ClipboardItem) {
-        MainActor.assumeIsolated { state.recordedItems.removeAll { $0.text == item.text } }
+        guard let identity = Self.identity(of: item) else { return }
+        MainActor.assumeIsolated { state.history.removeAll { Self.identity(of: $0) == identity } }
     }
 
     func clearAll() {
-        MainActor.assumeIsolated { state.recordedItems.removeAll() }
+        MainActor.assumeIsolated { state.history.removeAll() }
     }
 
-    func changeRetentionLimit(to limit: Int) {}
+    func changeRetentionLimit(to limit: Int) {
+        MainActor.assumeIsolated {
+            state.retentionLimit = max(limit, 1)
+            state.evictBeyondRetentionLimit()
+        }
+    }
 
-    /// Every item passed to `record`, oldest first.
+    /// Every item passed to `record`, oldest first, including refused ones.
     @MainActor var recordedItems: [ClipboardItem] { state.recordedItems }
 }
 
