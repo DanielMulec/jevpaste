@@ -5,4 +5,6 @@ import SmartPasteCore
 /// Scaffold only: nothing is inserted yet.
 public struct PasteboardSwapInserter: Inserter {
     public init() {}
+
+    public func postPasteKeystroke() {}
 }

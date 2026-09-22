@@ -5,4 +5,6 @@ import SmartPasteCore
 /// Scaffold only: no shortcut is registered yet.
 public struct GlobalHotkey: Hotkey {
     public init() {}
+
+    public func startListening(onPress: @escaping @MainActor () -> Void) {}
 }

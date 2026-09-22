@@ -5,4 +5,6 @@ import SmartPasteCore
 /// Scaffold only: no storage yet.
 public struct SQLiteHistoryRepository: HistoryRepository {
     public init() {}
+
+    public func record(_ item: ClipboardItem) {}
 }
