@@ -37,8 +37,8 @@ Everything else (`probabilities`, `confidence`, `usage`, `providerMetadata`) is 
 | 200, `choice` = `cNNN` with NNN < candidate count | `.decided(Decision(choice: .candidate(candidates[NNN]), containsValueProbability: p))` |
 | 200, `choice` = `none_of_these` | `.decided(Decision(choice: .noneOfThese, containsValueProbability: p))` |
 | 200, `choice` id unknown or out of range, `p` missing or outside 0…1, JSON malformed | `.failed` |
-| 429 with `retry-after: <seconds>` (integer or decimal ≥ 0) | `.rateLimited(retryAfter: .seconds(n))` |
-| 429 without a parseable `retry-after` | `.rateLimited(retryAfter: .seconds(1))` (free tier ≈ 1 call/s) |
+| 429 with `retry-after: <seconds>` (integer or decimal ≥ 0) | `.rateLimited(retryAfter: .seconds(min(n, 60)))` |
+| 429 without a finite, non-negative `retry-after` | `.rateLimited(retryAfter: .seconds(1))` (free tier ≈ 1 call/s) |
 | any other status, transport error | `.failed` |
 | key file missing/unreadable, or no non-empty `AI_GATEWAY_API_KEY=` line | `.failed`, no call |
 | more than 254 Candidates | `.failed`, no call |

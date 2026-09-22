@@ -1,7 +1,8 @@
 import Foundation
-import JevGateway
 import SmartPasteCore
 import Testing
+
+@testable import JevGateway
 
 private let rateLimitBody = #"{"error":{"type":"rate_limit_exceeded"}}"#
 
@@ -20,9 +21,21 @@ private func reply(to429WithHeaders headers: [String: String]) async throws -> D
         #expect(decisionReply == .rateLimited(retryAfter: .milliseconds(1500)))
     }
 
-    @Test(arguments: [[:], ["Retry-After": "Wed, 21 Oct 2026 07:28:00 GMT"], ["Retry-After": "-3"]])
+    @Test(arguments: [
+        [:], ["Retry-After": "Wed, 21 Oct 2026 07:28:00 GMT"], ["Retry-After": "-3"],
+        ["Retry-After": "nan"], ["Retry-After": "inf"], ["Retry-After": "-inf"], ["Retry-After": "-1e20"],
+    ])
     func aMissingOrUnusableRetryAfterWaitsOneSecond(headers: [String: String]) async throws {
         #expect(try await reply(to429WithHeaders: headers) == .rateLimited(retryAfter: .seconds(1)))
+    }
+
+    @Test(arguments: ["61", "1e20", "1e308"])
+    func aRetryAfterBeyondSixtySecondsIsClampedToSixtySeconds(header: String) async throws {
+        #expect(try await reply(to429WithHeaders: ["Retry-After": header]) == .rateLimited(retryAfter: .seconds(60)))
+    }
+
+    @Test func aRetryAfterOfExactlySixtySecondsIsPassedOn() async throws {
+        #expect(try await reply(to429WithHeaders: ["Retry-After": "60"]) == .rateLimited(retryAfter: .seconds(60)))
     }
 }
 
@@ -57,12 +70,9 @@ private func reply(to429WithHeaders headers: [String: String]) async throws -> D
         "AI_GATEWAY_API_KEY=\"test-key-value\"\n",
         "AI_GATEWAY_API_KEY='test-key-value'\n",
     ])
-    func theKeyIsReadFromShellStyleAssignments(keyFileText: String) async throws {
-        let transport = StubTransport.answering(body: answer)
-        _ = await reply(from: try Fixture.service(transport: transport, keyFileText: keyFileText))
-
-        let sent = await transport.sentRequests
-        #expect(sent.first?.value(forHTTPHeaderField: "Authorization") == "Bearer test-key-value")
+    func theKeyIsReadFromShellStyleAssignments(keyFileText: String) throws {
+        let credentials = GatewayCredentials(envFile: try Fixture.keyFile(containing: keyFileText))
+        #expect(credentials.apiKey() == "test-key-value")
     }
 
     @Test func theDefaultKeyFileIsTheJevpasteEnvFile() {

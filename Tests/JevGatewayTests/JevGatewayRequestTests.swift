@@ -60,6 +60,26 @@ private func sentState(for request: DecisionRequest) async throws -> SentState {
     return try decoder.decode(SentStateEnvelope.self, from: try await sentBodyData(for: request)).state
 }
 
+/// The question wording measured in `spikes/abstention/run.py` (`target_field` renamed `target_context`).
+/// Changing it invalidates the spike's evidence, so it is pinned here word for word.
+private enum ContractedWording {
+    static let choiceInstructions =
+        "The user copied `source_document` and is pasting into `target_context`. Every option is an exact "
+        + "contiguous excerpt of `source_document`. Choose the single excerpt that is exactly the value belonging "
+        + "in that field, as the user would type it. Do not choose an excerpt that is merely related to the field."
+    static let noneOfTheseDescription =
+        "None of the listed excerpts is the value that belongs in the target field. Choose this when the source "
+        + "document does not contain the value, or when no single excerpt is right."
+    static let gateInstructions =
+        "Does `source_document` contain some exact contiguous excerpt that is the value belonging in "
+        + "`target_context`? Answer true only if such an excerpt exists and could be inserted verbatim into "
+        + "the field."
+    static let gateCriteria = [
+        "true": "An exact excerpt of the document is the value for this field.",
+        "false": "No excerpt of the document is the value for this field.",
+    ]
+}
+
 @Suite struct JevGatewayRequestTests {
     @Test func postsOneEvaluationToTheGatewayWithTheKeyAsBearerToken() async throws {
         let transport = StubTransport.answering(body: Fixture.evaluateResponse(choice: "c001", containsValue: 0.97))
@@ -104,20 +124,20 @@ private func sentState(for request: DecisionRequest) async throws -> SentState {
         let paste = try await sentBody(for: Fixture.request).questions.paste
 
         #expect(paste.type == "choice")
-        #expect(!paste.instructions.isEmpty)
+        #expect(paste.instructions == ContractedWording.choiceInstructions)
         #expect(Set(paste.criteria.keys) == ["c000", "c001", "c002", "none_of_these"])
         #expect(paste.criteria["c000"] == "Ada Lovelace")
         #expect(paste.criteria["c001"] == "ada@example.org")
         #expect(paste.criteria["c002"] == "London")
-        #expect(paste.criteria["none_of_these"]?.isEmpty == false)
+        #expect(paste.criteria["none_of_these"] == ContractedWording.noneOfTheseDescription)
     }
 
     @Test func booleanGateAsksWhetherTheDocumentContainsAValue() async throws {
         let gate = try await sentBody(for: Fixture.request).questions.containsValue
 
         #expect(gate.type == "boolean")
-        #expect(!gate.instructions.isEmpty)
-        #expect(Set(gate.criteria.keys) == ["true", "false"])
+        #expect(gate.instructions == ContractedWording.gateInstructions)
+        #expect(gate.criteria == ContractedWording.gateCriteria)
     }
 
     @Test func candidateDescriptionsBecomeOneLineOfAtMost255Characters() async throws {
