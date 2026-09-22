@@ -20,9 +20,10 @@ granularity spike findings (`spikes/granularity/FINDINGS.md` on `spike/jev-contr
    occurrence wins). Canonically equivalent but differently encoded texts are both kept.
 6. **Substrings.** Every Candidate is a slice of the original `String` by index range, so it is a byte-exact
    contiguous substring; nothing is normalised, joined or generated.
-7. **Cap 255** (Jev hard limit; 256 → HTTP 400). When more than 255 remain, drop first the whole lines of
+7. **Cap 254** (Jev allows 255 options; 256 → HTTP 400; the JevGateway adapter adds `none_of_these` as one
+   option). When more than 254 remain, drop first the whole lines of
    labelled lines, last in document order first (their value stays, and the spike shows the value is what a field
-   wants); if still more than 255, drop the remaining Candidates from the end of the document. The result is
+   wants); if still more than 254, drop the remaining Candidates from the end of the document. The result is
    always in document order.
 
 ## Same-type detection (`sameTypeAlternatives(to:among:)`)
@@ -51,11 +52,11 @@ Derivation:
   `labelWithEmptyValueYieldsOnlyTheLine`
 - `identicalTextIsOfferedOnce`; `differentlyEncodedEqualTextIsKeptAsTwoCandidates`
 - `unicodeAndEmojiLinesAreKeptByteForByte`
-- `thousandLineSourceIsCappedAt255KeepingTheFirstLinesInDocumentOrder`
+- `thousandLineSourceIsCappedAt254KeepingTheFirstLinesInDocumentOrder`
 - `overCapDropsWholeLabelledLinesBeforeValuesAndPlainLines`
 - `everyCandidateOfAMixedSourceIsAcceptedByPasteResultValidation` — each Candidate goes through a Paste Attempt
   (`PasteAttemptHarness`, fake Jev choosing it) and ends `.inserted`, i.e. passes Core's verbatim check; plus a
-  UTF-8 `firstRange` check for all 255 Candidates of the 1 000-line source.
+  UTF-8 `firstRange` check for all 254 Candidates of the 1 000-line source.
 - `derivationIsDeterministic` (same input twice → identical output).
 
 Same type:
