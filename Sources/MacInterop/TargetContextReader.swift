@@ -1,23 +1,31 @@
 import SmartPasteCore
 
 /// Reads the Target Context around a focused element: the label contract (field label, placeholder, section
-/// heading, sibling field labels) plus bounded surrounding text.
+/// heading, sibling field labels) plus bounded surrounding text. The walks for sibling labels and surrounding
+/// text share one time budget, which starts before any ancestor is looked up.
 @MainActor
 struct TargetContextReader<Node: AccessibilityNode> {
+    private let timeLimit: Duration
     /// How far up a section heading is looked for (a fieldset legend sits a few levels above its fields).
     private let headingSearchDepth = 6
     private let maximumSiblingLabels = 10
     private let siblingSearchNodeBudget = 200
 
+    init(timeLimit: Duration = .milliseconds(250)) {
+        self.timeLimit = timeLimit
+    }
+
     func context(of focused: FocusedElement<Node>) -> TargetContext {
+        let deadline = ContinuousClock.now + timeLimit
         let target = focused.node
         let section = sectionAncestor(of: target)
         return TargetContext(
             fieldLabel: fieldLabel(of: target),
             placeholder: target.firstText(of: [.placeholder]),
             sectionHeading: section?.firstText(of: [.title, .description]),
-            siblingFieldLabels: siblingFieldLabels(of: target, within: section ?? target.parent?.parent),
-            surroundingText: SurroundingTextCollector<Node>().surroundingText(of: focused)
+            siblingFieldLabels: siblingFieldLabels(
+                of: target, within: section ?? target.parent?.parent, until: deadline),
+            surroundingText: SurroundingTextCollector<Node>().surroundingText(of: focused, until: deadline)
         )
     }
 
@@ -39,19 +47,24 @@ struct TargetContextReader<Node: AccessibilityNode> {
     }
 
     /// Labels of the other editable fields in `scope`, in document order.
-    private func siblingFieldLabels(of target: Node, within scope: Node?) -> [String] {
+    private func siblingFieldLabels(
+        of target: Node, within scope: Node?, until deadline: ContinuousClock.Instant
+    ) -> [String] {
         guard let scope else { return [] }
         var labels: [String] = []
         var pending = [scope]
         var visited = 0
-        while let node = pending.popLast(), visited < siblingSearchNodeBudget, labels.count < maximumSiblingLabels {
+        let isWithinBudget = {
+            visited < siblingSearchNodeBudget && labels.count < maximumSiblingLabels && ContinuousClock.now < deadline
+        }
+        while isWithinBudget(), let node = pending.popLast() {
             visited += 1
             if node.isEditable {
                 let label = fieldLabel(of: node) ?? node.firstText(of: [.placeholder])
                 if let label, !node.isSameElement(as: target) { labels.append(label) }
                 continue
             }
-            pending.append(contentsOf: node.children.reversed())
+            pending.append(contentsOf: node.children(upTo: AccessibilityWalkLimits.childrenPerElement).reversed())
         }
         return labels
     }

@@ -16,27 +16,31 @@ struct SurroundingTextCollector<Node: AccessibilityNode> {
 
     let characterLimit = 2_000
     let nodeLimit = 600
-    let timeLimit = Duration.milliseconds(250)
 
-    func surroundingText(of focused: FocusedElement<Node>) -> String {
+    /// The surrounding text, gathered only until `deadline`.
+    func surroundingText(of focused: FocusedElement<Node>, until deadline: ContinuousClock.Instant) -> String {
         if Self.terminalBundleIdentifiers.contains(focused.bundleIdentifier ?? "") {
             return String((focused.node.text(of: .value) ?? "").suffix(characterLimit))
         }
-        return String(pageText(from: scope(of: focused.node)).prefix(characterLimit))
+        let scope = scope(of: focused.node, until: deadline)
+        return String(pageText(from: scope, until: deadline).prefix(characterLimit))
     }
 
-    /// The nearest page above the Target, else its window, else the highest ancestor reached.
-    private func scope(of target: Node) -> Node {
+    /// The nearest page above the Target, else its window, else the highest ancestor reached within
+    /// `AccessibilityWalkLimits.ancestorDepth` levels (parent chains can be cyclic) and the time budget.
+    private func scope(of target: Node, until deadline: ContinuousClock.Instant) -> Node {
         var scope = target
-        while !TargetContextReader<Node>.isPageOrWindow(scope), let parent = scope.parent {
+        for _ in 0..<AccessibilityWalkLimits.ancestorDepth {
+            guard ContinuousClock.now < deadline, !TargetContextReader<Node>.isPageOrWindow(scope),
+                let parent = scope.parent
+            else { break }
             scope = parent
         }
         return scope
     }
 
-    /// Breadth-first text of `root`'s subtree, one line per element, stopping at any of the three limits.
-    private func pageText(from root: Node) -> String {
-        let deadline = ContinuousClock.now + timeLimit
+    /// Breadth-first text of `root`'s subtree, one line per element, stopping at any of the four limits.
+    private func pageText(from root: Node, until deadline: ContinuousClock.Instant) -> String {
         var lines: [String] = []
         var collectedCharacters = 0
         var queue = [root]
@@ -52,7 +56,7 @@ struct SurroundingTextCollector<Node: AccessibilityNode> {
                 lines.append(line)
                 collectedCharacters += line.count + 1
             }
-            queue.append(contentsOf: node.children)
+            queue.append(contentsOf: node.children(upTo: AccessibilityWalkLimits.childrenPerElement))
         }
         return lines.joined(separator: "\n")
     }

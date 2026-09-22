@@ -68,8 +68,10 @@ struct SurroundingTextTests {
 
     @Test func walkStopsAtSixHundredNodes() {
         let field = FakeNode("AXTextField")
-        let lines = (0..<700).map { _ in FakeNode("AXStaticText", [.value: "x"]) }
-        _ = FakeNode("AXWebArea", children: [field] + lines)
+        let sections = (0..<10).map { _ in
+            FakeNode("AXGroup", children: (0..<70).map { _ in FakeNode("AXStaticText", [.value: "x"]) })
+        }
+        _ = FakeNode("AXWebArea", children: [field] + sections)
 
         let collectedLines = surroundingText(of: field).split(separator: "\n").count
         #expect(collectedLines > 500 && collectedLines < 600)

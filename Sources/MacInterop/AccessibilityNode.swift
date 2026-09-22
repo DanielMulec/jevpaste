@@ -17,7 +17,8 @@ protocol AccessibilityNode {
     /// A text attribute, or `nil` when the element does not offer it or it is not text.
     func text(of attribute: AccessibilityTextAttribute) -> String?
     var parent: Self? { get }
-    var children: [Self] { get }
+    /// The first `limit` children; an element may have thousands.
+    func children(upTo limit: Int) -> [Self]
     /// The element that labels this one (`AXTitleUIElement`), such as an HTML `<label>`.
     var titleElement: Self? { get }
     /// Whether `AXSelectedTextRange` is settable: the mark of an editable element with a non-text role.
@@ -45,6 +46,12 @@ extension AccessibilityNode {
     func firstText(of attributes: [AccessibilityTextAttribute]) -> String? {
         attributes.lazy.compactMap { text(of: $0) }.first { !$0.isEmpty }
     }
+}
+
+/// Bounds for every walk over another app's Accessibility tree, which may be deep, cyclic or huge.
+enum AccessibilityWalkLimits {
+    static let childrenPerElement = 100
+    static let ancestorDepth = 32
 }
 
 /// The focused element and the process it belongs to.

@@ -48,7 +48,7 @@ final class AXFocusSource: FocusSource {
         var queue = [root]
         var next = 0
         while next < queue.count, next < Self.wakeWalkNodeLimit {
-            queue.append(contentsOf: queue[next].children)
+            queue.append(contentsOf: queue[next].children(upTo: AccessibilityWalkLimits.childrenPerElement))
             next += 1
         }
         return focusedNode()

@@ -13,8 +13,10 @@ struct AXElementNode: AccessibilityNode {
         element(for: kAXParentAttribute)
     }
 
-    var children: [AXElementNode] {
-        guard let list = copyValue(of: kAXChildrenAttribute) as? [AXUIElement] else { return [] }
+    func children(upTo limit: Int) -> [AXElementNode] {
+        var values: CFArray?
+        let status = AXUIElementCopyAttributeValues(element, kAXChildrenAttribute as CFString, 0, limit, &values)
+        guard status == .success, let list = values as? [AXUIElement] else { return [] }
         return list.map(AXElementNode.init)
     }
 

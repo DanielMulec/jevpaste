@@ -4,7 +4,7 @@
 @MainActor
 final class FakeNode: AccessibilityNode {
     private var texts: [AccessibilityTextAttribute: String]
-    private(set) var children: [FakeNode] = []
+    private var childNodes: [FakeNode] = []
     /// Strong on purpose: tests build a tree and keep only the leaf. The cycle is released with the test process.
     private(set) var parent: FakeNode?
     var titleElement: FakeNode?
@@ -18,7 +18,11 @@ final class FakeNode: AccessibilityNode {
 
     func adopt(_ child: FakeNode) {
         child.parent = self
-        children.append(child)
+        childNodes.append(child)
+    }
+
+    func children(upTo limit: Int) -> [FakeNode] {
+        Array(childNodes.prefix(limit))
     }
 
     func text(of attribute: AccessibilityTextAttribute) -> String? {
