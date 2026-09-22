@@ -1,4 +1,5 @@
 import Foundation
+import SmartPasteCore
 
 /// Drives the clipboard's change-count polling. macOS has no pasteboard change notification, so polling is
 /// the supported mechanism; a tick always runs on a later main run-loop turn, never inside a call that wrote.
@@ -21,8 +22,7 @@ public final class TimerPollingSchedule: PollingSchedule {
 
     public func start(_ tick: @escaping @MainActor () -> Void) {
         timer?.invalidate()
-        let seconds = Double(interval.components.seconds) + Double(interval.components.attoseconds) / 1e18
-        let timer = Timer(timeInterval: seconds, repeats: true) { _ in
+        let timer = Timer(timeInterval: interval.timeInterval, repeats: true) { _ in
             MainActor.assumeIsolated { tick() }
         }
         RunLoop.main.add(timer, forMode: .common)

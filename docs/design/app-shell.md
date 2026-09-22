@@ -46,6 +46,8 @@ States and timings:
 |---|---|---|
 | `showProcessing(onCancel:)` (Core calls it at 150 ms) | `ellipsis.circle` "Jev is choosing… click to cancel" | next call |
 | `showRetrying()` | `hourglass` "Jev asked us to wait… click to cancel" | next call |
+The "click to cancel" hint appears only once Core has handed over `onCancel`; a 429 before 150 ms shows the
+retrying label without it, and the later `showProcessing` re-displays retrying with the hint.
 | `showOutcome(.inserted)` | `checkmark.circle.fill` "Pasted" | hidden after 1 s |
 | `showOutcome(other)` | symbol + reason (table below) | hidden after 2.5 s |
 
@@ -84,3 +86,5 @@ Live-proven only: the panel's rendering and non-activation, hotkey → real past
 ## Open questions (carried into the report)
 Pre-launch clipboard not seeded; `DecisionService` cancel token still absent (a cancelled request still runs);
 no Jev pre-warm at launch (cold call ~1.2 s).
+The label still says "click to cancel" during the ≤ 150 ms delivery step, where a click has no effect (Core has no
+port call at delivery start) — for the hardening slice.

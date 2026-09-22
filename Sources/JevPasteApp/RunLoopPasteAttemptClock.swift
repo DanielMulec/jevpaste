@@ -30,10 +30,3 @@ private final class ScheduledTimer: ScheduledAction {
         timer.invalidate()
     }
 }
-
-extension Duration {
-    /// This duration in seconds, as `Timer` and `Date` take it.
-    var timeInterval: TimeInterval {
-        Double(components.seconds) + Double(components.attoseconds) / 1e18
-    }
-}

@@ -1,4 +1,5 @@
 import Foundation
+import SmartPasteCore
 import Testing
 
 @testable import JevPasteApp
@@ -54,7 +55,6 @@ struct RunLoopPasteAttemptClockTests {
 
     /// Lets the main run loop process timers for `duration`, as it does between events in the running app.
     private func spinMainRunLoop(for duration: Duration) {
-        let seconds = Double(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18
-        RunLoop.main.run(until: Date(timeIntervalSinceNow: seconds))
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: duration.timeInterval))
     }
 }
