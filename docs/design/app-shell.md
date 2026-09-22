@@ -46,10 +46,11 @@ States and timings:
 |---|---|---|
 | `showProcessing(onCancel:)` (Core calls it at 150 ms) | `ellipsis.circle` "Jev is choosing… click to cancel" | next call |
 | `showRetrying()` | `hourglass` "Jev asked us to wait… click to cancel" | next call |
-The "click to cancel" hint appears only once Core has handed over `onCancel`; a 429 before 150 ms shows the
-retrying label without it, and the later `showProcessing` re-displays retrying with the hint.
 | `showOutcome(.inserted)` | `checkmark.circle.fill` "Pasted" | hidden after 1 s |
 | `showOutcome(other)` | symbol + reason (table below) | hidden after 2.5 s |
+
+The "click to cancel" hint appears only once Core has handed over `onCancel`; a 429 before 150 ms shows the
+retrying label without it, and the later `showProcessing` re-displays retrying with the hint.
 
 Reasons: `.insertedWithoutRestore` "Pasted — original clipboard not restored (replaced by your new copy)";
 `.noSuitableMatch` "No suitable match"; refusals "Nothing copied yet" / "No text field focused" / "Secure field —
