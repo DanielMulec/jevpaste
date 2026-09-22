@@ -5,8 +5,17 @@ struct IndicatorContent: Equatable {
     let symbolName: String
     let text: String
 
-    static let processing = IndicatorContent(symbolName: "ellipsis.circle", text: "Jev is choosing… click to cancel")
-    static let retrying = IndicatorContent(symbolName: "hourglass", text: "Jev asked us to wait… click to cancel")
+    private static let cancelHint = " click to cancel"
+
+    /// While Jev is choosing; the click hint appears only when a click actually cancels.
+    static func processing(cancellable: Bool) -> IndicatorContent {
+        IndicatorContent(symbolName: "ellipsis.circle", text: "Jev is choosing…" + (cancellable ? cancelHint : ""))
+    }
+
+    /// While waiting to retry after Jev asked us to; the click hint appears only when a click actually cancels.
+    static func retrying(cancellable: Bool) -> IndicatorContent {
+        IndicatorContent(symbolName: "hourglass", text: "Jev asked us to wait…" + (cancellable ? cancelHint : ""))
+    }
 }
 
 /// The visible form of a Paste Attempt outcome: ✓ for a second on success, otherwise the reason for 2.5 s.

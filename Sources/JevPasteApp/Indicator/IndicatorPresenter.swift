@@ -32,13 +32,17 @@ final class IndicatorPresenter: PasteOutcomePresenter {
 
     func showProcessing(onCancel: @escaping @MainActor () -> Void) {
         self.onCancel = onCancel
-        guard state != .retrying else { return }
-        display(.processing, as: .processing)
+        // A rate limit that arrived before the 150 ms mark keeps its retrying label, now with the click hint.
+        if state == .retrying {
+            display(.retrying(cancellable: true), as: .retrying)
+        } else {
+            display(.processing(cancellable: true), as: .processing)
+        }
         Self.log.notice("processing indicator shown")
     }
 
     func showRetrying() {
-        display(.retrying, as: .retrying)
+        display(.retrying(cancellable: onCancel != nil), as: .retrying)
         Self.log.notice("retrying after Jev asked us to wait")
     }
 

@@ -16,21 +16,31 @@ struct IndicatorPresenterTests {
     @Test func processingIsDisplayedAtOnce() {
         presenter.showProcessing {}
 
-        #expect(surface.displayed == .processing)
+        #expect(surface.displayed == .processing(cancellable: true))
     }
 
     @Test func retryingReplacesProcessing() {
         presenter.showProcessing {}
         presenter.showRetrying()
 
-        #expect(surface.displayed == .retrying)
+        #expect(surface.displayed == .retrying(cancellable: true))
     }
 
-    @Test func processingDoesNotHideAnEarlierRetryingState() {
+    @Test func retryingBeforeProcessingOffersNoCancel() {
         presenter.showRetrying()
-        presenter.showProcessing {}
+        surface.click()
 
-        #expect(surface.displayed == .retrying)
+        #expect(surface.displayed == .retrying(cancellable: false))
+    }
+
+    @Test func processingAfterAnEarlyRetryKeepsRetryingAndOffersCancel() {
+        var cancels = 0
+        presenter.showRetrying()
+        presenter.showProcessing { cancels += 1 }
+        surface.click()
+
+        #expect(surface.displayed == .retrying(cancellable: true))
+        #expect(cancels == 1)
     }
 
     @Test func insertedShowsTheCheckmarkForOneSecondThenHides() {
@@ -60,7 +70,7 @@ struct IndicatorPresenterTests {
 
         clock.step(by: .seconds(1))
 
-        #expect(surface.displayed == .processing)
+        #expect(surface.displayed == .processing(cancellable: true))
     }
 
     @Test func clickingProcessingOrRetryingCancels() {
