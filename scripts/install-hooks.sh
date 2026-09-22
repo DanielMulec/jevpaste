@@ -21,7 +21,10 @@ if [[ ! -f Makefile ]]; then
     echo "pre-commit: no Makefile in this checkout; make check skipped"
     exit 0
 fi
-if ! make check; then
+# Git exports GIT_DIR/GIT_INDEX_FILE/GIT_WORK_TREE to hooks; SwiftPM's own git calls inside
+# .build/checkouts would then act on *this* repository (dependency checkout fails, SIGBUS in the
+# test bundle). Run the gate with a clean git environment.
+if ! env -u GIT_DIR -u GIT_INDEX_FILE -u GIT_WORK_TREE make check; then
     echo "pre-commit: make check failed; commit blocked"
     exit 1
 fi
