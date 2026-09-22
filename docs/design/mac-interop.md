@@ -58,9 +58,13 @@ decisions sit in small internal value types so they are unit-testable without AX
   values. **Probe-proven:** real AX resolution, wake retry, `isStillFocused` on Chrome and Ghostty.
 
 ## Inserter — `PasteboardSwapInserter` (renamed `PasteKeystrokeInserter`: it no longer swaps)
-- **Mechanism.** Two `CGEvent`s from a `.combinedSessionState` source, `kVK_ANSI_V` down/up with `.maskCommand`,
+- **Mechanism.** Two `CGEvent`s from a `.privateState` source, `kVK_ANSI_V` down/up with `.maskCommand`,
   posted to `.cghidEventTap`. Nothing else, ever: no Return, no key sequence, no AX setter.
-- **Unit-tested:** the built event pair (key code 9, command flag only, down then up) without posting.
+- **Key-release wait (found by the probe run).** Chrome drops a ⌘V that arrives while ⌘⇧V is still physically
+  held; the private source alone did not fix it. `postPasteKeystroke` first polls the HID state of ⌘/⇧/V every
+  10 ms, at most 1 s, then posts (probe: 132–207 ms waited per press, then 6/6 inserted). Blocks the main actor.
+- **Unit-tested:** the built event pair (key code 9, command flag only, down then up, private source) without
+  posting; the wait (none / until release / give up after 100 polls) over a fake keyboard.
   **Probe-proven:** actual paste.
 
 ## Probe plan (step 3)
