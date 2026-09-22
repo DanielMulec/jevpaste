@@ -3,6 +3,9 @@ import SmartPasteCore
 /// A `PasteAttemptClock` that only moves when a test calls `advance(by:)`, firing due actions in time order.
 @MainActor
 final class ManualClock: PasteAttemptClock {
+    /// Simulates timers whose action was already queued when `cancel()` was called: cancelled timers still fire.
+    var ignoresCancellation = false
+
     private final class Timer: ScheduledAction {
         let fireAt: ContinuousClock.Instant
         let order: Int
@@ -53,7 +56,9 @@ final class ManualClock: PasteAttemptClock {
     }
 
     private func nextDueTimer(notAfter target: ContinuousClock.Instant) -> Timer? {
-        timers.removeAll { $0.isCancelled }
+        if !ignoresCancellation {
+            timers.removeAll { $0.isCancelled }
+        }
         return timers.filter { $0.fireAt <= target }.min { ($0.fireAt, $0.order) < ($1.fireAt, $1.order) }
     }
 }
