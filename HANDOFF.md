@@ -11,9 +11,11 @@ Map: [Build Daniel's Jev-powered macOS smart-paste app](https://github.com/Danie
 Read its body first (Destination, Notes = hard rules, Decisions-so-far index, fog, out-of-scope).
 Do not restate it here. Glossary: `CONTEXT.md` — keep it updated when terms sharpen.
 
-Nine decisions closed, each with a resolution comment. The most recent:
+Twelve tickets closed, each with a resolution comment. The ones the next steps lean on:
 [Choose paste lifecycle, cancellation and clipboard preservation](https://github.com/DanielMulec/jevpaste/issues/8#issuecomment-5767988662)
-— the full Paste Attempt state model, invariants and test list live there.
+(Paste Attempt state model + test list) and
+[Choose native module boundaries and local quality checks](https://github.com/DanielMulec/jevpaste/issues/10#issuecomment-5781286644)
+(five modules, seams, gate, review policy; ADR `docs/adr/0001-…md`).
 
 **Frontier (open, unblocked):**
 - [Define the implementation slices and their order](https://github.com/DanielMulec/jevpaste/issues/16) — grilling, HITL. Recommended next: it turns the scaffold into a build plan. Consult the two prototype tickets' questions before fixing the shell slice.
@@ -38,16 +40,17 @@ Herdr pane**, not a subagent. Research: DeepSeek Flash.
 4. Verify: `herdr agent read <name> --source visible --lines 30 | grep -i opus` must show
    `claude-opus-5-5 • medium` before sending anything.
 5. `herdr agent prompt <name> "<brief pointer>"` (no `--timeout` without `--wait`).
-6. **There is no `/alias` command in this pi.** Don't tell workers to run it; tell them to
-   `intercom list` and find the supervisor by cwd.
-7. Communication protocol Daniel likes: the worker owns one channel to Daniel (its pane), asks
+6. A worker's blocking `intercom ask` is answered **only** by `intercom reply` — a `herdr agent prompt` just queues behind it and the worker looks stuck. `intercom send` silently attaches to a pending ask, so use it only when none is pending.
+7. **There is no `/alias` command in this pi.** Give the worker the supervisor's intercom id
+   explicitly in the brief (two pis may share the cwd).
+8. Communication protocol Daniel likes: the worker owns one channel to Daniel (its pane), asks
    him for one-word answers (`done`/`nothing`/`failed`); gated steps via blocking intercom
    `ask` to the supervisor; matrix-row reports after each; ask before anything unexpected.
    Review the worker's code early. **Never block in a long `sleep`** while a worker runs — its intercom asks only land when this session has a free turn; poll ≤ 60 s or just wait for messages.
 
-The one human step in the signing spike is the Accessibility toggle in System Settings
-(no CLI path without disabling SIP). If Daniel is away, the worker parks there and commits
-its partial `SIGNING-RESULTS.md`.
+Accessibility grants need a human click in System Settings (no CLI path; this terminal has no AX
+trust for UI scripting). Brief workers to park cleanly at that step if Daniel is away.
+Reference brief: `docs/briefs/scaffold-brief.md` (gates, report format).
 
 ## Standing facts — do not re-litigate
 
@@ -55,8 +58,10 @@ its partial `SIGNING-RESULTS.md`.
   reformat, generate. No "safety" argument licenses mutating it.
 - Jev returns typed decisions, not text (contract in the Jev semantics ticket; spike on `spike/jev-contract`).
 - Free-tier Jev ~1 call/s account-wide. 400 lines/file ceiling. No hosted CI.
-- Toolchain: no Xcode, CLT only, Swift 6.3.3; `swift build` works, `swift test` does not;
-  SwiftLint needs `--disable-sourcekit`.
+- Toolchain: no Xcode, CLT only, Swift 6.3.3. `swift test` works via the swift-testing package +
+  two linker flags; SwiftLint needs `TOOLCHAIN_DIR=/Library/Developer/CommandLineTools` (not
+  `--disable-sourcekit`). All of it is wired in the Makefile — just run `make check`; run `npm ci`
+  once per checkout first.
 - Signing: every installed build is signed with `jevpaste-dev` (dedicated keychain
   `~/Library/Keychains/jevpaste-signing.keychain-db`); ad-hoc builds orphan the grant and are
   never installed. `~/Desktop/MacOSProbe.app` (ad-hoc) and `~/Desktop/SigningProbe.app`
@@ -78,10 +83,11 @@ its partial `SIGNING-RESULTS.md`.
 
 - Worktrees under `~/.pi/worktrees/jevpaste/{jev,macos,quality,spike-contract,macos-probe,signing,scaffold}` — all branches pushed; `scaffold` is merged and removable.
 - Herdr: `wC:pA` (`signing-worker`, Opus 5, done) and `wC:pC` (`scaffold-worker`, Opus 5.5, done) — closable. `wC:pB` is the `/teach` session — keep. `wC:p7` is an older idle pi (grok) in the repo cwd; closable. Supervisor intercom id for this session was `01a0c5fd`; a new supervisor must give the worker its new id explicitly (two pis share the cwd, so "find by cwd" is ambiguous — and `intercom send` will silently attach to a pending ask, so answer asks with `reply`).
-- Clipboard may hold a synthetic marker; unsaved TextEdit scratch doc; `test-page.html` open in Chrome.
+- `/tmp/jevpaste-signing/` still holds the original signing key until reboot (copy lives in `~/.config/jevpaste/signing/`); `/tmp/jevtestprobe`, `/tmp/jevverify` are disposable.
 
 ## Suggested skills
 
-- `wayfinder` (every session), `grilling` + `domain-modeling` (architecture ticket),
-  `codebase-design` (architecture), `prototype` (history UX), `pi-intercom` + `herdr --skill`
-  (workers), `research` (only for new research tickets).
+- `wayfinder` (every session), `grilling` + `domain-modeling` (the slicing ticket),
+  `codebase-design` (when a slice touches a seam), `prototype` (the two prototype tickets),
+  `pi-intercom` + `herdr --skill` (workers), `research` (only for new research tickets),
+  `tdd` (once slices are implemented — the lifecycle ticket already holds the test list).
