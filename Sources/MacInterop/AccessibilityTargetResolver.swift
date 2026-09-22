@@ -1,16 +1,18 @@
 import SmartPasteCore
 
-/// The `TargetResolver` adapter that will find the focused editable Target through Accessibility.
-///
-/// Scaffold only: no Accessibility calls yet.
-public struct AccessibilityTargetResolver: TargetResolver {
+/// The `TargetResolver` adapter: finds the focused editable Target through Accessibility and re-verifies that
+/// the same element in the same process still has focus right before insertion.
+@MainActor
+public final class AccessibilityTargetResolver: TargetResolver {
+    private let resolver = FocusedTargetResolver(source: AXFocusSource())
+
     public init() {}
 
     public func resolveFocusedTarget() -> BoundTarget? {
-        nil
+        resolver.resolveFocusedTarget()
     }
 
     public func isStillFocused(_ target: TargetIdentity) -> Bool {
-        false
+        resolver.isStillFocused(target)
     }
 }

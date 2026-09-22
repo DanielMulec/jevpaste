@@ -1,8 +1,6 @@
 /// Identifies one focused element in one process, so the Bound Target can be re-verified before insertion.
 public struct TargetIdentity: Equatable, Hashable, Sendable {
-    // periphery:ignore - read by the "Port the MacInterop adapters from the probe" adapter
     public let processIdentifier: Int32
-    // periphery:ignore - read by the "Port the MacInterop adapters from the probe" adapter
     /// Minted by the `TargetResolver` adapter; meaningful only to that adapter.
     public let elementToken: UInt64
 

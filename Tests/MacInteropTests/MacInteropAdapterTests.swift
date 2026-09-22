@@ -17,7 +17,7 @@ import Testing
     #expect(resolver is AccessibilityTargetResolver)
 }
 
-@Test @MainActor func pasteboardSwapInserterFillsTheInserterSeam() {
-    let inserter: any Inserter = PasteboardSwapInserter()
-    #expect(inserter is PasteboardSwapInserter)
+@Test @MainActor func pasteKeystrokeInserterFillsTheInserterSeam() {
+    let inserter: any Inserter = PasteKeystrokeInserter()
+    #expect(inserter is PasteKeystrokeInserter)
 }
