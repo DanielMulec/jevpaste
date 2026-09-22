@@ -4,10 +4,10 @@ extension PasteAttemptCoordinator {
     /// Fixed: 20 ms pasted the previous clipboard on two engines, 120 ms was clean on all five targets.
     static let restoreDelay = Duration.milliseconds(120)
 
+    /// Delivers a Paste Result that `RunningAttempt.accepts(_:offeredAmong:)` already validated.
     func deliver(_ pasteResult: Candidate) {
         guard let attempt else { return }
         stopClocks()
-        guard attempt.item.containsVerbatim(pasteResult.text) else { return finish(.failed(.invalidResult)) }
         phase = .delivering
         guard ports.targetResolver.isStillFocused(attempt.target.identity) else {
             return finish(.failed(.targetChanged))

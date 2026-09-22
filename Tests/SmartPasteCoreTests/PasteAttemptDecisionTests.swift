@@ -60,4 +60,13 @@ struct PasteAttemptDecisionTests {
 
         #expect(harness.presenter.outcomes == [.failed(.invalidResult)])
     }
+
+    @Test func verbatimJevAnswerThatIsNotAnOfferedCandidateFailsAsInvalidResult() {
+        let harness = PasteAttemptHarness()
+
+        harness.pasteChoosing("Lovelace")
+
+        #expect(harness.presenter.outcomes == [.failed(.invalidResult)])
+        #expect(harness.log.steps.isEmpty)
+    }
 }

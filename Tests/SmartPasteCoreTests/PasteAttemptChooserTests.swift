@@ -51,4 +51,13 @@ struct PasteAttemptChooserTests {
 
         #expect(harness.presenter.outcomes == [.inserted])
     }
+
+    @Test func chooserReplyThatIsNotAnOfferedAlternativeFailsAsInvalidResult() {
+        let harness = Self.harnessWithChooserOpen()
+
+        harness.chooser.choose("Ada Lovelace")
+
+        #expect(harness.presenter.outcomes == [.failed(.invalidResult)])
+        #expect(harness.log.steps.isEmpty)
+    }
 }

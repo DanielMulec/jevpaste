@@ -32,6 +32,7 @@ extension PasteAttemptCoordinator {
         guard case .candidate(let chosen) = decision.choice,
             decision.containsValueProbability >= Self.containsValueThreshold
         else { return finish(.noSuitableMatch) }
+        guard attempt.accepts(chosen, offeredAmong: attempt.candidates) else { return finish(.failed(.invalidResult)) }
         let alternatives = rules.candidateExtraction.sameTypeAlternatives(to: chosen, among: attempt.candidates)
         if alternatives.count >= 2 {
             offerChoice(among: alternatives)
@@ -48,11 +49,9 @@ extension PasteAttemptCoordinator {
         let number = attempt.number
         ports.chooser.presentChoice(among: alternatives, for: attempt.target) { [weak self] choice in
             guard let self, self.attempt?.number == number, phase == .choosing else { return }
-            if let choice {
-                deliver(choice)
-            } else {
-                finish(.cancelled)
-            }
+            guard let choice else { return finish(.cancelled) }
+            guard attempt.accepts(choice, offeredAmong: alternatives) else { return finish(.failed(.invalidResult)) }
+            deliver(choice)
         }
     }
 
