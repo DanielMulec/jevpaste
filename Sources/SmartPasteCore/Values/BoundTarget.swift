@@ -1,8 +1,6 @@
 /// Identifies one focused element in one process, so the Bound Target can be re-verified before insertion.
 public struct TargetIdentity: Equatable, Hashable, Sendable {
-    // periphery:ignore - read by the "Port the MacInterop adapters from the probe" adapter
     public let processIdentifier: Int32
-    // periphery:ignore - read by the "Port the MacInterop adapters from the probe" adapter
     /// Minted by the `TargetResolver` adapter; meaningful only to that adapter.
     public let elementToken: UInt64
 
@@ -14,15 +12,10 @@ public struct TargetIdentity: Equatable, Hashable, Sendable {
 
 /// Information about the Target and its surroundings that helps establish what text belongs there.
 public struct TargetContext: Equatable, Sendable {
-    // periphery:ignore - read by the "Implement the JevGateway adapter" adapter
     public let fieldLabel: String?
-    // periphery:ignore - read by the "Implement the JevGateway adapter" adapter
     public let placeholder: String?
-    // periphery:ignore - read by the "Implement the JevGateway adapter" adapter
     public let sectionHeading: String?
-    // periphery:ignore - read by the "Implement the JevGateway adapter" adapter
     public let siblingFieldLabels: [String]
-    // periphery:ignore - read by the "Implement the JevGateway adapter" adapter
     /// A bounded window of visible text around the Target, for unlabelled Targets such as chats and terminals.
     public let surroundingText: String
 
