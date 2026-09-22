@@ -7,6 +7,8 @@ disable_update_check: true
 # A status item must be held for its lifetime; the reference is intentionally never read.
 retain_assign_only_property_types:
   - NSStatusItem
+# Encodable request bodies are read by the synthesized encode(to:), which Periphery cannot see.
+retain_encodable_properties: true
 # Periphery builds the test targets too, so it needs the same CLT Swift Testing linker flags as `swift test`.
 build_arguments:
   - -Xlinker

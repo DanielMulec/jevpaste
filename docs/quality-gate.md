@@ -143,6 +143,8 @@ Paths in the diagnostics are shortened from `Sources/SmartPasteCore/ProofViolati
 - **Periphery** builds the test targets too, so `.periphery.yml` repeats the two CLT linker flags as
   `build_arguments`. `retain_assign_only_property_types: [NSStatusItem]` keeps the status item, which must be
   held for its lifetime but is never read. Public declarations that only tests use are not reported.
+  `retain_encodable_properties: true` keeps properties of `Encodable` types (JevGateway request bodies), which
+  only the synthesized `encode(to:)` reads.
 - **Line guard** covers every non-Swift text file tracked or untracked-but-not-ignored by git, excluding
   `frames/`, `spikes/`, `node_modules/`, `.build/`, `build/` and `video.mp4`. It counts like SwiftLint: a final
   line without a trailing newline counts.
