@@ -32,13 +32,13 @@ A Candidate's type is detected on its **whole** text (so `Email: a@b.example` ha
 | type | regex (whole match, case-insensitive) |
 |---|---|
 | email | `[A-Z0-9._%+\-]+@[A-Z0-9\-]+(\.[A-Z0-9\-]+)*\.[A-Z]{2,}` |
-| URL | `(https?://|www\.)\S+` |
+| URL | `(https?://\|www\.)\S+` (pipe escaped for the table) |
 | handle | `@[A-Z0-9_]{1,30}` (and not an email) |
-| phone | `\+?[0-9(][0-9 ()./\-]{5,22}[0-9]` with 7–15 digits in total |
+| phone | digit groups (optionally in parentheses) joined by at most one of ` ./-`, optional leading `+`; 7–15 digits; without `+` also ≥ 3 groups or ≥ 10 digits (so `2021-2024` is not a phone) |
 
 Checked in the order above; the first match wins, so a Candidate has at most one type. Result: every Candidate in
 `candidates` (in their order) with the same type as `chosen`. If `chosen` has no type, or is not among
-`candidates` (byte for byte), the result is `[chosen]`, which never opens the chooser.
+`candidates` (UTF-8 byte for byte), the result is `[chosen]`, which never opens the chooser.
 
 ## Tests (Swift Testing, `Tests/SmartPasteCoreTests/Candidate*Tests.swift`)
 Derivation:
@@ -49,11 +49,12 @@ Derivation:
 - `labelledLineYieldsTheWholeLineAndTheValue`
 - `valueContainingAURLKeepsAllItsColons`; `urlLineWithoutLabelIsNotSplit`
 - `colonWithoutFollowingSpaceDoesNotSplit`; `labelLongerThanFortyCharactersDoesNotSplit`;
-  `labelWithEmptyValueYieldsOnlyTheLine`
+  `labelWithEmptyValueYieldsOnlyTheLine`; `labelContainingAColonDoesNotSplitAtALaterSeparator`
 - `identicalTextIsOfferedOnce`; `differentlyEncodedEqualTextIsKeptAsTwoCandidates`
 - `unicodeAndEmojiLinesAreKeptByteForByte`
 - `thousandLineSourceIsCappedAt254KeepingTheFirstLinesInDocumentOrder`
-- `overCapDropsWholeLabelledLinesBeforeValuesAndPlainLines`
+- `exactly254CandidatesAreAllKeptAnd255LoseTheLast`; `overCapDropsWholeLabelledLinesBeforeValuesAndPlainLines`;
+  `whenValuesAndPlainLinesAloneExceedTheCapTheDocumentEndIsDropped`
 - `everyCandidateOfAMixedSourceIsAcceptedByPasteResultValidation` — each Candidate goes through a Paste Attempt
   (`PasteAttemptHarness`, fake Jev choosing it) and ends `.inserted`, i.e. passes Core's verbatim check; plus a
   UTF-8 `firstRange` check for all 254 Candidates of the 1 000-line source.
@@ -61,8 +62,9 @@ Derivation:
 
 Same type:
 - `emailsShareATypeAndIncludeTheChosenOne`; `urlsShareAType`; `phonesShareAType`; `handlesShareAType`
-- `emailAndHandleAreDifferentTypes`; `wholeLabelledLineHasNoType`
-- `untypedChosenReturnsOnlyItself`; `chosenNotAmongCandidatesReturnsOnlyItself`
+- `emailAndHandleAreDifferentTypes`; `wholeLabelledLineHasNoType`; `shortNumbersTimesAndYearsAreNotPhones`
+- `untypedChosenReturnsOnlyItself`; `chosenNotAmongCandidatesReturnsOnlyItself`;
+  `chosenInADifferentEncodingThanItsCandidateReturnsOnlyItself`
 - `singleEmailAmongOtherTypesReturnsOnlyItself`
 
 ## Open questions

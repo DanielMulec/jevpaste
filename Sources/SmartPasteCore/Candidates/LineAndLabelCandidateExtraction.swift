@@ -13,7 +13,11 @@ public struct LineAndLabelCandidateExtraction: CandidateExtraction {
     }
 
     public func sameTypeAlternatives(to chosen: Candidate, among candidates: [Candidate]) -> [Candidate] {
-        [chosen]
+        let chosenBytes = Array(chosen.text.utf8)
+        guard candidates.contains(where: { $0.text.utf8.elementsEqual(chosenBytes) }),
+            let chosenType = CandidateType(of: chosen.text)
+        else { return [chosen] }
+        return candidates.filter { CandidateType(of: $0.text) == chosenType }
     }
 }
 
