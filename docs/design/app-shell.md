@@ -76,8 +76,9 @@ Live-proven only: the panel's rendering and non-activation, hotkey → real past
 3. Daniel opens `data:text/html,<label for=e>Email address</label><br><textarea id=e placeholder="Your email
    address" rows=4 cols=40></textarea>` in Chrome, clicks into the textarea, presses ⌘⇧V.
    Expected: processing indicator, then "✓ Pasted"; textarea holds exactly `maren.holtby@example.org`, no newline.
-4. Daniel presses ordinary ⌘V in the textarea: the full three-line synthetic text appears (clipboard restored).
+4. After the ✓ has disappeared, Daniel presses ordinary ⌘V in the textarea: the full three-line synthetic text appears (clipboard restored).
 5. Failing case: Daniel clicks the Finder desktop (nothing editable focused), presses ⌘⇧V → "No text field focused".
+   If the desktop resolves as editable, a Chrome page with no field focused instead (reported).
 6. Evidence: Daniel's `done`/`nothing`/`failed` report plus the `jevpaste` log lines (kinds only). Then I quit the app.
 
 ## Open questions (carried into the report)
