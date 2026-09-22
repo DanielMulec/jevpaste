@@ -16,25 +16,29 @@ Nine decisions closed, each with a resolution comment. The most recent:
 — the full Paste Attempt state model, invariants and test list live there.
 
 **Frontier (open, unblocked):**
-- [Choose native module boundaries and local quality checks](https://github.com/DanielMulec/jevpaste/issues/10) — grilling, HITL, uses `codebase-design`.
-- [Verify multi-line Paste Results insert line breaks without sending](https://github.com/DanielMulec/jevpaste/issues/14) — prototype; now unblocked (signing identity resolved). Sign the probe with `jevpaste-dev` (see `spikes/macos-probe/scripts/make-signed-app.sh` on `spike/signing-identity`) so the grant persists.
+- [Scaffold the package, quality gate and signed bundle](https://github.com/DanielMulec/jevpaste/issues/15) — task, AFK (Opus 5.5 medium worker pane). Spec is the resolution of the architecture ticket + ADR 0001. Recommended next.
+- [Verify multi-line Paste Results insert line breaks without sending](https://github.com/DanielMulec/jevpaste/issues/14) — prototype; sign the probe with `jevpaste-dev`.
 - [Validate history selection and visible paste feedback](https://github.com/DanielMulec/jevpaste/issues/9) — prototype, HITL.
 
-Most recent closed: [Establish a signing identity that keeps the Accessibility grant across rebuilds](https://github.com/DanielMulec/jevpaste/issues/13#issuecomment-5768392720) — resolved; evidence `spikes/macos-probe/SIGNING-RESULTS.md` on `spike/signing-identity` (b68154d). Identity + keychain retained; `~/Desktop/SigningProbe.app` installed and granted.
+Blocked: [Define the implementation slices and their order](https://github.com/DanielMulec/jevpaste/issues/16) waits on the scaffold.
 
-Suggested order: architecture grilling next (HITL), multi-line verification (mostly AFK, one real-app paste per target — synthetic payloads only), history prototype last.
+Most recent closed: [Choose native module boundaries and local quality checks](https://github.com/DanielMulec/jevpaste/issues/10#issuecomment-5781286644) — five targets, Core owns seams, `make check` composition, SwiftLint policy, reviewer routing chain. ADR: `docs/adr/0001-…md`. Key fact: `swift test` works on CLT with the swift-testing package + `-Xlinker -L/Library/Developer/CommandLineTools/Library/Developer/usr/lib -Xlinker -rpath -Xlinker <same>` (probe in `/tmp/jevtestprobe`, disposable).
+
+**Models (Daniel's standing preference, 2026-09-22):** workers/prototypes `anthropic/claude-opus-5-5:medium` — **Opus 5 is retired, do not use**. Research `deepseek/deepseek-flash`. Pre-merge semantic-duplication reviewer chain: `openai-codex/gpt-5.6-sol:medium` → `xai/grok-4.7` (highest thinking accepted; supervisor reviews Grok's reviews until proven) → `anthropic/claude-opus-5-5:medium`, always a fresh instance separate from the author.
+
+Side session (not on the map): `/teach` on AppKit/SwiftUI roles + Swift 6 concurrency, pane `wC:pB`, agent `swift-teach`, workspace `~/Projekte/education-swift-mac`. Never write teaching files into this repo.
 
 ## Running a worker pane (do this exactly; the previous attempt failed twice)
 
-Daniel wants spikes/builds run by **Opus 5, thinking high** in a **separate Pi instance in a
+Daniel wants spikes/builds run by **Opus 5.5, thinking medium** (`anthropic/claude-opus-5-5:medium`) in a **separate Pi instance in a
 Herdr pane**, not a subagent. Research: DeepSeek Flash.
 
 1. Read `herdr --skill` and `pi --help` first. `intercom … openProjectPaneIfMissing` launches
    pi with the *default* model — do not use it for workers.
 2. `herdr pane split --current --direction right --cwd <worktree> --no-focus` → read `pane_id`.
-3. `herdr agent start <name> --kind pi --pane <id> --timeout 60000 -- --model anthropic/claude-opus-5:high`
+3. `herdr agent start <name> --kind pi --pane <id> --timeout 60000 -- --model anthropic/claude-opus-5-5:medium`
 4. Verify: `herdr agent read <name> --source visible --lines 30 | grep -i opus` must show
-   `claude-opus-5 • high` before sending anything.
+   `claude-opus-5-5 • medium` before sending anything.
 5. `herdr agent prompt <name> "<brief pointer>"` (no `--timeout` without `--wait`).
 6. **There is no `/alias` command in this pi.** Don't tell workers to run it; tell them to
    `intercom list` and find the supervisor by cwd.
@@ -75,7 +79,7 @@ its partial `SIGNING-RESULTS.md`.
 ## Loose ends on the Mac (non-blocking)
 
 - Worktrees under `~/.pi/worktrees/jevpaste/{jev,macos,quality,spike-contract,macos-probe,signing}` — all branches pushed.
-- Herdr: pane `wC:pA` hosts the finished `signing-worker` (Opus 5) — closable, or reuse for the multi-line probe (it knows the probe harness). `wC:p7` is an older idle pi (grok) in the repo cwd; closable. Supervisor intercom id for this session was `01a0c5fd`; a new supervisor must give the worker its new id explicitly (two pis share the cwd, so "find by cwd" is ambiguous — and `intercom send` will silently attach to a pending ask, so answer asks with `reply`).
+- Herdr: pane `wC:pA` hosts the finished `signing-worker` (Opus 5, retired model) — closable. `wC:p7` is an older idle pi (grok) in the repo cwd; closable. Supervisor intercom id for this session was `01a0c5fd`; a new supervisor must give the worker its new id explicitly (two pis share the cwd, so "find by cwd" is ambiguous — and `intercom send` will silently attach to a pending ask, so answer asks with `reply`).
 - Clipboard may hold a synthetic marker; unsaved TextEdit scratch doc; `test-page.html` open in Chrome.
 
 ## Suggested skills
