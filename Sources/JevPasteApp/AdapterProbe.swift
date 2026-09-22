@@ -63,8 +63,11 @@ final class AdapterProbe: NSObject, NSApplicationDelegate {
     private func deliver(_ marker: String) {
         let original = clipboard.snapshot()
         let ownCount = clipboard.write(marker)
-        inserter.postPasteKeystroke()
-        log.write("press \(presses): wrote marker chars=\(marker.count) ownChangeCount=\(ownCount), posted ⌘V")
+        let keyReleaseWait = ContinuousClock().measure { inserter.postPasteKeystroke() }
+        log.write(
+            "press \(presses): wrote marker chars=\(marker.count) ownChangeCount=\(ownCount), "
+                + "posted ⌘V after waiting \(keyReleaseWait) for key release"
+        )
         let press = presses
         Task { @MainActor in
             try? await Task.sleep(for: Self.restoreDelay)
