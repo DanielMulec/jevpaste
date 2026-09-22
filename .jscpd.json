@@ -1,0 +1,9 @@
+{
+  "path": ["Sources", "Tests"],
+  "format": ["swift"],
+  "minTokens": 50,
+  "threshold": 0,
+  "exitCode": 1,
+  "reporters": ["console"],
+  "gitignore": true
+}

@@ -1,0 +1,76 @@
+# SwiftLint policy from "Choose native module boundaries and local quality checks".
+# Every configured rule is an error; `make check` also runs with --strict so nothing stays a warning.
+# Proof that each rule fires: docs/quality-gate.md.
+included:
+  - Sources
+  - Tests
+
+# swift-format is the only formatter; SwiftLint style rules that contradict its output are off.
+disabled_rules:
+  - trailing_comma
+
+opt_in_rules:
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - fatal_error_message
+
+file_length:
+  warning: 400
+  error: 400
+  ignore_comment_only_lines: false
+cyclomatic_complexity:
+  warning: 10
+  error: 10
+function_body_length:
+  warning: 60
+  error: 60
+type_body_length:
+  warning: 250
+  error: 250
+line_length:
+  warning: 120
+  error: 120
+nesting:
+  type_level:
+    warning: 2
+    error: 2
+  function_level:
+    warning: 2
+    error: 2
+identifier_name:
+  min_length:
+    warning: 3
+    error: 3
+force_cast: error
+force_try: error
+force_unwrapping:
+  severity: error
+implicitly_unwrapped_optional:
+  severity: error
+todo:
+  severity: error
+fatal_error_message:
+  severity: error
+
+custom_rules:
+  no_print:
+    name: "No print"
+    message: "Do not use print(); log through the Log module, which never records payloads."
+    regex: '(?<![\w.])print\s*\('
+    excluded_match_kinds: [comment, comment.mark, comment.url, doccomment, doccomment.field, string]
+    severity: error
+  no_dynamic_any:
+    name: "No Any or AnyObject"
+    message: "Do not use Any or AnyObject as a type; add the file to this rule's allowlist only with a reason."
+    regex: '\b(Any|AnyObject)\b'
+    excluded_match_kinds: [comment, comment.mark, comment.url, doccomment, doccomment.field, string]
+    # Allowlist of path regexes permitted to use Any/AnyObject. Empty on purpose.
+    excluded: []
+    severity: error
+  core_import_ban:
+    name: "Core stays platform-free"
+    message: "SmartPasteCore must not import AppKit, ApplicationServices, SQLite3, Cocoa or SwiftUI, or use URLSession."
+    included: 'Sources/SmartPasteCore/.*\.swift$'
+    regex: '\bimport\s+(?:\w+\s+)?(?:AppKit|ApplicationServices|SQLite3|Cocoa|SwiftUI)\b|\bURLSession\b'
+    excluded_match_kinds: [comment, comment.mark, comment.url, doccomment, doccomment.field, string]
+    severity: error
