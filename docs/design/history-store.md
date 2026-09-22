@@ -64,6 +64,8 @@ caller's thread (main actor included). `items()` uses `queue.sync` and may block
 - The directory is created on first use with mode `0700`; the file is set to `0600` after open (also
   tightening an existing file). Rollback journal (default `DELETE` mode) so no `-wal`/`-shm` side files
   linger; SQLite gives the journal the database file's mode.
+- `PRAGMA secure_delete = ON`: deleted, evicted and cleared text is overwritten inside the file, not left in
+  free pages (a test greps the file bytes).
 - No at-rest encryption (resolution: single-user Mac, FileVault).
 
 ## Failures (visible, never silent)
@@ -76,11 +78,12 @@ caller's thread (main actor included). `items()` uses `queue.sync` and may block
   result codes and the file *name*. Never item text or keys.
 
 ## Files (each ≤ 400 lines)
-`SQLiteHistoryRepository.swift` (seam + queue), `SQLiteConnection.swift` (thin `SQLite3` wrapper: open,
-prepare/bind/step, transactions, result codes), `HistoryStoreSchema.swift` (DDL, `user_version`),
+`SQLiteHistoryRepository.swift` (seam, queue, refusals, logging), `ClipboardItemTable.swift` (the SQL for
+record/evict/read/delete/clear), `SQLiteConnection.swift` (the only `SQLite3` caller: open, prepare/bind/step,
+transactions, result codes), `HistoryStoreSchema.swift` (DDL, `user_version`, `secure_delete`),
 `DistinctKey.swift` (trimming + hash), `HistoryStoreFailure.swift`, `HistoryStoreLocation.swift` (default URL,
-directory/file modes). Tests split by concern: recording/order/dedup, retention, deletion, refusal,
-persistence and failures.
+directory/file modes). Tests: recording/order/dedup/refusal, retention, deletion, file/permissions/failures,
+restart proof (opt-in via `JEVPASTE_HISTORY_PROOF_FILE`).
 
 ## Tested vs proven
 - **Unit (`swift test`, real SQLite in a temporary directory):** round trip; newest-first; trimmed dedup moves
