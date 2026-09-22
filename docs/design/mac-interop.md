@@ -29,16 +29,17 @@ decisions sit in small internal value types so they are unit-testable without AX
   callback per change with text and count, restored text reported, each marker → `isConcealed`, no text → `item nil`.
 
 ## Hotkey — `GlobalHotkey`
-- **Mechanism.** Carbon `RegisterEventHotKey(kVK_ANSI_V, cmdKey | shiftKey)` + `InstallEventHandler` on the
-  application event target (probe: fires with zero TCC grants, also under secure input). The C callback reaches the
-  instance through the `userData` pointer and hops with `MainActor.assumeIsolated` (Carbon calls on the main thread).
-  No CGEventTap / `NSEvent` monitor, so no dedup window is needed.
-- **Unit-tested:** nothing that registers the shortcut (it would swallow Daniel's ⌘⇧V during `swift test`).
-  **Probe-proven:** the press triggers the probe delivery.
+- **Mechanism.** Carbon `RegisterEventHotKey(kVK_ANSI_V, cmdKey | shiftKey)` behind an internal `HotKeyRegistrar`
+  (probe: fires with zero TCC grants, also under secure input). `onPress` fires on **`kEventHotKeyReleased`**, not on
+  the press (review fix): the Paste Attempt starts once V is up, so the Inserter never waits after the Bound Target
+  was re-verified. The C callback reaches the registrar through `userData` and hops with `MainActor.assumeIsolated`.
+- **Unit-tested** (fake registrar): release → one callback; press alone → none; listening twice registers once.
+  **Probe-proven:** release-triggered delivery inserts in Chrome. Note: at delivery ⌘/⇧ were still held
+  (`held=true`); Carbon reports the release when V goes up. The paste landed, so the held V (not ⌘/⇧) is the likely reason Chrome dropped it before.
 
 ## TargetResolver — `AccessibilityTargetResolver`
-- **Mechanism.** System-wide `AXFocusedUIElement` (messaging timeout 0.5 s). On `noValue`, one ordinary `AXChildren`
-  walk of the frontmost app's focused window (wakes Chromium trees), then one retry. pid = `AXUIElementGetPid`.
+- **Mechanism.** System-wide `AXFocusedUIElement` (messaging timeout 1 s). On `noValue`, one ordinary `AXChildren`
+  walk (≤ 300 elements) of the frontmost app's focused window (wakes Chromium trees), then one retry. pid = `AXUIElementGetPid`.
   - *Editable:* role `AXTextField`, `AXTextArea`, `AXComboBox`, subrole `AXSecureTextField`/`AXSearchField`, or
     settable `AXSelectedTextRange`. Otherwise `nil` (e.g. a just-launched Catalyst `iOSContentGroup`).
   - *Secure:* subrole or role `AXSecureTextField`, or `IsSecureEventInputEnabled()`.
@@ -46,12 +47,16 @@ decisions sit in small internal value types so they are unit-testable without AX
     `isStillFocused` re-resolves focus and is true only if pid matches and `CFEqual(current, bound)`.
 - **Target Context.** `fieldLabel` = `AXTitle`, else `AXTitleUIElement`'s value, else `AXDescription`;
   `placeholder` = `AXPlaceholderValue`; `sectionHeading` = first titled/described `AXGroup` ancestor (fieldset legend,
-  ≤ 6 levels); `siblingFieldLabels` = labels of other editable children of the parent (≤ 10). `surroundingText`
-  always (labelled fields are often underdetermined without it): breadth-first text (`AXValue`/`AXTitle`/
-  `AXDescription`, secure fields skipped) of the nearest `AXWebArea` ancestor, else the focused window, capped at 2 000 characters, 600 nodes, 250 ms.
-  Terminals (focused `AXTextArea` whose window has no other text node, i.e. Ghostty's window scrape) get the **last**
-  2 000 characters of the element's own `AXValue` — nearest the prompt. Cross-pane bleed in Herdr is accepted, per
-  the brief. AX does not report visibility; "visible" = what AX exposes.
+  ≤ 6 levels); `siblingFieldLabels` = labels of other editable fields of the section (≤ 10, ≤ 200 nodes).
+  `surroundingText` always (labelled fields are often underdetermined without it): breadth-first text
+  (`AXValue`/`AXTitle`/`AXDescription`, secure fields skipped) of the nearest `AXWebArea` ancestor, else the window,
+  capped at 2 000 characters and 600 nodes. Terminals (bundle-id list: Ghostty, Terminal, iTerm2, kitty, Alacritty,
+  WezTerm, Warp) get the **last** 2 000 characters of their own `AXValue` — nearest the prompt. Cross-pane bleed in
+  Herdr is accepted, per the brief. AX does not report visibility; "visible" = what AX exposes.
+- **Walk bounds (review fix).** Trees come from other apps and can be deep, cyclic or huge: ancestor climbs stop
+  after 32 levels; each element yields at most its first 100 children (`AXUIElementCopyAttributeValues` range), also
+  in the wake walk; sibling scan and surrounding text share one 250 ms deadline that starts before any ancestor
+  lookup. Labels, placeholder and heading are always read.
 - **Threading.** Main actor; AX calls are synchronous (probe: 0.3–9 ms lookup, ≤ 68 ms context on Chrome).
 - **Unit-tested:** editable/secure classification, context assembly and bounding (head for pages, tail for
   terminals, grapheme-safe, fragment joining), token bookkeeping (unknown/stale token → not focused) — all over plain
@@ -59,13 +64,9 @@ decisions sit in small internal value types so they are unit-testable without AX
 
 ## Inserter — `PasteboardSwapInserter` (renamed `PasteKeystrokeInserter`: it no longer swaps)
 - **Mechanism.** Two `CGEvent`s from a `.privateState` source, `kVK_ANSI_V` down/up with `.maskCommand`,
-  posted to `.cghidEventTap`. Nothing else, ever: no Return, no key sequence, no AX setter.
-- **Key-release wait (found by the probe run).** Chrome drops a ⌘V that arrives while ⌘⇧V is still physically
-  held; the private source alone did not fix it. `postPasteKeystroke` first polls the HID state of ⌘/⇧/V every
-  10 ms, at most 1 s, then posts (probe: 132–207 ms waited per press, then 6/6 inserted). Blocks the main actor.
+  posted to `.cghidEventTap` at once. Nothing else, ever: no Return, no key sequence, no AX setter, no wait.
 - **Unit-tested:** the built event pair (key code 9, command flag only, down then up, private source) without
-  posting; the wait (none / until release / give up after 100 polls) over a fake keyboard.
-  **Probe-proven:** actual paste.
+  posting. **Probe-proven:** actual paste.
 
 ## Probe plan (step 3)
 - `JevPasteApp --probe <log-path>`: registers `GlobalHotkey`; each press runs Core's delivery order over the real
