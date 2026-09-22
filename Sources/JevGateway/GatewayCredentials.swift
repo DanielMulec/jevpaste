@@ -17,6 +17,9 @@ public struct GatewayCredentials: Sendable {
         self.envFile = envFile
     }
 
+    /// Whether a key is available, without revealing it.
+    public var hasAPIKey: Bool { apiKey() != nil }
+
     /// The key from the first non-empty `AI_GATEWAY_API_KEY=` line, or `nil` if the file or the key is missing.
     func apiKey() -> String? {
         guard let contents = try? String(contentsOf: envFile, encoding: .utf8) else { return nil }

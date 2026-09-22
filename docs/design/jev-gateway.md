@@ -48,8 +48,8 @@ No retry and no timeout here: `URLRequest.timeoutInterval` is left at the system
 Attempt drops late replies itself.
 
 ## Error taxonomy (diagnostics only)
-`JevGatewayFailure`: `missingKey(file:)`, `tooManyCandidates(count:)`, `transport`, `httpStatus(Int)`,
-`malformedResponse`, `unknownChoice`. Each `.failed` logs one line through `os.Logger`
+`JevGatewayFailure`: `missingKey(file:)`, `tooManyCandidates(count:)`, `malformedRequest` (encoding),
+`transport`, `httpStatus(Int)`, `malformedResponse`, `unknownChoice`. Each `.failed` logs one line through `os.Logger`
 (subsystem `jevpaste`, category `JevGateway`) with the case, and `.decided`/`.rateLimited` log the latency and
 option count. Never logged: the key, source document, Target Context, Candidates, request or response body.
 `missingKey` names the file path (`~/.config/jevpaste/env`), never a value.
@@ -62,10 +62,10 @@ option count. Never logged: the key, source document, Target Context, Candidates
   and returns canned status/headers/body — no network.
 - `GatewayCredentials(envFile: URL)` reads the key at each call (a later Keychain slice replaces it); tests
   point it at a temporary file. Default: `~/.config/jevpaste/env`. Accepts an optional `export ` prefix and
-  surrounding quotes.
+  surrounding quotes. `hasAPIKey` tells the live test (and later the shell) whether a key exists.
 - Files: `JevGatewayDecisionService.swift` (orchestration), `EvaluateRequestBody.swift` (encoding),
   `EvaluateResponse.swift` (decoding + mapping), `GatewayCredentials.swift`, `HTTPTransport.swift`,
-  `JevGatewayFailure.swift`. Tests split by concern: request shape, reply mapping, rate limit, credentials.
+  `JevGatewayFailure.swift`, `RateLimit.swift` (`retry-after`). Tests split by concern: request shape, reply mapping, rate limit, credentials.
 
 ## Live test
 `JEVPASTE_LIVE_JEV=1` and a readable key → one real call with a synthetic document (name/email/city lines,
