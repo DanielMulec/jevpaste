@@ -1,0 +1,8 @@
+{
+  "name": "jevpaste-dev-tools",
+  "private": true,
+  "description": "Pinned developer tools for make check (jscpd copy-paste detection). Not part of the app.",
+  "devDependencies": {
+    "jscpd": "5.3.1"
+  }
+}

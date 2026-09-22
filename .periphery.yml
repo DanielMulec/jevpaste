@@ -1,0 +1,17 @@
+# Periphery dead-code scan for `make check`. SwiftPM mode scans every target in Package.swift:
+# the library modules, the JevPasteApp executable (its @main entry is retained automatically) and the tests.
+strict: true
+quiet: true
+relative_results: true
+disable_update_check: true
+# A status item must be held for its lifetime; the reference is intentionally never read.
+retain_assign_only_property_types:
+  - NSStatusItem
+# Periphery builds the test targets too, so it needs the same CLT Swift Testing linker flags as `swift test`.
+build_arguments:
+  - -Xlinker
+  - -L/Library/Developer/CommandLineTools/Library/Developer/usr/lib
+  - -Xlinker
+  - -rpath
+  - -Xlinker
+  - /Library/Developer/CommandLineTools/Library/Developer/usr/lib
