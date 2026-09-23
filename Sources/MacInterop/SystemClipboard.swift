@@ -68,6 +68,12 @@ public final class SystemClipboard: Clipboard {
         }
     }
 
+    /// The text on the clipboard right now as a Clipboard Item, or `nil` when it holds no text. Read once at
+    /// launch to seed the Active Item; not part of the `Clipboard` port. Markers are checked before the content.
+    public func currentItem() -> ClipboardItem? {
+        Self.currentItem(on: pasteboard)
+    }
+
     /// The current text as a Clipboard Item. Markers are checked before the content is read.
     private static func currentItem(on pasteboard: NSPasteboard) -> ClipboardItem? {
         let isConcealed = PasteboardMarkers.conceal(pasteboard)

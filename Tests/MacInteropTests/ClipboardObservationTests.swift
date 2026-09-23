@@ -16,15 +16,6 @@ struct ClipboardObservationTests {
         return (clipboard, recorder)
     }
 
-    /// Copies like another app would, through the legacy declare-then-set API: it also accepts pre-UTI marker
-    /// names such as "Pasteboard generator type", which `NSPasteboardItem` rejects.
-    private func copy(_ bytesByType: [String: Data]) {
-        pasteboard.declareTypes(bytesByType.keys.map { NSPasteboard.PasteboardType($0) }, owner: nil)
-        for (type, bytes) in bytesByType {
-            pasteboard.setData(bytes, forType: NSPasteboard.PasteboardType(type))
-        }
-    }
-
     @Test func ownWriteIsReportedOnlyOnALaterTickWithItsChangeCount() {
         let (clipboard, recorder) = observedClipboard()
 
@@ -38,7 +29,7 @@ struct ClipboardObservationTests {
     @Test func foreignCopyIsReportedOnceWithItsText() {
         let (_, recorder) = observedClipboard()
 
-        copy(["public.utf8-plain-text": Data("Jane Doe\njane@example.com".utf8)])
+        scratch.copyLikeAnotherApp(["public.utf8-plain-text": Data("Jane Doe\njane@example.com".utf8)])
         schedule.tick()
         schedule.tick()
 
@@ -59,7 +50,7 @@ struct ClipboardObservationTests {
     @Test func copyWithoutTextIsReportedWithoutAnItem() {
         let (_, recorder) = observedClipboard()
 
-        copy(["public.png": Data([0x89, 0x50])])
+        scratch.copyLikeAnotherApp(["public.png": Data([0x89, 0x50])])
         schedule.tick()
 
         #expect(recorder.changes.count == 1)
@@ -78,7 +69,7 @@ struct ClipboardObservationTests {
     func markedCopyIsReportedAsConcealed(marker: String) {
         let (_, recorder) = observedClipboard()
 
-        copy(["public.utf8-plain-text": Data("hunter2".utf8), marker: Data()])
+        scratch.copyLikeAnotherApp(["public.utf8-plain-text": Data("hunter2".utf8), marker: Data()])
         schedule.tick()
 
         #expect(recorder.changes.map(\.item) == [ClipboardItem(text: "hunter2", isConcealed: true)])
@@ -87,7 +78,9 @@ struct ClipboardObservationTests {
     @Test func unmarkedCopyIsNotConcealed() {
         let (_, recorder) = observedClipboard()
 
-        copy(["public.utf8-plain-text": Data("hello".utf8), "org.nspasteboard.source": Data("com.example".utf8)])
+        scratch.copyLikeAnotherApp([
+            "public.utf8-plain-text": Data("hello".utf8), "org.nspasteboard.source": Data("com.example".utf8),
+        ])
         schedule.tick()
 
         #expect(recorder.changes.first?.item?.isConcealed == false)
