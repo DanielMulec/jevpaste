@@ -12,10 +12,34 @@ GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues
   design docs `docs/design/*.md`; quality gate `docs/quality-gate.md`; signing `docs/signing.md`.
 - Worker briefs (templates for new ones): `docs/briefs/*-brief.md` — newest `capture-history-brief.md` and
   `candidate-chooser-brief.md` show the "Shared files" section used for parallel workers.
-- Worker handoffs of merged branches live on `main` in `docs/handoffs/<branch>-HANDOFF.md`. Every worker writes one
-  on its branch before it ends; any worker continuing a branch reads it first (brief "Read first", item 1).
+- **Per-branch worker handoffs are retired** (Daniel, 2026-09-23): workers fold commits/architecture/merge
+  touchpoints/open questions into their ticket report comment instead. `docs/handoffs/*` holds only the two
+  historical wave-3 files; their still-live facts were absorbed into this file's "Durable notes".
 
-## Where things stand
+## Where things stand (updated 2026-09-23 evening)
+- [Verify multi-line Paste Results insert line breaks without sending](https://github.com/DanielMulec/jevpaste/issues/14)
+  **resolved and closed**: no per-Target refusal/warning needed (nothing sends or executes pasted newlines).
+  Prototype asset: unmerged branch `multiline-probe` (keep). Side finding → new frontier-adjacent ticket
+  [Restore Smart Paste in the ChatGPT desktop app](https://github.com/DanielMulec/jevpaste/issues/33)
+  (`com.openai.codex` = Daniel's ChatGPT app; resolver gets kAXErrorNoValue; blocks the acceptance suite).
+  [Implement Pre-check rules](https://github.com/DanielMulec/jevpaste/issues/20) is now unblocked.
+- [Harden installation and daily use](https://github.com/DanielMulec/jevpaste/issues/28): branch `harden`
+  (ef9092d) implemented, 294 tests, live-proven with Daniel (grant check, click-to-cancel regression,
+  Open-at-Login left ON). Pending: report comment → GPT-6-Sol review → merge. Shared pre-commit hook now checks
+  the **staged snapshot** (`scripts/check-staged-snapshot.sh`; fresh ~56 s, incremental ~10 s+compile).
+- Installed `~/Applications/JevPaste.app` = harden ef9092d (running); pre-harden state was main cc556cc.
+
+## Durable notes (rescued from retired worker handoffs + today's runs)
+- `sqlite3`'s `trim()` strips spaces only — compare history rows with `LIKE`, not `trim()`, for multi-line text.
+- Chooser behaviours intentionally not test-asserted: close-triggered resign-key firing synchronously,
+  Enter+click in one turn, close-before-reply ordering (see `PanelCandidateChooser` reply-once design).
+- Herdr automation: `herdr tab focus` from the CLI can silently no-op — gate every synthetic keystroke/trigger on
+  a verified `herdr pane get <id>` focused=true + frontmost-app check, and abort otherwise (a misdelivery landed
+  in the supervisor pane before this gate existed). Prefer new **tabs** (`herdr tab new`) over splits for scratch
+  panes and extra workers (Daniel's preference).
+- Worker shells have no Accessibility; only the signed bundle can post events. For probe automation, add a signal
+  trigger (e.g. SIGUSR1 → same delivery path) to the signed app rather than trying osascript.
+
 **Wave 3 is complete.** `main` @ f610b8b: `capture-history` (b6517b5) and `candidate-chooser` (f610b8b) merged,
 `make check` = 271 tests / 50 suites. Both tickets closed with resolution + live-proof comments; map gists added.
 No worker is running; no worktrees for finished branches remain (only research/spike ones).
