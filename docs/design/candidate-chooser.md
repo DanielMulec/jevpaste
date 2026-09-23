@@ -27,7 +27,8 @@ goes there after ⌘⇧V; and it never covers the Target field the user is looki
 - Keys (in the panel's `keyDown`): ↑ / ↓ move the selection, clamped at the ends (no wrap); Return / Enter choose
   the selected row; Esc cancels. A click on a row chooses that row. Other keys are ignored.
 - Click-away = the panel resigns key (`windowDidResignKey`: the user clicked another window or app) → cancel.
-- Fallback, only if the live run shows keys do not arrive: additionally `NSApp.activate()` before
+- Live-proven (32a4756, Chrome): ↓/Enter reached the non-activating key panel and Chrome stayed frontmost
+  ("target app reactivated in 0 ms"), so the fallback below is not used. Fallback, only if keys do not arrive: additionally `NSApp.activate()` before
   `makeKey`, and treat `NSApplication.didResignActive` as click-away too (reported as a deviation).
 
 ## Focus return before reply — bounded poll
