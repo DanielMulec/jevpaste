@@ -73,9 +73,8 @@ Report: https://github.com/DanielMulec/jevpaste/issues/25#issuecomment-578926757
 
 ## 5. Open questions / live-proof gaps
 - Live (a): after two synthetic copies + quit + relaunch, `sqlite3` read them back newest first — proven.
-- Live (b): Launch Adoption of the pre-launch copy → ⌘⇧V logged `outcome inserted`, Daniel saw ✓; the textarea's exact text
-  (expected `tamsin.vorlage@example.com`) is **not confirmed** by Daniel. Live run predates d49d87b (logic
-  unchanged in the common path; not re-proven).
+- Live (b): Launch Adoption of the pre-launch copy → **proven on merged main f610b8b** (Daniel copied one email
+  before launch, ⌘⇧V → `outcome inserted`, email confirmed in the textarea).
 - Launch Adoption (launch clipboard becomes the Active Item and is recorded) — **confirmed by Daniel**; keep as is.
 - "History read failed" is unreachable until the History UI calls `items()`.
 - `sqlite3`'s `trim()` strips spaces only — compare with `LIKE`, not `trim()`, when checking multi-line rows.
