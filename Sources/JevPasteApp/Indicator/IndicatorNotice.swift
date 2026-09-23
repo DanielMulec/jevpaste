@@ -11,4 +11,10 @@ struct IndicatorNotice: Equatable {
         content = IndicatorContent(symbolName: Self.warningSymbolName, text: text)
         self.displayDuration = displayDuration
     }
+
+    /// PROTOTYPE // history-probe, never merged: any symbol.
+    init(symbolName: String, text: String, for displayDuration: Duration) {
+        content = IndicatorContent(symbolName: symbolName, text: text)
+        self.displayDuration = displayDuration
+    }
 }

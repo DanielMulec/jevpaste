@@ -15,6 +15,8 @@ final class SmartPasteApplication {
     private let coordinator: PasteAttemptCoordinator
     /// "Open at Login" for the status-item menu; its notices share the indicator.
     let loginItem: LoginItemToggle
+    /// PROTOTYPE — history-probe, never merged.
+    let historyProbe: HistoryProbe
 
     init(statusItem: NSStatusItem) {
         Self.log.notice("launch apiKeyPresent=\(GatewayCredentials.standard.hasAPIKey, privacy: .public)")
@@ -27,10 +29,17 @@ final class SmartPasteApplication {
         let notices = IndicatorNoticeSurface(wrapping: panel, clock: clock)
         let presenter = IndicatorPresenter(surface: notices, clock: clock)
         let clipboard = SystemClipboard()
+        let history = ClipboardHistoryOpening.open(notices: notices)
         let capture = CopyCapture(
             clipboard: clipboard,
-            history: ClipboardHistoryOpening.open(notices: notices),
+            history: history,
             contentsAtLaunch: { clipboard.currentItem() }
+        )
+        let focusReturn = TargetAppFocusReturn(activator: WorkspaceApplicationActivator(), clock: clock)
+        let failNext = FailNextDecisionService(wrapping: JevGatewayDecisionService())
+        historyProbe = HistoryProbe(
+            history: history, capture: capture, notices: notices, statusItem: statusItem,
+            statusItemFrame: statusItemFrame, focusReturn: focusReturn, failNext: failNext
         )
         // After the history notice, so a missing grant — the more urgent one — is what shows at launch.
         loginItem = LoginItemToggle(service: MainAppLoginItemService(), notices: notices)
@@ -46,12 +55,12 @@ final class SmartPasteApplication {
                 clipboard: clipboard,
                 targetResolver: AccessibilityTargetResolver(),
                 inserter: PasteKeystrokeInserter(),
-                decisionService: JevGatewayDecisionService(),
+                decisionService: failNext,
                 clock: clock,
                 presenter: presenter,
                 chooser: PanelCandidateChooser(
                     surface: ChooserPanel(anchorFrame: statusItemFrame),
-                    focusReturn: TargetAppFocusReturn(activator: WorkspaceApplicationActivator(), clock: clock),
+                    focusReturn: focusReturn,
                     indicator: presenter
                 )
             ),

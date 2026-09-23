@@ -2,7 +2,11 @@
 /// in Clipboard History unless it is concealed. Changes produced by our own pasteboard writes are invisible.
 @MainActor
 public final class CopyCapture {
-    public private(set) var activeItem: ClipboardItem?
+    public private(set) var activeItem: ClipboardItem? {
+        didSet { if let activeItem { onActiveItemChange?(activeItem) } }
+    }
+    /// PROTOTYPE — history-probe, never merged: told whenever the Active Item changes (copy or selection).
+    public var onActiveItemChange: (@MainActor (ClipboardItem) -> Void)?
     private let history: any HistoryRepository
     /// Change counts produced by the Paste Attempt's own writes that have not been observed yet.
     private var ownChangeCounts: Set<Int> = []
@@ -24,6 +28,12 @@ public final class CopyCapture {
         if let launchContents = contentsAtLaunch() {
             adopt(launchContents)
         }
+    }
+
+    /// PROTOTYPE — history-probe, never merged: an explicit selection from Clipboard History makes `item` the
+    /// Active Item until the next copy or selection. History order is left unchanged (no record).
+    public func select(_ item: ClipboardItem) {
+        activeItem = item
     }
 
     /// Declares that `changeCount` came from our own write, so observing it produces no Clipboard Item.

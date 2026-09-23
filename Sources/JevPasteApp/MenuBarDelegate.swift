@@ -18,8 +18,13 @@ final class MenuBarDelegate: NSObject, NSApplicationDelegate {
         smartPaste = application
         let loginItemMenu = LoginItemMenu(toggle: application.loginItem)
         self.loginItemMenu = loginItemMenu
-        item.menu = makeMenu(loginItem: loginItemMenu)
+        // PROTOTYPE — history-probe, never merged: the probe menu replaces the production menu.
+        let probeMenu = ProbeMenu(probe: application.historyProbe, loginItem: loginItemMenu)
+        self.probeMenu = probeMenu
+        item.menu = probeMenu.menu
     }
+
+    private var probeMenu: ProbeMenu?
 
     private func makeMenu(loginItem: LoginItemMenu) -> NSMenu {
         let menu = NSMenu()
