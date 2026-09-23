@@ -14,7 +14,8 @@ Core ports are unchanged (`docs/design/paste-attempt-state-machine.md`). Everyth
 - Merge note (capture ∥ chooser): `hideWhileChoosing()` passes through `IndicatorNoticeSurface`, so a history notice that
   waited during processing appears on the indicator while the chooser is open. Accepted as informational: the chooser is
   its own panel, the notice is short-lived, and the outcome after the choice displays over it as usual.
-- At launch it logs `AXIsProcessTrusted()` and `GatewayCredentials.standard.hasAPIKey` (booleans only).
+- At launch it logs `GatewayCredentials.standard.hasAPIKey` (boolean only); `AccessibilityGrantCheck` logs
+  `grant check at launch trusted=…` and ⌘⇧V passes through `GrantCheckingHotkey` (see `hardening.md`).
 - Active Item = the text on the clipboard at launch, then each newer copy; history is persistent — see
   `docs/design/capture-and-history.md` (capture+history slice).
 

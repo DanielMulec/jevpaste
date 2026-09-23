@@ -1,5 +1,4 @@
 import AppKit
-import ApplicationServices
 import JevGateway
 import MacInterop
 import SmartPasteCore
@@ -16,12 +15,7 @@ final class SmartPasteApplication {
     private let coordinator: PasteAttemptCoordinator
 
     init(statusItem: NSStatusItem) {
-        Self.log.notice(
-            """
-            launch accessibilityTrusted=\(AXIsProcessTrusted(), privacy: .public) \
-            apiKeyPresent=\(GatewayCredentials.standard.hasAPIKey, privacy: .public)
-            """
-        )
+        Self.log.notice("launch apiKeyPresent=\(GatewayCredentials.standard.hasAPIKey, privacy: .public)")
         let clock = RunLoopPasteAttemptClock()
         let statusItemFrame: @MainActor () -> NSRect? = { [weak statusItem] in
             guard let button = statusItem?.button, let window = button.window else { return nil }
@@ -36,9 +30,16 @@ final class SmartPasteApplication {
             history: ClipboardHistoryOpening.open(notices: notices),
             contentsAtLaunch: { clipboard.currentItem() }
         )
+        // After the history notice, so a missing grant — the more urgent one — is what shows at launch.
+        let grantCheck = AccessibilityGrantCheck(trust: ProcessAccessibilityTrust(), notices: notices)
+        grantCheck.checkAtLaunch()
+        let hotkey = GlobalHotkey { [weak notices] status in
+            guard let notices else { return }
+            HotkeyRegistrationReport.failed(status: status, notices: notices)
+        }
         coordinator = PasteAttemptCoordinator(
             ports: PasteAttemptPorts(
-                hotkey: GlobalHotkey(),
+                hotkey: GrantCheckingHotkey(wrapping: hotkey, check: grantCheck),
                 clipboard: clipboard,
                 targetResolver: AccessibilityTargetResolver(),
                 inserter: PasteKeystrokeInserter(),
