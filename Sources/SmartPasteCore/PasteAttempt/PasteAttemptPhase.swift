@@ -17,6 +17,8 @@ struct RunningAttempt {
     let number: Int
     let item: ClipboardItem
     let target: BoundTarget
+    /// The Target Context as screened at ⌘⇧V: what every request sends, and the note the outcome carries.
+    let contextToSend: ScreenedTargetContext
     let candidates: [Candidate]
     /// When the 5 s clock runs out.
     let deadline: ContinuousClock.Instant

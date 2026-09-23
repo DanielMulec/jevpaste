@@ -31,11 +31,11 @@ public final class PasteAttemptCoordinator {
         guard let target = ports.targetResolver.resolveFocusedTarget() else { return refuse(.noEditableTarget) }
         if let refusal = rules.preCheck.refusal(for: item, in: target) { return refuse(refusal) }
         let candidates = rules.candidateExtraction.candidates(in: item)
-        guard !candidates.isEmpty else { return ports.presenter.showOutcome(.noSuitableMatch) }
+        guard !candidates.isEmpty else { return ports.presenter.showOutcome(.noSuitableMatch, note: nil) }
         attemptCount += 1
         attempt = RunningAttempt(
-            number: attemptCount, item: item, target: target, candidates: candidates,
-            deadline: ports.clock.now + Self.attemptTimeLimit
+            number: attemptCount, item: item, target: target, contextToSend: rules.preCheck.screenedContext(of: target),
+            candidates: candidates, deadline: ports.clock.now + Self.attemptTimeLimit
         )
         schedule(after: Self.attemptTimeLimit) { coordinator in
             coordinator.finish(.failed(.timedOut))
@@ -70,12 +70,14 @@ public final class PasteAttemptCoordinator {
         finish(.cancelled)
     }
 
-    /// Ends the running attempt: cancels its timers, shows the outcome and accepts the next ⌘⇧V.
+    /// Ends the running attempt: cancels its timers, shows the outcome with the attempt's note and accepts the
+    /// next ⌘⇧V.
     func finish(_ outcome: PasteAttemptOutcome) {
         stopClocks()
+        let note = attempt?.contextToSend.note
         attempt = nil
         phase = .idle
-        ports.presenter.showOutcome(outcome)
+        ports.presenter.showOutcome(outcome, note: note)
     }
 
     /// Cancels the 5 s clock, the indicator timer and any retry: the chooser and delivery run off the clock.
@@ -87,6 +89,6 @@ public final class PasteAttemptCoordinator {
     }
 
     private func refuse(_ refusal: PreCheckRefusal) {
-        ports.presenter.showOutcome(.refused(refusal))
+        ports.presenter.showOutcome(.refused(refusal), note: nil)
     }
 }

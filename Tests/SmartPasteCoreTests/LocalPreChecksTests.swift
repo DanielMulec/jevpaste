@@ -9,10 +9,10 @@ struct LocalPreChecksTests {
 
     private let preChecks = LocalPreChecks()
 
-    private static func target(isSecureField: Bool = false, surroundingText: String = "") -> BoundTarget {
+    private static func target(isSecureField: Bool) -> BoundTarget {
         BoundTarget(
             identity: TargetIdentity(processIdentifier: 7, elementToken: 1),
-            context: TargetContext(fieldLabel: "Email address", surroundingText: surroundingText),
+            context: TargetContext(fieldLabel: "Email address"),
             isSecureField: isSecureField
         )
     }
@@ -30,5 +30,43 @@ struct LocalPreChecksTests {
         let item = ClipboardItem(text: text, isConcealed: isConcealed)
 
         #expect(preChecks.refusal(for: item, in: Self.target(isSecureField: isSecureField)) == expected)
+    }
+}
+
+/// Secrets in the Target Context: the surrounding-text window is dropped before it is sent, the rest stays, and
+/// the attempt carries a visible note. Not a refusal.
+struct TargetContextScreeningTests {
+    private let preChecks = LocalPreChecks()
+
+    private static func context(surroundingText: String) -> TargetContext {
+        TargetContext(
+            fieldLabel: "Message", placeholder: "Write a reply", sectionHeading: "Deploy chat",
+            siblingFieldLabels: ["Attach"], surroundingText: surroundingText
+        )
+    }
+
+    private static func target(surroundingText: String) -> BoundTarget {
+        BoundTarget(
+            identity: TargetIdentity(processIdentifier: 7, elementToken: 1),
+            context: context(surroundingText: surroundingText), isSecureField: false
+        )
+    }
+
+    @Test func surroundingTextWithASuspectedSecretIsWithheldAndNoted() {
+        let window = "ops: the prod DB is postgres://deploy:hunter2@db.example.org/app\nyou: which one?"
+
+        let screened = preChecks.screenedContext(of: Self.target(surroundingText: window))
+
+        #expect(screened.context == Self.context(surroundingText: ""))
+        #expect(screened.note == .surroundingTextWithheld)
+    }
+
+    @Test func ordinarySurroundingTextIsSentUnchanged() {
+        let window = "ops: which email should I use for the invoice?\nyou: "
+
+        let screened = preChecks.screenedContext(of: Self.target(surroundingText: window))
+
+        #expect(screened.context == Self.context(surroundingText: window))
+        #expect(screened.note == nil)
     }
 }

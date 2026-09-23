@@ -10,6 +10,7 @@ public protocol PasteOutcomePresenter {
     func showRetrying()
     /// Delivery started: it can no longer be cancelled and ends with an outcome within the Restore Window.
     func showDelivering()
-    /// Shows the outcome (✓, reason or note) and hides the processing indicator.
-    func showOutcome(_ outcome: PasteAttemptOutcome)
+    /// Shows the outcome (✓ or reason), with `note` when the attempt carries one, and hides the processing
+    /// indicator.
+    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?)
 }

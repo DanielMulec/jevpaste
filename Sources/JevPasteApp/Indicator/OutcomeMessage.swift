@@ -21,13 +21,27 @@ struct IndicatorContent: Equatable {
     }
 }
 
-/// The visible form of a Paste Attempt outcome: ✓ for a second on success, otherwise the reason for 2.5 s.
+/// The visible form of a Paste Attempt outcome: ✓ for a second on success, otherwise the reason for 2.5 s. A note
+/// is appended to the outcome's line and keeps it up for 2.5 s, success included, so it can be read.
 struct OutcomeMessage: Equatable {
     let content: IndicatorContent
     let displayDuration: Duration
 
     private static let successDuration = Duration.seconds(1)
     private static let reasonDuration = Duration.milliseconds(2500)
+
+    init(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?) {
+        let message = OutcomeMessage(outcome)
+        guard let note else {
+            self = message
+            return
+        }
+        self.init(
+            reason: IndicatorContent(
+                symbolName: message.content.symbolName, text: message.content.text + " · " + Self.text(for: note)
+            )
+        )
+    }
 
     init(_ outcome: PasteAttemptOutcome) {
         switch outcome {
@@ -78,6 +92,12 @@ struct OutcomeMessage: Equatable {
         case .noEditableTarget: "No text field focused"
         case .secureField: "Secure field — not supported"
         case .suspectedSecret: "Suspected secret — blocked"
+        }
+    }
+
+    private static func text(for note: PasteAttemptNote) -> String {
+        switch note {
+        case .surroundingTextWithheld: "nearby text withheld (suspected secret)"
         }
     }
 
