@@ -1,4 +1,4 @@
-# Handoff — jevpaste supervisor (Wayfinder map in execution phase)
+# Handoff — jevpaste supervisor (Wayfinder map in execution phase, after wave 5)
 
 Written for a fresh supervisor session that has never seen the previous one. Repo:
 `/Users/danielmulec/Projekte/experiments/jevpaste` (private, `DanielMulec/jevpaste`, `main` clean and pushed).
@@ -10,40 +10,54 @@ GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues
   **read its body first**: Destination, Notes (hard rules, models, review chain), Decisions-so-far, fog, out of scope.
 - Glossary `CONTEXT.md`; design docs `docs/design/*.md` (now incl. `hardening.md`); quality gate
   `docs/quality-gate.md` (staged-snapshot hook); signing `docs/signing.md` (incl. rotation).
-- Worker briefs (templates for new ones): `docs/briefs/*-brief.md` — newest `harden-brief.md` (task) and
-  `multiline-probe-brief.md` (prototype with live-run relay protocol).
+- Worker briefs (templates for new ones): `docs/briefs/*-brief.md` — newest `chatgpt-resolver-brief.md`
+  (root-cause hunt), `pre-checks-brief.md` (Core task), `history-probe-brief.md` (UI prototype with live relay).
 - **Per-branch worker handoffs are retired** (Daniel): workers fold commits/architecture/merge touchpoints/open
   questions into their ticket **report comment**. `docs/handoffs/*` holds only two historical wave-3 files;
   their still-live facts are in "Durable notes" below.
 
-## Where things stand (end of 2026-09-23 session)
-**Waves 3 and 4 complete.** `main` @ 9d4c145: `harden` merged (295 tests / 53 suites + 7 hermetic hook cases).
-Resolved and closed this session:
-- [Verify multi-line Paste Results insert line breaks without sending](https://github.com/DanielMulec/jevpaste/issues/14)
-  — **no per-Target refusal or warning needed** (nothing sends or executes pasted newlines; Return key ≠ newline
-  char). Prototype asset: unmerged branch `multiline-probe` (keep). Side finding → ticket #33.
-- [Harden installation and daily use](https://github.com/DanielMulec/jevpaste/issues/28) — grant self-check +
-  visible notices, "Pasting…" delivery state (Core seam `showDelivering()`), Open-at-Login toggle (Daniel keeps
-  it **ON**), staged-snapshot pre-commit hook, signing-rotation doc. Two clean GPT-6-Sol passes (zero blocking
-  findings — a project first). Resolution: the ticket's closing comment.
+## Where things stand (end of 2026-09-23, second session — wave 5)
+`main` @ 63079ad: `pre-checks` merged (320 tests / 61 suites). Resolved and closed this session:
+- [Validate history selection and visible paste feedback](https://github.com/DanielMulec/jevpaste/issues/9) —
+  Daniel delegated the design ("make it look like something Apple would be proud shipping"); recommendation =
+  Spotlight-style panel under the status item (search, ↑/↓/Enter, pinned Active row, hover-✕/⌫ delete, confirmed
+  clear-all), Core needs `CopyCapture.select(_:)` + an Active-Item observation port. Asset: unmerged branch
+  `history-probe` (keep). Only Variant A ran live; B/C and checks 8–11 deferred to #27's acceptance.
+- [Implement Pre-check rules](https://github.com/DanielMulec/jevpaste/issues/20) — merged: `LocalPreChecks`,
+  nine regex-free secret rules, Target Context screening + outcome note (`showOutcome(_:note:)`). Two clean
+  GPT-6-Sol passes. **Live proof still pending** (two presses; block in the ticket report § "Live proof pending").
+
+**In flight — review-clean, NOT merged:** [Restore Smart Paste in the ChatGPT desktop app](https://github.com/DanielMulec/jevpaste/issues/33),
+branch `chatgpt-resolver` @ 2f9e4fe, worktree `~/.pi/worktrees/jevpaste/chatgpt-resolver`, worker pane
+`wC:p18` (tab `chatgpt-resolver`, agent `chatgpt`, idle; may be dead by next session — start fresh if so).
+Root cause: Electron apps keep the AX tree asleep until `AXEnhancedUserInterface=true` is set on the application
+element (walks never wake it; set returns kAXErrorNotImplemented yet takes effect ~1–3 s later; sticks per process).
+Fix (Daniel's decision, option 2): on unreadable focus, set the flag, refuse with the typed
+`PreCheckRefusal.targetWaking(applicationName:)` → "Waking ChatGPT for Smart Paste — press ⌘⇧V again in a
+moment"; ⌘⇧V is the retry; 5 s per-pid wake window; no bundle ids; never reset. GPT-6-Sol: "merge after fixes +
+live proof"; fixes done, delta approved. **Blocking = the live proof**, esp. the Finder control (native app with
+nothing focused must NOT say "Waking Finder"; log category `TargetResolver` shows `focus unreadable` / `wake
+requested … readBack=`). Instruction block: #33 report § "Live proof pending" (6 steps).
 
 ## Open tickets (all children of the map)
 | ticket | type | state |
 |---|---|---|
-| [Validate history selection and visible paste feedback](https://github.com/DanielMulec/jevpaste/issues/9) | prototype (HITL) | **frontier**; blocks the history UI |
-| [Implement Pre-check rules](https://github.com/DanielMulec/jevpaste/issues/20) | task | **frontier** (unblocked by #14) |
-| [Restore Smart Paste in the ChatGPT desktop app](https://github.com/DanielMulec/jevpaste/issues/33) | task | **frontier**; blocks #29. Daniel's ChatGPT app IS bundle `com.openai.codex`; resolver gets kAXErrorNoValue after the wake walk; fix must be app-agnostic. Evidence in the #14 report |
-| [Implement the history UI](https://github.com/DanielMulec/jevpaste/issues/27) | task | blocked by 9 |
-| [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) | task | blocked by 20, 27, 33 |
-| [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31) | grilling | blocked by 29 |
+| [Restore Smart Paste in the ChatGPT desktop app](https://github.com/DanielMulec/jevpaste/issues/33) | task | claimed, code done, **needs live proof → merge**; blocks #29 |
+| [Implement the history UI](https://github.com/DanielMulec/jevpaste/issues/27) | task | **frontier** (unblocked by #9); build on the #9 resolution |
+| [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) | task | blocked by 27, 33; must include the #20 live proof |
+| [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31) | grilling | blocked by 29; new evidence: Jev is borderline on `label value@email` lines (#9 report) |
 | [Skip Jev when the Active Item yields a single Candidate](https://github.com/DanielMulec/jevpaste/issues/32) | grilling | blocked by 29 |
 
 ## Next session — in order
-1. Read the map body and this file. `intercom status` → your id (all earlier ids are dead). No panes/agents
-   exist; start fresh ones.
-2. Pick from the frontier. Up to three parallel workers are possible (#9's prototype worker + #20 + #33), but
-   **live runs stay serialized** (the installed app and Daniel's attention are shared, gated by you).
-3. Worker protocol below; merge discipline; resolution comment + close + map gist per ticket.
+1. Read the map body and this file. `intercom status` → your id (all earlier ids are dead).
+2. **First live block with Daniel (~8 presses):** (a) #33 — `make install` from the `chatgpt-resolver` worktree,
+   run the 6-step block, read the `TargetResolver` log; if Finder says "Waking", the worker fixes + delta review;
+   else merge (`--no-ff`, `make check`, push), resolve, map gist; (b) #20 live proof from merged main (reinstall
+   from a clean `main` after (a)) — record the evidence on #20 as a follow-up comment.
+3. Then start the history-UI worker (#27) from a brief modelled on `docs/briefs/history-probe-brief.md` +
+   the #9 resolution; it is a production slice (TDD, review chain). It needs a **UI-quality bar** Daniel set:
+   Apple-shippable — brief the worker to propose the visual design at Gate A with a screenshot.
+4. Worker protocol below; merge discipline; resolution comment + close + map gist per ticket.
 
 ## Supervisor role (Daniel's standing instructions, this session)
 - **You orchestrate only.** Workers do ALL hands-on work, including prototypes — Daniel rejected the supervisor
@@ -95,13 +109,24 @@ Resolved and closed this session:
   [#14 report](https://github.com/DanielMulec/jevpaste/issues/14#issuecomment-5801268147). Not measured:
   terminals without bracketed paste would execute lines.
 
+## Wave-5 lessons (new)
+- **Fixture rule bit us again:** `JEVPASTE-HIST-ONE alpha.one@example.org` on one line is one whole-line
+  Candidate; Jev's gate said no once, yes once. One pure value per line — put the marker on its own line.
+- Daniel gets tired late in a session: batch every worker's live steps into **one** block, run it early, and
+  ask "stop for tonight?" with a recommendation when the queue grows. Reviews/merges run fine without him.
+- Review brief template now lives in this session's history only — reconstruct from `harden`'s pattern:
+  VERDICT/BLOCKING/NON-BLOCKING/DUPLICATION/GAPS/METHOD, five specific questions, `make check` required,
+  mandatory `intercom send` last step. Delta re-review = appended "Delta re-review request" + fresh instance.
+- GPT-6-Sol reviews took ~3 min each on these branch sizes; don't wait on them synchronously.
+
 ## Environment facts
-- Installed `~/Applications/JevPaste.app` = **merged main 9d4c145**, running, Open-at-Login **ON**
+- Installed `~/Applications/JevPaste.app` = **merged main 63079ad** (pre-checks in), running, Open-at-Login **ON**
   (SMAppService [enabled, allowed, notified]). The `jevpaste-dev` identity keeps the Accessibility grant.
 - `~/Library/Application Support/jevpaste/history.sqlite` (0600) holds synthetic rows, fixtures and rows of
   Daniel's real clipboard — never print it; read only `JEVPASTE-…` rows.
 - Jev key at `~/.config/jevpaste/env` (never print). Jev live ~1.1–1.7 s cold, ~0.2–0.5 s warm.
-- Worktrees present: research spikes only (`jev`, `macos`, `macos-probe`, `quality`, `signing`, `spike-contract`).
+- Worktrees present: research spikes (`jev`, `macos`, `macos-probe`, `quality`, `signing`, `spike-contract`) +
+  **`chatgpt-resolver`** (live worker branch, see above). Kept branches, no worktree: `multiline-probe`, `history-probe`.
 - `/tmp/jevpaste-chooser.txt`, `/tmp/jevpaste-chooser-test.html`, `/tmp/jevpaste-harden.txt` are stale live-run
   fixtures; recreate per run. **Payload rule:** candidates are whole lines — pure values per line.
 
