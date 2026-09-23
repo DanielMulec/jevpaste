@@ -46,12 +46,15 @@ the transition out of `open` happens before the panel is ordered out, so the res
 any late Esc/click are ignored → exactly one reply. A new `presentChoice` while a session is not `closed` ends the
 old one silently with `nil` (Core's attempt-number guard drops it) — defensive only, Core never does this.
 
-## The processing indicator under the chooser — needs a decision (GATE A)
-By the time Jev answered (> 150 ms) the indicator usually shows "Jev is choosing… click to cancel"; in the
-`choosing` phase a click on it does nothing, and the chooser opens at the same place. The presenter API has no call
-to hide it. Proposal: add `IndicatorPresenter.hideWhileChoosing()` (state → hidden, `onCancel` dropped, surface
-hidden; the next `showOutcome` displays as usual), called by the chooser on open. Alternative without touching the
-presenter: the chooser hides the `IndicatorSurface` directly (presenter state goes stale until the outcome).
+## The processing indicator under the chooser (decided at GATE A)
+By the time Jev answered (> 150 ms) the indicator usually shows "Jev is choosing… click to cancel", inert in the
+`choosing` phase. On open the chooser calls `IndicatorPresenter.hideWhileChoosing()` (state → hidden, `onCancel`
+and any pending hide dropped, surface hidden); Core's later `showOutcome` displays as usual.
+
+## Shared panel parts
+`StatusItemPlacement` (origin below the status item, clamped to its screen; pure part unit-tested) and
+`StatusItemPanelParts` (`StatusItemPanel(becomesKey:)`, `HUDBackgroundView`, `FirstClickView`) are used by both
+`IndicatorPanel` and `ChooserPanel`, extracted from `IndicatorPanel` without behaviour change.
 
 ## Diagnostic logging (`os.Logger`, subsystem `jevpaste`, category `CandidateChooser`, enum/ints public)
 `chooser opened with N alternatives`, `chose index i`, `cancelled (esc|click-away)`,
@@ -61,10 +64,9 @@ text, row text, titles, labels or context.
 ## Unit-tested vs live-proven
 Unit (`Tests/JevPasteAppTests`, fakes + `SteppedClock`, no AppKit):
 - `ChooserRow` display text: single line verbatim; multi-line → first line + `… N lines`; title fallbacks.
-- `CandidateChooserSession` (selection model): starts at 0, down/up clamped, choose selected / choose row i,
-  cancel reason, answered once (second choose/cancel/move ignored).
-- `PanelCandidateChooser` (the adapter) over a fake `ChooserSurface` + fake `ApplicationActivator` + `SteppedClock`:
-  opens with rows and title in Core's order; replies with the untouched `Candidate`; Esc and click-away reply `nil`;
+- `TargetAppFocusReturn`: frontmost at once / on a later poll / never (reply at 1 s, not before) / app gone.
+- `PanelCandidateChooser` (the adapter; holds the selection model) over a fake `ChooserSurface` + fake `ApplicationActivator` + `SteppedClock`:
+  opens with rows and title in Core's order, first row selected, indicator hidden; ↑/↓ clamped at both ends; replies with the untouched `Candidate`; Esc and click-away reply `nil`;
   reply comes only after the Target's app is frontmost; never frontmost → reply at 1 s, not before; app gone → reply
   at once; a second Esc/click after the reply is ignored; the surface is closed before the reply.
 Live-proven only: the AppKit panel, key routing to a non-activating key panel, resign-key on click-away, real focus

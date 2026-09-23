@@ -21,7 +21,7 @@ Core ports are unchanged (`docs/design/paste-attempt-state-machine.md`). Everyth
 | `RunLoopPasteAttemptClock` | `PasteAttemptClock` | `now` = `ContinuousClock.now`; `schedule` = one-shot `Timer` added to `RunLoop.main` in `.common` modes (as `TimerPollingSchedule`), action via `MainActor.assumeIsolated`; the returned `ScheduledAction` invalidates the timer | unit: fires once after the delay on a spun main run loop; not before; cancelled never fires |
 | `SecureTargetAndConcealedItemPreCheck` | `PreCheck` | `.secureField` if `target.isSecureField`, else `.suspectedSecret` if `item.isConcealed`, else `nil`. Replaced by "Implement Pre-check rules" | unit: all four combinations |
 | `DiscardingHistoryRepository` | `HistoryRepository` | `record` does nothing. Replaced by the capture+history slice | none (no behaviour) |
-| `UnbuiltCandidateChooser` | `CandidateChooser` | tells the presenter the next `.cancelled` means "chooser not built", then replies `nil` synchronously → Core finishes `.cancelled`. Never guesses | unit: replies `nil` once; the outcome text is the chooser one; a later plain cancel reads "Cancelled" |
+| `PanelCandidateChooser` | `CandidateChooser` | key-capable non-activating `ChooserPanel` below the status item; ↑/↓, Enter/click chooses, Esc/click-away cancels; hides the indicator, activates the Bound Target's app and polls frontmost (10 ms, ≤ 1 s) before replying once — see `candidate-chooser.md` | unit: content, selection, reply-once, focus-return bound over fakes + stepped clock |
 | `IndicatorPresenter` | `PasteOutcomePresenter` | see below | unit: state/timing logic over a fake panel and a manual clock |
 
 All shell types are `@MainActor` (AppKit, timers). Nothing blocks the main actor; Jev replies arrive via Core's

@@ -34,11 +34,4 @@ struct OutcomeMessageTests {
         #expect(!message.content.symbolName.isEmpty)
         #expect(message.displayDuration == .milliseconds(2500))
     }
-
-    @Test func chooserNotBuiltExplainsTheCancellation() {
-        let message = OutcomeMessage.chooserNotBuilt
-
-        #expect(message.content.text == "Several matches — chooser not built yet")
-        #expect(message.displayDuration == .milliseconds(2500))
-    }
 }

@@ -19,8 +19,6 @@ final class IndicatorPresenter: PasteOutcomePresenter {
     private var state = State.hidden
     private var onCancel: (@MainActor () -> Void)?
     private var pendingHide: (any ScheduledAction)?
-    /// Interim, removed with "Candidate Chooser UI": the next `.cancelled` came from `UnbuiltCandidateChooser`.
-    private var cancellationIsChooserDecline = false
 
     init(surface: any IndicatorSurface, clock: any PasteAttemptClock) {
         self.surface = surface
@@ -48,14 +46,17 @@ final class IndicatorPresenter: PasteOutcomePresenter {
 
     func showOutcome(_ outcome: PasteAttemptOutcome) {
         Self.log.notice("outcome \(String(describing: outcome), privacy: .public)")
-        let isChooserDecline = outcome == .cancelled && cancellationIsChooserDecline
-        cancellationIsChooserDecline = false
-        show(isChooserDecline ? .chooserNotBuilt : OutcomeMessage(outcome))
+        show(OutcomeMessage(outcome))
     }
 
-    /// Interim, removed with "Candidate Chooser UI": `UnbuiltCandidateChooser` declined among several matches.
-    func explainNextCancellationAsChooserNotBuilt() {
-        cancellationIsChooserDecline = true
+    /// The Candidate Chooser opened in the indicator's place: hides it, and a click can no longer cancel. The
+    /// outcome that follows the choice is shown as usual.
+    func hideWhileChoosing() {
+        onCancel = nil
+        pendingHide?.cancel()
+        pendingHide = nil
+        hide()
+        Self.log.notice("processing indicator hidden while choosing")
     }
 
     private func show(_ message: OutcomeMessage) {
