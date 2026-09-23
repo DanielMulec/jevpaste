@@ -22,10 +22,10 @@ Scanned over the UTF-8 bytes. "Boundary" = the byte before the match is not an A
 | `gitHubToken` | boundary `ghp_` + ≥36 `[A-Za-z0-9]`; `github_pat_` + ≥82 `[A-Za-z0-9_]` | both + short negative |
 | `slackToken` | boundary `xox` + one of `baprs` + `-` + ≥10 `[A-Za-z0-9-]` | positive + `xoxz-` negative |
 | `stripeLiveKey` | boundary `sk_live_` + ≥16 `[A-Za-z0-9]` | positive + `sk_test_` negative |
-| `openAIStyleKey` | boundary `sk-` + ≥20 `[A-Za-z0-9_-]` (OpenAI, Anthropic) | positive + `task-…`/short negative |
+| `openAIStyleKey` | boundary `sk-` + ≥20 `[A-Za-z0-9_-]` (OpenAI, Anthropic); recall over precision — a standalone `sk-` slug is an accepted false positive | positive + `task-…`/short negatives + `OpenAIStyleKeyTradeOffTests` |
 | `googleAPIKey` | boundary `AIza` + ≥35 `[A-Za-z0-9_-]` | positive + short negative |
 | `jsonWebToken` | boundary, three `.`-separated base64url segments, first two start `eyJ`, each ≥10 | positive + two-part negative |
-| `connectionStringCredentials` | `scheme://user:password@host` — non-empty password (user may be empty, `redis://:pw@`) before the first `/?#`/whitespace | postgres/mongodb/redis + `https://host/a@b`, user-only, empty-password negatives |
+| `connectionStringCredentials` | `scheme://user:password@host` — non-empty password (user may be empty, `redis://:pw@`) and host, before the first `/?#`/whitespace; `host:443@other` is accepted userinfo | postgres/mongodb/redis + `https://host/a@b`, user-only, empty-password, empty-host negatives |
 
 Linear time, no regex: every prefix rule reads at most its fixed minimum body after each prefix hit; the JWT and
 connection-string scans start only at boundaries / `://` and stop at the first delimiter, so no byte is re-read
@@ -53,6 +53,7 @@ token-start guard removed the suite ran > 120 s — a quadratic scan fails by or
 2. **Port/outcome change (explicit):** `PasteOutcomePresenter.showOutcome(_:)` becomes
    `showOutcome(_:note:)` with `note: PasteAttemptNote?` (`.surroundingTextWithheld`); `PasteAttemptOutcome` is
    unchanged. Every outcome after screening carries the note (inserted, no match, failed, cancelled); refusals never.
+   Empty Candidate extraction ends in `.noSuitableMatch` before screening, with no note: nothing was sent.
 3. **Visible note:** the outcome line gets the suffix ` · nearby text withheld (suspected secret)`, e.g.
    "Pasted · nearby text withheld (suspected secret)", shown ≥2.5 s even on success. Log: `note=surroundingTextWithheld`.
 

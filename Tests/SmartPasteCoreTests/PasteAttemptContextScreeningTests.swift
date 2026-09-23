@@ -64,4 +64,50 @@ struct PasteAttemptContextScreeningTests {
         #expect(harness.presenter.outcomes == [.refused(.suspectedSecret)])
         #expect(harness.presenter.notes == [nil])
     }
+
+    /// Every way a screened attempt can finish, driven from ⌘⇧V.
+    enum FinishPath: CaseIterable {
+        case timeout, decisionUnavailable, invalidResult, targetChanged, chooserCancel, escape
+
+        var outcome: PasteAttemptOutcome {
+            switch self {
+            case .timeout: .failed(.timedOut)
+            case .decisionUnavailable: .failed(.decisionUnavailable)
+            case .invalidResult: .failed(.invalidResult)
+            case .targetChanged: .failed(.targetChanged)
+            case .chooserCancel, .escape: .cancelled
+            }
+        }
+
+        @MainActor func drive() -> PasteAttemptHarness {
+            let harness = PasteAttemptHarness(
+                sameTypeGroup: self == .chooserCancel ? PasteAttemptHarness.emailCandidates : [],
+                focusedTarget: PasteAttemptContextScreeningTests.chatWithSecret
+            )
+            harness.hotkey.press()
+            switch self {
+            case .timeout: harness.clock.advance(by: .seconds(5))
+            case .decisionUnavailable: harness.jev.reply(.failed)
+            case .invalidResult: harness.jev.choose("not in the item")
+            case .targetChanged:
+                harness.targetResolver.focusedTarget = nil
+                harness.jev.choose("Ada Lovelace")
+            case .chooserCancel:
+                harness.jev.choose("ada@example.com")
+                harness.chooser.dismiss()
+            case .escape:
+                harness.clock.advance(by: .milliseconds(150))
+                harness.presenter.pressEscape()
+            }
+            return harness
+        }
+    }
+
+    @Test(arguments: FinishPath.allCases)
+    func everyFinishPathCarriesTheNote(path: FinishPath) {
+        let harness = path.drive()
+
+        #expect(harness.presenter.outcomes == [path.outcome])
+        #expect(harness.presenter.notes == [.surroundingTextWithheld])
+    }
 }
