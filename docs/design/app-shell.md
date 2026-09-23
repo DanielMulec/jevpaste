@@ -34,7 +34,7 @@ All shell types are `@MainActor` (AppKit, timers). Nothing blocks the main actor
 ## Presenter
 Split so the logic is testable without AppKit:
 - `OutcomeMessage` (pure): `PasteAttemptOutcome` → symbol, short text, display duration.
-- `IndicatorPresenter` (logic): holds the state (`hidden`, `processing`, `retrying`, `outcome`), the pending
+- `IndicatorPresenter` (logic): holds the state (`hidden`, `processing`, `retrying`, `delivering`, `outcome`), the pending
   `onCancel`, the auto-hide `ScheduledAction` (on the injected `PasteAttemptClock`), and renders through an
   `IndicatorSurface` protocol. Logs phase transitions and outcome *kinds* (`os.Logger`, subsystem `jevpaste`,
   category `PasteAttempt`, `privacy: .public` on enum names only) — never clipboard text, Candidates, Target Context
@@ -55,7 +55,9 @@ States and timings:
 | `showOutcome(other)` | symbol + reason (table below) | hidden after 2.5 s |
 
 The "click to cancel" hint appears only once Core has handed over `onCancel`; a 429 before 150 ms shows the
-retrying label without it, and the later `showProcessing` re-displays retrying with the hint.
+retrying label without it, and the later `showProcessing` re-displays retrying with the hint. At delivery start
+(`showDelivering()`, after the Bound Target re-verification) the hint and `onCancel` go: a shown processing or
+retrying indicator becomes "Pasting…"; a hidden one stays hidden.
 
 Reasons: `.insertedWithoutRestore` "Pasted — original clipboard not restored (replaced by your new copy)";
 `.noSuitableMatch` "No suitable match"; refusals "Nothing copied yet" / "No text field focused" / "Secure field —
@@ -78,7 +80,8 @@ Live-proven only: the panel's rendering and non-activation, hotkey → real past
 
 ## Live-run plan (step 3; ask before each `make install` and launch)
 1. `make install`, `open ~/Applications/JevPaste.app`; read `log show --predicate 'subsystem == "jevpaste"'` for
-   `accessibilityTrusted=true`, `apiKeyPresent=true`.
+   `apiKeyPresent=true` and `grant check at launch trusted=true` (the launch line was `accessibilityTrusted=true`
+   before the hardening slice).
 2. Daniel copies (from a text editor):
    `Maren Holtby` / `maren.holtby@example.org` / `+49 30 5550 1234` — three lines, one of each kind.
 3. Daniel opens `data:text/html,<label for=e>Email address</label><br><textarea id=e placeholder="Your email
@@ -91,6 +94,5 @@ Live-proven only: the panel's rendering and non-activation, hotkey → real past
 
 ## Open questions (carried into the report)
 No Launch Adoption of the pre-launch clipboard (resolved by the capture+history slice); `DecisionService` cancel token still absent (a cancelled request still runs);
-no Jev pre-warm at launch (cold call ~1.2 s).
-The label still says "click to cancel" during the ≤ 150 ms delivery step, where a click has no effect (Core has no
-port call at delivery start) — for the hardening slice.
+no Jev pre-warm at launch (cold call ~1.2 s) — both declined in the hardening slice (`hardening.md`).
+The delivery-step "click to cancel" label is resolved there by `showDelivering()`.
