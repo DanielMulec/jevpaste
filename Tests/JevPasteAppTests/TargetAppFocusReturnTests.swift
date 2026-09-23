@@ -54,6 +54,21 @@ struct TargetAppFocusReturnTests {
         #expect(results == [.notFrontmost(after: .seconds(1))])
     }
 
+    @Test func completesEvenWhenNothingElseHoldsTheFocusReturnMidPoll() {
+        activator.frontmostProcessIdentifier = 1
+        var results: [FocusReturnResult] = []
+        var released: TargetAppFocusReturn? = TargetAppFocusReturn(activator: activator, clock: clock)
+        weak let watched = released
+
+        released?.returnFocus(to: Self.chrome) { results.append($0) }
+        released = nil
+        activator.frontmostProcessIdentifier = Self.chrome
+        clock.step(by: .milliseconds(10))
+
+        #expect(results == [.frontmost(after: .milliseconds(10))])
+        #expect(watched == nil)
+    }
+
     @Test func finishesAtOnceWhenTheTargetAppIsGone() {
         activator.runningProcessIdentifiers = []
         var results: [FocusReturnResult] = []

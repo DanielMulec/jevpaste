@@ -48,8 +48,10 @@ final class TargetAppFocusReturn {
         let elapsed = clock.now - start
         if activator.frontmostProcessIdentifier == processIdentifier { return completion(.frontmost(after: elapsed)) }
         if elapsed >= Self.bound { return completion(.notFrontmost(after: elapsed)) }
-        _ = clock.schedule(after: Self.pollInterval) { [weak self] in
-            self?.poll(for: processIdentifier, since: start, completion: completion)
+        // Strong on purpose: the poll keeps this alive until it completes (≤ 1 s), so the reply is always sent even
+        // if the owner lets go mid-poll. The clock drops each action once it fired, so nothing outlives the bound.
+        _ = clock.schedule(after: Self.pollInterval) {
+            self.poll(for: processIdentifier, since: start, completion: completion)
         }
     }
 }
