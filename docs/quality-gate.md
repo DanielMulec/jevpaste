@@ -21,7 +21,7 @@ a deliberate violation (see the proofs further down).
 | 5 | `test` | `swift test` + the two CLT linker flags from ADR 0001 | 0 | 1 |
 | 6 | `dead-code` | `periphery scan` (config `.periphery.yml`, `strict: true`) | 0 | 1 |
 | 7 | `line-counts` | `scripts/check-line-counts.sh` | 0 | 1 |
-| 8 | `hook-test` | `scripts/test-staged-snapshot.sh` (hermetic: scratch repository, stub check command) | 0 | 1 |
+| 8 | `hook-test` | `scripts/test-staged-snapshot.sh` (7 cases; hermetic: scratch repository, stub check command) | 0 | 1 |
 
 Other targets: `make format` (swift-format in place), `make acceptance` (stub; the real-app suite is never part
 of `make check`), `make app` (`scripts/make-app.sh`), `make install` (copies to `~/Applications/JevPaste.app`).
@@ -47,8 +47,9 @@ Duration (this Mac): the first commit in a worktree builds the snapshot from scr
 
 `make hook-test` proves it in a scratch repository with a stub check command: staged good + working tree bad →
 pass; staged bad + working tree good → fail; untracked file absent; staged deletion absent; `.build/` kept; an
-unchanged file's mtime kept. Each case was seen failing against a broken variant (check run in the worktree;
-no `--checksum`; `.build/` not excluded).
+unchanged file's mtime kept; a temporary index via `GIT_INDEX_FILE` is what gets checked. Each case was seen
+failing against a broken variant (check run in the worktree; no `--checksum`; `.build/` not excluded;
+`GIT_INDEX_FILE` ignored).
 
 ## Deviations from the resolution's literal commands, and why
 

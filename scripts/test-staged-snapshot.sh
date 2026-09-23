@@ -48,4 +48,15 @@ expect "a staged deletion is gone from the snapshot" pass "test ! -e deleted.txt
 expect "the snapshot keeps its .build products" pass "test -e .build/product"
 expect "an unchanged file keeps its mtime" pass "test \$(stat -f %Sm -t %Y unchanged.txt) = 2020"
 
+# `git commit -a` and `git commit <paths>` stage into a temporary index and point GIT_INDEX_FILE at it for the
+# hook; the snapshot must follow it, not the default index (which here still holds "bad").
+git commit --quiet -m "stage for the temporary index case"
+echo bad >verdict.txt && git add verdict.txt
+temporary_index="$(git rev-parse --absolute-git-dir)/temporary-index"
+cp "$(git rev-parse --absolute-git-dir)/index" "$temporary_index"
+echo good >verdict.txt && GIT_INDEX_FILE="$temporary_index" git add verdict.txt
+export GIT_INDEX_FILE="$temporary_index"
+expect "a temporary index (commit -a, commit <paths>) is what gets checked" pass "grep -qx good verdict.txt"
+unset GIT_INDEX_FILE
+
 exit "$failures"
