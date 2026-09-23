@@ -2,7 +2,7 @@
 # offline, fail-fast, in the order decided in "Choose native module boundaries and local quality checks".
 # Exit-code contract of every step: docs/quality-gate.md.
 
-.PHONY: check build-strict format-lint lint duplication test dead-code line-counts \
+.PHONY: check build-strict format-lint lint duplication test dead-code line-counts hook-test \
 	format acceptance app install
 
 # Swift Testing ships in the Command Line Tools, but its interop library is not on the default search
@@ -17,7 +17,7 @@ SWIFTLINT_TOOLCHAIN := /Library/Developer/CommandLineTools
 INSTALLED_APP := $(HOME)/Applications/JevPaste.app
 BUILT_APP := build/JevPaste.app
 
-check: build-strict format-lint lint duplication test dead-code line-counts
+check: build-strict format-lint lint duplication test dead-code line-counts hook-test
 	@echo "make check: all steps passed"
 
 build-strict:
@@ -40,6 +40,10 @@ dead-code:
 
 line-counts:
 	scripts/check-line-counts.sh
+
+# Hermetic: a scratch repository and a stub check command, never a nested `make check`.
+hook-test:
+	scripts/test-staged-snapshot.sh
 
 format:
 	swift format format --in-place -r Sources Tests

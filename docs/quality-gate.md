@@ -3,7 +3,7 @@
 The entire local CI of jevpaste, decided in
 [Choose native module boundaries and local quality checks](https://github.com/DanielMulec/jevpaste/issues/10)
 and [ADR 0001](adr/0001-clt-only-swiftpm-app-with-hand-assembled-signed-bundle.md). Offline, fail-fast, run by
-the pre-commit hook. Command Line Tools only — no Xcode. Tool versions at the time of writing: Swift 6.3.3,
+the pre-commit hook on the staged snapshot (below). Command Line Tools only — no Xcode. Tool versions at the time of writing: Swift 6.3.3,
 swift-format 6.3.0 (CLT), SwiftLint 0.63.3, jscpd 5.3.1 (pinned in `package.json`), Periphery 3.8.0,
 Swift Testing 6.3.2 (package dependency, pinned exactly).
 
@@ -21,9 +21,34 @@ a deliberate violation (see the proofs further down).
 | 5 | `test` | `swift test` + the two CLT linker flags from ADR 0001 | 0 | 1 |
 | 6 | `dead-code` | `periphery scan` (config `.periphery.yml`, `strict: true`) | 0 | 1 |
 | 7 | `line-counts` | `scripts/check-line-counts.sh` | 0 | 1 |
+| 8 | `hook-test` | `scripts/test-staged-snapshot.sh` (hermetic: scratch repository, stub check command) | 0 | 1 |
 
 Other targets: `make format` (swift-format in place), `make acceptance` (stub; the real-app suite is never part
 of `make check`), `make app` (`scripts/make-app.sh`), `make install` (copies to `~/Applications/JevPaste.app`).
+
+## Staged snapshot — what the pre-commit hook checks
+
+`scripts/install-hooks.sh` writes the shared hook (all worktrees). It runs `scripts/check-staged-snapshot.sh` of
+the committing worktree, which checks **exactly the staged content**; a dirty or untracked working-tree file can
+neither pass nor fail the commit. A checkout without that script runs plain `make check` in place (as before).
+
+1. `git checkout-index --all` exports the index into a temporary directory. It honours `GIT_INDEX_FILE`, so
+   `git commit -a` and `git commit <paths>` (temporary index) are checked as committed.
+2. `rsync --recursive --links --perms --checksum --delete` copies it into the persistent snapshot
+   `$(git rev-parse --absolute-git-dir)/staged-snapshot` (per worktree, e.g. `.git/worktrees/<name>/`). By
+   content and without times: unchanged files keep their mtimes, so builds stay incremental. `/.build/`,
+   `/build/` and `/node_modules` are excluded and therefore never deleted; `node_modules` is a link to the
+   worktree's (`npm ci` there first).
+3. `make check` runs in the snapshot with `GIT_DIR`/`GIT_INDEX_FILE`/`GIT_WORK_TREE` unset. The snapshot is not a
+   git work tree, so `scripts/check-line-counts.sh` counts every file there instead of `git ls-files`.
+
+Duration (this Mac): the first commit in a worktree builds the snapshot from scratch and resolves the packages
+(≈ 56 s); later commits ≈ 10 s plus compiling what changed. Delete the snapshot directory to reset it.
+
+`make hook-test` proves it in a scratch repository with a stub check command: staged good + working tree bad →
+pass; staged bad + working tree good → fail; untracked file absent; staged deletion absent; `.build/` kept; an
+unchanged file's mtime kept. Each case was seen failing against a broken variant (check run in the worktree;
+no `--checksum`; `.build/` not excluded).
 
 ## Deviations from the resolution's literal commands, and why
 
@@ -145,6 +170,7 @@ Paths in the diagnostics are shortened from `Sources/SmartPasteCore/ProofViolati
   held for its lifetime but is never read. Public declarations that only tests use are not reported.
   `retain_encodable_properties: true` keeps properties of `Encodable` types (JevGateway request bodies), which
   only the synthesized `encode(to:)` reads.
-- **Line guard** covers every non-Swift text file tracked or untracked-but-not-ignored by git, excluding
+- **Line guard** covers every non-Swift text file tracked or untracked-but-not-ignored by git (in the staged
+  snapshot: every file), excluding
   `frames/`, `spikes/`, `node_modules/`, `.build/`, `build/` and `video.mp4`. It counts like SwiftLint: a final
   line without a trailing newline counts.
