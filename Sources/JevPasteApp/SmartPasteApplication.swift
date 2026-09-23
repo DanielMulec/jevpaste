@@ -4,9 +4,9 @@ import MacInterop
 import SmartPasteCore
 import os
 
-/// The composition root: wires the real adapters and the tracer bullet's interim ones into one Paste Attempt
-/// coordinator, so ⌘⇧V performs a Smart Paste of the Active Item (the newest copy, or the text on the clipboard
-/// at launch). Copies persist in Clipboard History.
+/// The composition root: wires the real adapters and Core's rules into one Paste Attempt coordinator, so ⌘⇧V
+/// performs a Smart Paste of the Active Item (the newest copy, or the text on the clipboard at launch). Copies
+/// persist in Clipboard History.
 @MainActor
 final class SmartPasteApplication {
     private static let log = Logger(subsystem: "jevpaste", category: "Launch")
@@ -57,7 +57,7 @@ final class SmartPasteApplication {
             ),
             rules: PasteAttemptRules(
                 candidateExtraction: StructuralCandidateExtraction(),
-                preCheck: SecureTargetAndConcealedItemPreCheck()
+                preCheck: LocalPreChecks()
             ),
             capture: capture
         )
