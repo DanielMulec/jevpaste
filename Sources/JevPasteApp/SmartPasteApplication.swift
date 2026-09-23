@@ -13,6 +13,8 @@ final class SmartPasteApplication {
 
     // periphery:ignore - held for the app's lifetime (it holds the Copy Capture too); the hotkey drives it.
     private let coordinator: PasteAttemptCoordinator
+    /// "Open at Login" for the status-item menu; its notices share the indicator.
+    let loginItem: LoginItemToggle
 
     init(statusItem: NSStatusItem) {
         Self.log.notice("launch apiKeyPresent=\(GatewayCredentials.standard.hasAPIKey, privacy: .public)")
@@ -31,6 +33,7 @@ final class SmartPasteApplication {
             contentsAtLaunch: { clipboard.currentItem() }
         )
         // After the history notice, so a missing grant — the more urgent one — is what shows at launch.
+        loginItem = LoginItemToggle(service: MainAppLoginItemService(), notices: notices)
         let grantCheck = AccessibilityGrantCheck(trust: ProcessAccessibilityTrust(), notices: notices)
         grantCheck.checkAtLaunch()
         let hotkey = GlobalHotkey { [weak notices] status in

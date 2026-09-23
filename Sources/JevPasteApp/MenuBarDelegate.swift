@@ -1,22 +1,31 @@
 import AppKit
 
-/// Owns the status item (the SF Symbol `doc.on.clipboard` and a menu with only "Quit") and starts Smart Paste.
+/// Owns the status item (the SF Symbol `doc.on.clipboard` and a menu with "Open at Login" and "Quit") and starts
+/// Smart Paste.
 @MainActor
 final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     // periphery:ignore - held for the app's lifetime; ⌘⇧V drives it.
     private var smartPaste: SmartPasteApplication?
+    // periphery:ignore - held for the app's lifetime: the menu keeps its delegate and item target weakly.
+    private var loginItemMenu: LoginItemMenu?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "jevpaste")
-        item.menu = makeMenu()
         statusItem = item
-        smartPaste = SmartPasteApplication(statusItem: item)
+        let application = SmartPasteApplication(statusItem: item)
+        smartPaste = application
+        let loginItemMenu = LoginItemMenu(toggle: application.loginItem)
+        self.loginItemMenu = loginItemMenu
+        item.menu = makeMenu(loginItem: loginItemMenu)
     }
 
-    private func makeMenu() -> NSMenu {
+    private func makeMenu(loginItem: LoginItemMenu) -> NSMenu {
         let menu = NSMenu()
+        menu.delegate = loginItem
+        menu.addItem(loginItem.item)
+        menu.addItem(.separator())
         menu.addItem(
             NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         )
