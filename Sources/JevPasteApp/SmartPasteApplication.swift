@@ -1,5 +1,4 @@
 import AppKit
-import ApplicationServices
 import JevGateway
 import MacInterop
 import SmartPasteCore
@@ -14,21 +13,18 @@ final class SmartPasteApplication {
 
     // periphery:ignore - held for the app's lifetime (it holds the Copy Capture too); the hotkey drives it.
     private let coordinator: PasteAttemptCoordinator
+    /// "Open at Login" for the status-item menu; its notices share the indicator.
+    let loginItem: LoginItemToggle
 
     init(statusItem: NSStatusItem) {
-        Self.log.notice(
-            """
-            launch accessibilityTrusted=\(AXIsProcessTrusted(), privacy: .public) \
-            apiKeyPresent=\(GatewayCredentials.standard.hasAPIKey, privacy: .public)
-            """
-        )
+        Self.log.notice("launch apiKeyPresent=\(GatewayCredentials.standard.hasAPIKey, privacy: .public)")
         let clock = RunLoopPasteAttemptClock()
         let statusItemFrame: @MainActor () -> NSRect? = { [weak statusItem] in
             guard let button = statusItem?.button, let window = button.window else { return nil }
             return window.convertToScreen(button.convert(button.bounds, to: nil))
         }
         let panel = IndicatorPanel(anchorFrame: statusItemFrame)
-        let notices = HistoryNoticeSurface(wrapping: panel, clock: clock)
+        let notices = IndicatorNoticeSurface(wrapping: panel, clock: clock)
         let presenter = IndicatorPresenter(surface: notices, clock: clock)
         let clipboard = SystemClipboard()
         let capture = CopyCapture(
@@ -36,9 +32,17 @@ final class SmartPasteApplication {
             history: ClipboardHistoryOpening.open(notices: notices),
             contentsAtLaunch: { clipboard.currentItem() }
         )
+        // After the history notice, so a missing grant — the more urgent one — is what shows at launch.
+        loginItem = LoginItemToggle(service: MainAppLoginItemService(), notices: notices)
+        let grantCheck = AccessibilityGrantCheck(trust: ProcessAccessibilityTrust(), notices: notices)
+        grantCheck.checkAtLaunch()
+        let hotkey = GlobalHotkey { [weak notices] status in
+            guard let notices else { return }
+            HotkeyRegistrationReport.failed(status: status, notices: notices)
+        }
         coordinator = PasteAttemptCoordinator(
             ports: PasteAttemptPorts(
-                hotkey: GlobalHotkey(),
+                hotkey: GrantCheckingHotkey(wrapping: hotkey, check: grantCheck),
                 clipboard: clipboard,
                 targetResolver: AccessibilityTargetResolver(),
                 inserter: PasteKeystrokeInserter(),

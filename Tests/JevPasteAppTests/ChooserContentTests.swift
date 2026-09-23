@@ -28,6 +28,12 @@ struct ChooserContentTests {
         #expect(content.rows == ["Street 1 … 2 lines"])
     }
 
+    @Test func aLoneCarriageReturnCountsAsALineBreak() {
+        let content = ChooserContent(candidates: [Candidate(text: "Street 1\r10115 Berlin")], context: TargetContext())
+
+        #expect(content.rows == ["Street 1 … 2 lines"])
+    }
+
     @Test func titleNamesTheFieldLabel() {
         let content = ChooserContent(
             candidates: [], context: TargetContext(fieldLabel: "Email address", placeholder: "you@example.org")

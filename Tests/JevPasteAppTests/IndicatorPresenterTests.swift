@@ -116,4 +116,36 @@ struct IndicatorPresenterTests {
 
         #expect(surface.displayed == OutcomeMessage(.inserted).content)
     }
+
+    @Test(arguments: [false, true])
+    func deliveryReplacesProcessingOrRetryingWithPastingThatNoClickCancels(afterRetrying: Bool) {
+        var cancels = 0
+        presenter.showProcessing { cancels += 1 }
+        if afterRetrying { presenter.showRetrying() }
+        presenter.showDelivering()
+        surface.click()
+
+        #expect(surface.displayed == .delivering)
+        #expect(surface.displayed?.text.contains("cancel") == false)
+        #expect(cancels == 0)
+    }
+
+    @Test func deliveryBeforeTheProcessingIndicatorOrAfterChoosingStaysHidden() {
+        presenter.showDelivering()
+        #expect(surface.displayed == nil)
+
+        presenter.showProcessing {}
+        presenter.hideWhileChoosing()
+        presenter.showDelivering()
+        #expect(surface.displayed == nil)
+    }
+
+    @Test func deliveryLeavesAnEarlierOutcomeAndItsAutoHideAlone() {
+        presenter.showOutcome(.refused(.noEditableTarget))
+        presenter.showDelivering()
+        #expect(surface.displayed == OutcomeMessage(.refused(.noEditableTarget)).content)
+
+        clock.step(by: .milliseconds(2500))
+        #expect(surface.displayed == nil)
+    }
 }

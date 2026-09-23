@@ -8,12 +8,12 @@ import Testing
 @MainActor
 struct ClipboardHistoryOpeningTests {
     private let screen = RecordingIndicatorSurface()
-    private let notices: HistoryNoticeSurface
+    private let notices: IndicatorNoticeSurface
     private let directory = FileManager.default.temporaryDirectory
         .appendingPathComponent("jevpaste-app-test-\(UUID().uuidString)", isDirectory: true)
 
     init() {
-        notices = HistoryNoticeSurface(wrapping: screen, clock: SteppedClock())
+        notices = IndicatorNoticeSurface(wrapping: screen, clock: SteppedClock())
     }
 
     private func removeDirectory() {
@@ -52,7 +52,7 @@ struct ClipboardHistoryOpeningTests {
             }
         }
 
-        #expect(delivered == HistoryNotice(runtimeFailure: .sqlite(operation: "record", resultCode: 8)))
+        #expect(delivered == IndicatorNotice(historyRuntimeFailure: .sqlite(operation: "record", resultCode: 8)))
     }
 
     @Test func unavailableHistoryKeepsNothing() {

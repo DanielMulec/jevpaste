@@ -6,15 +6,16 @@ Core ports are unchanged (`docs/design/paste-attempt-state-machine.md`). Everyth
 
 ## Composition root — `SmartPasteApplication`
 - `@MainActor final class`, created by `MenuBarDelegate.applicationDidFinishLaunching` after the status item is
-  set up. `MenuBarDelegate` still owns only the status item and its "Quit" menu. `--probe` stays as it is.
+  set up. `MenuBarDelegate` owns the status item and its menu ("Open at Login", "Quit"). `--probe` stays as it is.
 - It builds and keeps: `SystemClipboard()` (100 ms polling), `CopyCapture(clipboard:history:)`, and
   `PasteAttemptCoordinator` with `GlobalHotkey()`, `AccessibilityTargetResolver()`, `PasteKeystrokeInserter()`,
-  `JevGatewayDecisionService()`, `RunLoopPasteAttemptClock`, `IndicatorPresenter` over `HistoryNoticeSurface`, `PanelCandidateChooser`,
+  `JevGatewayDecisionService()`, `RunLoopPasteAttemptClock`, `IndicatorPresenter` over `IndicatorNoticeSurface`, `PanelCandidateChooser`,
   plus rules `StructuralCandidateExtraction()` and `SecureTargetAndConcealedItemPreCheck`.
-- Merge note (capture ∥ chooser): `hideWhileChoosing()` passes through `HistoryNoticeSurface`, so a history notice that
+- Merge note (capture ∥ chooser): `hideWhileChoosing()` passes through `IndicatorNoticeSurface`, so a history notice that
   waited during processing appears on the indicator while the chooser is open. Accepted as informational: the chooser is
   its own panel, the notice is short-lived, and the outcome after the choice displays over it as usual.
-- At launch it logs `AXIsProcessTrusted()` and `GatewayCredentials.standard.hasAPIKey` (booleans only).
+- At launch it logs `GatewayCredentials.standard.hasAPIKey` (boolean only); `AccessibilityGrantCheck` logs
+  `grant check at launch trusted=…` and ⌘⇧V passes through `GrantCheckingHotkey` (see `hardening.md`).
 - Active Item = the text on the clipboard at launch, then each newer copy; history is persistent — see
   `docs/design/capture-and-history.md` (capture+history slice).
 
@@ -33,7 +34,7 @@ All shell types are `@MainActor` (AppKit, timers). Nothing blocks the main actor
 ## Presenter
 Split so the logic is testable without AppKit:
 - `OutcomeMessage` (pure): `PasteAttemptOutcome` → symbol, short text, display duration.
-- `IndicatorPresenter` (logic): holds the state (`hidden`, `processing`, `retrying`, `outcome`), the pending
+- `IndicatorPresenter` (logic): holds the state (`hidden`, `processing`, `retrying`, `delivering`, `outcome`), the pending
   `onCancel`, the auto-hide `ScheduledAction` (on the injected `PasteAttemptClock`), and renders through an
   `IndicatorSurface` protocol. Logs phase transitions and outcome *kinds* (`os.Logger`, subsystem `jevpaste`,
   category `PasteAttempt`, `privacy: .public` on enum names only) — never clipboard text, Candidates, Target Context
@@ -49,11 +50,14 @@ States and timings:
 |---|---|---|
 | `showProcessing(onCancel:)` (Core calls it at 150 ms) | `ellipsis.circle` "Jev is choosing… click to cancel" | next call |
 | `showRetrying()` | `hourglass` "Jev asked us to wait… click to cancel" | next call |
+| `showDelivering()` (only over processing/retrying) | `arrow.down.doc` "Pasting…", click inert | outcome |
 | `showOutcome(.inserted)` | `checkmark.circle.fill` "Pasted" | hidden after 1 s |
 | `showOutcome(other)` | symbol + reason (table below) | hidden after 2.5 s |
 
 The "click to cancel" hint appears only once Core has handed over `onCancel`; a 429 before 150 ms shows the
-retrying label without it, and the later `showProcessing` re-displays retrying with the hint.
+retrying label without it, and the later `showProcessing` re-displays retrying with the hint. At delivery start
+(`showDelivering()`, after the Bound Target re-verification) the hint and `onCancel` go: a shown processing or
+retrying indicator becomes "Pasting…"; a hidden one stays hidden.
 
 Reasons: `.insertedWithoutRestore` "Pasted — original clipboard not restored (replaced by your new copy)";
 `.noSuitableMatch` "No suitable match"; refusals "Nothing copied yet" / "No text field focused" / "Secure field —
@@ -76,7 +80,8 @@ Live-proven only: the panel's rendering and non-activation, hotkey → real past
 
 ## Live-run plan (step 3; ask before each `make install` and launch)
 1. `make install`, `open ~/Applications/JevPaste.app`; read `log show --predicate 'subsystem == "jevpaste"'` for
-   `accessibilityTrusted=true`, `apiKeyPresent=true`.
+   `apiKeyPresent=true` and `grant check at launch trusted=true` (the launch line was `accessibilityTrusted=true`
+   before the hardening slice).
 2. Daniel copies (from a text editor):
    `Maren Holtby` / `maren.holtby@example.org` / `+49 30 5550 1234` — three lines, one of each kind.
 3. Daniel opens `data:text/html,<label for=e>Email address</label><br><textarea id=e placeholder="Your email
@@ -89,6 +94,5 @@ Live-proven only: the panel's rendering and non-activation, hotkey → real past
 
 ## Open questions (carried into the report)
 No Launch Adoption of the pre-launch clipboard (resolved by the capture+history slice); `DecisionService` cancel token still absent (a cancelled request still runs);
-no Jev pre-warm at launch (cold call ~1.2 s).
-The label still says "click to cancel" during the ≤ 150 ms delivery step, where a click has no effect (Core has no
-port call at delivery start) — for the hardening slice.
+no Jev pre-warm at launch (cold call ~1.2 s) — both declined in the hardening slice (`hardening.md`).
+The delivery-step "click to cancel" label is resolved there by `showDelivering()`.

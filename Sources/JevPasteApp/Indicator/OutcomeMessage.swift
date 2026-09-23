@@ -12,6 +12,9 @@ struct IndicatorContent: Equatable {
         IndicatorContent(symbolName: "ellipsis.circle", text: "Jev is choosing…" + (cancellable ? cancelHint : ""))
     }
 
+    /// While delivering: uninterruptible and over within the Restore Window, so it never offers a cancel.
+    static let delivering = IndicatorContent(symbolName: "arrow.down.doc", text: "Pasting…")
+
     /// While waiting to retry after Jev asked us to; the click hint appears only when a click actually cancels.
     static func retrying(cancellable: Bool) -> IndicatorContent {
         IndicatorContent(symbolName: "hourglass", text: "Jev asked us to wait…" + (cancellable ? cancelHint : ""))
@@ -48,6 +51,15 @@ struct OutcomeMessage: Equatable {
             self.init(reason: IndicatorContent(symbolName: "xmark.circle", text: "Cancelled"))
         case .failed(let failure):
             self.init(reason: IndicatorContent(symbolName: "exclamationmark.triangle", text: Self.reason(for: failure)))
+        }
+    }
+
+    /// The outcome's kind for diagnostic logs, unqualified: `inserted`, `refused.noEditableTarget`, `failed.timedOut`.
+    static func logName(for outcome: PasteAttemptOutcome) -> String {
+        switch outcome {
+        case .refused(let refusal): "refused.\(refusal)"
+        case .failed(let failure): "failed.\(failure)"
+        default: "\(outcome)"
         }
     }
 

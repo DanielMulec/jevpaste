@@ -9,7 +9,9 @@ enum HotKeyEvent: Equatable {
 /// Registers the system-wide ⌘⇧V shortcut and reports its press and release events.
 @MainActor
 protocol HotKeyRegistrar {
-    func registerCommandShiftV(_ onEvent: @escaping @MainActor (HotKeyEvent) -> Void)
+    /// Returns `noErr` (0) when the shortcut is registered, else the first failing Carbon `OSStatus` — e.g.
+    /// `eventHotKeyExistsErr` when another app already holds ⌘⇧V.
+    func registerCommandShiftV(_ onEvent: @escaping @MainActor (HotKeyEvent) -> Void) -> Int32
 }
 
 /// Carbon `RegisterEventHotKey`: chosen by the macOS probe because it needs no permission at all and still fires
@@ -29,13 +31,13 @@ final class CarbonHotKeyRegistrar: HotKeyRegistrar {
         if let eventHandlerReference { RemoveEventHandler(eventHandlerReference) }
     }
 
-    func registerCommandShiftV(_ onEvent: @escaping @MainActor (HotKeyEvent) -> Void) {
+    func registerCommandShiftV(_ onEvent: @escaping @MainActor (HotKeyEvent) -> Void) -> Int32 {
         self.onEvent = onEvent
         var hotKeyEvents = [
             EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed)),
             EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyReleased)),
         ]
-        InstallEventHandler(
+        let handlerStatus = InstallEventHandler(
             GetApplicationEventTarget(),
             { _, event, registrar in CarbonHotKeyRegistrar.handle(event, for: registrar) },
             hotKeyEvents.count,
@@ -43,7 +45,8 @@ final class CarbonHotKeyRegistrar: HotKeyRegistrar {
             Unmanaged.passUnretained(self).toOpaque(),
             &eventHandlerReference
         )
-        RegisterEventHotKey(
+        guard handlerStatus == noErr else { return handlerStatus }
+        return RegisterEventHotKey(
             UInt32(kVK_ANSI_V),
             UInt32(cmdKey | shiftKey),
             Self.hotKeyIdentifier,

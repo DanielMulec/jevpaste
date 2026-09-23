@@ -5,18 +5,18 @@ import Testing
 
 /// A history notice shares the one indicator with the Paste Attempt without ever disturbing it.
 @MainActor
-struct HistoryNoticeSurfaceTests {
+struct IndicatorNoticeSurfaceTests {
     private let screen = RecordingIndicatorSurface()
     private let clock = SteppedClock()
-    private let notices: HistoryNoticeSurface
+    private let notices: IndicatorNoticeSurface
     private let presenter: IndicatorPresenter
 
-    private let writeFailed = HistoryNotice(runtimeFailure: .sqlite(operation: "record", resultCode: 8))
-    private let readFailed = HistoryNotice(runtimeFailure: .sqlite(operation: "items", resultCode: 26))
-    private let unavailable = HistoryNotice(unavailable: .fileNotCreated)
+    private let writeFailed = IndicatorNotice(historyRuntimeFailure: .sqlite(operation: "record", resultCode: 8))
+    private let readFailed = IndicatorNotice(historyRuntimeFailure: .sqlite(operation: "items", resultCode: 26))
+    private let unavailable = IndicatorNotice(historyUnavailable: .fileNotCreated)
 
     init() {
-        notices = HistoryNoticeSurface(wrapping: screen, clock: clock)
+        notices = IndicatorNoticeSurface(wrapping: screen, clock: clock)
         presenter = IndicatorPresenter(surface: notices, clock: clock)
     }
 

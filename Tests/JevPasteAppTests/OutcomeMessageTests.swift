@@ -34,4 +34,16 @@ struct OutcomeMessageTests {
         #expect(!message.content.symbolName.isEmpty)
         #expect(message.displayDuration == .milliseconds(2500))
     }
+
+    @Test(arguments: [
+        (PasteAttemptOutcome.inserted, "inserted"),
+        (.insertedWithoutRestore, "insertedWithoutRestore"),
+        (.noSuitableMatch, "noSuitableMatch"),
+        (.refused(.noEditableTarget), "refused.noEditableTarget"),
+        (.cancelled, "cancelled"),
+        (.failed(.timedOut), "failed.timedOut"),
+    ])
+    func logNameIsTheShortOutcomeKind(outcome: PasteAttemptOutcome, logName: String) {
+        #expect(OutcomeMessage.logName(for: outcome) == logName)
+    }
 }

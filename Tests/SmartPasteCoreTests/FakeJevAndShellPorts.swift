@@ -101,6 +101,9 @@ final class FakePresenter: PasteOutcomePresenter {
     private(set) var processingShownAt: Duration?
     private(set) var retryingShownCount = 0
     private(set) var outcomes: [PasteAttemptOutcome] = []
+    private(set) var deliveringShownCount = 0
+    /// Called when Core announces delivery, so a test can see what had happened by then.
+    var onShowDelivering: (@MainActor () -> Void)?
 
     init(clock: ManualClock) {
         self.clock = clock
@@ -113,6 +116,11 @@ final class FakePresenter: PasteOutcomePresenter {
 
     func showRetrying() {
         retryingShownCount += 1
+    }
+
+    func showDelivering() {
+        deliveringShownCount += 1
+        onShowDelivering?()
     }
 
     func showOutcome(_ outcome: PasteAttemptOutcome) {

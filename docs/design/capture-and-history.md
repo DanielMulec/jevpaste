@@ -5,14 +5,14 @@ Slice: [Add clipboard capture and persistent history](https://github.com/DanielM
 [Tracer bullet](https://github.com/DanielMulec/jevpaste/issues/24). Core ports unchanged; no history UI.
 
 ## Composition (`SmartPasteApplication`, only the history/capture lines change)
-- `panel` → `HistoryNoticeSurface(wrapping: panel, clock:)` → `IndicatorPresenter(surface: noticeSurface, …)`.
+- `panel` → `IndicatorNoticeSurface(wrapping: panel, clock:)` → `IndicatorPresenter(surface: noticeSurface, …)`.
   The presenter line changes only its `surface:` argument; `chooser:` and the presenter files stay untouched.
 - `history = ClipboardHistoryOpening.open(notices: noticeSurface)`: tries `SQLiteHistoryRepository(fileURL:
   HistoryStoreLocation.defaultFileURL, retentionLimit: 500, onFailure:)`; on throw returns
   `UnavailableHistoryRepository` (the renamed interim discarding type, moved to `JevPasteApp/History/`).
 - `CopyCapture(clipboard:history:contentsAtLaunch: { clipboard.currentItem() })`.
 
-## Failure paths and their visible form (`HistoryNotice`, pure mapping)
+## Failure paths and their visible form (`IndicatorNotice+History`, pure mapping)
 | path | log (`jevpaste`/`History`, kinds only) | indicator | duration |
 |---|---|---|---|
 | init throws | failure kind + file name | `exclamationmark.triangle` "History unavailable — <reason>" | 5 s |
@@ -24,7 +24,7 @@ file is not a database (result 26) / written by a newer version / database error
 Smart Paste works on the Active Item without history. HistoryStore already logs the SQLite details.
 
 ## Notice vs. a running Paste Attempt — **defer**
-`HistoryNoticeSurface` is an `IndicatorSurface` decorator; the presenter keeps sole ownership of attempt states.
+`IndicatorNoticeSurface` is an `IndicatorSurface` decorator; the presenter keeps sole ownership of attempt states.
 - It forwards `display`/`hide`/`forwardClicks` and tracks whether the presenter is showing anything
   (processing, retrying **or** an outcome).
 - `show(notice)`: presenter idle → display it and schedule its hide; presenter busy → keep it pending (only the
@@ -50,14 +50,14 @@ marker check *before* reading content. So the adapter derives the item and Core 
 
 ## Threading
 `onFailure` runs on the repository's serial queue. The handler only captures the `@MainActor` notice surface and
-does `Task { @MainActor in noticeSurface.show(HistoryNotice(runtimeFailure: failure)) }`. It never calls
+does `Task { @MainActor in noticeSurface.show(IndicatorNotice(historyRuntimeFailure: failure)) }`. It never calls
 `items()` or any repository method. Everything else is on the main actor as before.
 
 ## Tested vs live-proven
 - Core (`LaunchAdoptionTests`, fake clipboard + `FakeHistoryRepository`): launch text → active + recorded;
   concealed → active, not recorded; `nil` → no Active Item, nothing recorded; a later live copy replaces it.
 - MacInterop: `currentItem()` over a scratch pasteboard: text; marked → concealed; no text → `nil`.
-- Shell (`Tests/JevPasteAppTests`): `HistoryNotice` mapping (every failure kind, read vs write); the surface over
+- Shell (`Tests/JevPasteAppTests`): `IndicatorNotice+History` mapping (every failure kind, read vs write); the surface over
   `RecordingIndicatorSurface` + `SteppedClock` (idle show + hide at 2.5/5 s; deferred behind processing/retrying/
   outcome, shown after the presenter hides; presenter replaces a notice and the old timer does not hide it);
   `UnavailableHistoryRepository` keeps nothing; the failure handler called off the main thread delivers the mapped

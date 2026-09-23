@@ -1,9 +1,10 @@
 #!/bin/bash
-# Installs the git pre-commit hook that runs `make check` — the entire local CI (no hosted CI).
-# Run once per clone: scripts/install-hooks.sh
+# Installs the git pre-commit hook that runs `make check` — the entire local CI (no hosted CI) — on the staged
+# snapshot (scripts/check-staged-snapshot.sh). Run once per clone: scripts/install-hooks.sh
 #
-# The hook lives in the repository's shared hooks directory, so it applies to every worktree. In a
-# checkout that predates the scaffold (no Makefile at its root) it says so and lets the commit through.
+# The hook lives in the repository's shared hooks directory, so it applies to every worktree. A checkout
+# without the snapshot script runs plain `make check` in place, as before; one that predates the scaffold (no
+# Makefile at its root) says so and lets the commit through.
 # Bypassing it with `git commit --no-verify` is reserved for commits that cannot affect the gate.
 set -euo pipefail
 
@@ -14,11 +15,18 @@ hook_path="$hooks_directory/pre-commit"
 
 cat > "$hook_path" <<'HOOK'
 #!/bin/bash
-# Installed by scripts/install-hooks.sh: block the commit unless `make check` passes.
+# Installed by scripts/install-hooks.sh: block the commit unless `make check` passes on what is staged.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 if [[ ! -f Makefile ]]; then
     echo "pre-commit: no Makefile in this checkout; make check skipped"
+    exit 0
+fi
+if [[ -x scripts/check-staged-snapshot.sh ]]; then
+    if ! scripts/check-staged-snapshot.sh; then
+        echo "pre-commit: make check failed on the staged snapshot; commit blocked"
+        exit 1
+    fi
     exit 0
 fi
 # Git exports GIT_DIR/GIT_INDEX_FILE/GIT_WORK_TREE to hooks; SwiftPM's own git calls inside

@@ -2,11 +2,7 @@ import HistoryStore
 
 /// The visible form of a Clipboard History failure: a short line on the indicator. Smart Paste keeps working
 /// without history, so a notice only informs; it never offers an action.
-struct HistoryNotice: Equatable {
-    let content: IndicatorContent
-    let displayDuration: Duration
-
-    private static let symbolName = "exclamationmark.triangle"
+extension IndicatorNotice {
     /// Read with the launch notice, which appears once and names a cause, so it stays longer.
     private static let unavailableDuration = Duration.seconds(5)
     private static let runtimeFailureDuration = Duration.milliseconds(2500)
@@ -14,19 +10,16 @@ struct HistoryNotice: Equatable {
     private static let notADatabase: Int32 = 26
 
     /// The history file could not be opened at launch; the app runs without Clipboard History.
-    init(unavailable failure: HistoryStoreFailure) {
-        self.init(text: "History unavailable — " + Self.reason(for: failure), displayDuration: Self.unavailableDuration)
+    init(historyUnavailable failure: HistoryStoreFailure) {
+        self.init(warning: "History unavailable — " + Self.reason(for: failure), for: Self.unavailableDuration)
     }
 
     /// An operation failed after a successful open: reading history, or any write (the write is lost).
-    init(runtimeFailure failure: HistoryStoreFailure) {
+    /// "History read failed" is unreachable today — nothing in the app calls `items()` yet; the history UI will
+    /// (https://github.com/DanielMulec/jevpaste/issues/27, "Implement the history UI"). Keep it.
+    init(historyRuntimeFailure failure: HistoryStoreFailure) {
         let text = Self.isRead(failure) ? "History read failed" : "History write failed"
-        self.init(text: text, displayDuration: Self.runtimeFailureDuration)
-    }
-
-    private init(text: String, displayDuration: Duration) {
-        content = IndicatorContent(symbolName: Self.symbolName, text: text)
-        self.displayDuration = displayDuration
+        self.init(warning: text, for: Self.runtimeFailureDuration)
     }
 
     private static func isRead(_ failure: HistoryStoreFailure) -> Bool {
