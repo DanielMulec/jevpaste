@@ -49,6 +49,7 @@ States and timings:
 |---|---|---|
 | `showProcessing(onCancel:)` (Core calls it at 150 ms) | `ellipsis.circle` "Jev is choosing… click to cancel" | next call |
 | `showRetrying()` | `hourglass` "Jev asked us to wait… click to cancel" | next call |
+| `showDelivering()` (only over processing/retrying) | `arrow.down.doc` "Pasting…", click inert | outcome |
 | `showOutcome(.inserted)` | `checkmark.circle.fill` "Pasted" | hidden after 1 s |
 | `showOutcome(other)` | symbol + reason (table below) | hidden after 2.5 s |
 

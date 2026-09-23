@@ -9,6 +9,7 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         case hidden
         case processing
         case retrying
+        case delivering
         case outcome
     }
 
@@ -44,7 +45,14 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         Self.log.notice("retrying after Jev asked us to wait")
     }
 
-    func showDelivering() {}
+    /// Delivery can no longer be cancelled: a shown processing or retrying indicator turns into "Pasting…" without
+    /// the click hint. Anything else stays as it is — delivery ends with its outcome within the Restore Window.
+    func showDelivering() {
+        guard state == .processing || state == .retrying else { return }
+        onCancel = nil
+        display(.delivering, as: .delivering)
+        Self.log.notice("delivering indicator shown")
+    }
 
     func showOutcome(_ outcome: PasteAttemptOutcome) {
         Self.log.notice("outcome \(OutcomeMessage.logName(for: outcome), privacy: .public)")
