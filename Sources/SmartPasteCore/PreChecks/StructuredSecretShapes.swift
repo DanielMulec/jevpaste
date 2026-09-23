@@ -9,7 +9,7 @@ extension SuspectedSecretRule {
             let labelLength = text.run(of: .pemLabel, from: labelStart, upTo: longestPEMLabel)
             let label = text.bytes[labelStart..<labelStart + labelLength]
             return label.reversed().starts(with: pemPrivateKeyLabel.reversed())
-                && text.bytes[(labelStart + labelLength)...].starts(with: pemDashes)
+                && text.hasPattern(pemDashes, at: labelStart + labelLength)
         }
     }
 
@@ -21,7 +21,7 @@ extension SuspectedSecretRule {
             let header = text.run(of: .base64URL, from: offset, upTo: .max)
             let payloadStart = offset + header + 1
             guard header >= minimumJWTSegment, text.byte(at: payloadStart - 1) == dot,
-                text.bytes[payloadStart...].starts(with: jsonObjectStart)
+                text.hasPattern(jsonObjectStart, at: payloadStart)
             else { return false }
             let payload = text.run(of: .base64URL, from: payloadStart, upTo: .max)
             let signatureStart = payloadStart + payload + 1
