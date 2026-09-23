@@ -1,6 +1,7 @@
 import AppKit
 import ApplicationServices
 import Carbon.HIToolbox
+import os
 
 /// The system's keyboard focus, read through the system-wide Accessibility element. Needs the Accessibility
 /// grant; without it every lookup fails and no Target is found.
@@ -12,6 +13,8 @@ final class AXFocusSource: FocusSource {
     private static let wakeWalkNodeLimit = 300
     /// Chromium's "an assistive technology is present" switch; Electron apps keep their web tree off without it.
     private static let enhancedUserInterfaceAttribute = "AXEnhancedUserInterface" as CFString
+
+    private static let log = Logger(subsystem: "jevpaste", category: "TargetResolver")
 
     private let systemWide = AXUIElementCreateSystemWide()
 
@@ -64,17 +67,33 @@ final class AXFocusSource: FocusSource {
         )
     }
 
+    /// Logged: the unreadable-focus app's bundle id and the attribute's status and value — never content.
     func isAccessibilityAwake(in processIdentifier: Int32) -> Bool {
+        let isAwake = enhancedUserInterfaceIsOn(in: processIdentifier)
+        let app = Self.bundleIdentifier(of: processIdentifier)
+        Self.log.notice("focus unreadable app=\(app, privacy: .public) enhancedUI=\(isAwake, privacy: .public)")
+        return isAwake
+    }
+
+    func wakeAccessibility(in processIdentifier: Int32) -> Bool {
+        let status = AXUIElementSetAttributeValue(
+            applicationElement(processIdentifier), Self.enhancedUserInterfaceAttribute, kCFBooleanTrue)
+        let isAwake = enhancedUserInterfaceIsOn(in: processIdentifier)
+        let app = Self.bundleIdentifier(of: processIdentifier)
+        let code = status.rawValue
+        Self.log.notice("wake requested app=\(app, privacy: .public) set=\(code) readBack=\(isAwake, privacy: .public)")
+        return isAwake
+    }
+
+    private func enhancedUserInterfaceIsOn(in processIdentifier: Int32) -> Bool {
         var value: CFTypeRef?
         let status = AXUIElementCopyAttributeValue(
             applicationElement(processIdentifier), Self.enhancedUserInterfaceAttribute, &value)
         return status == .success && (value as? Bool) == true
     }
 
-    func wakeAccessibility(in processIdentifier: Int32) -> Bool {
-        AXUIElementSetAttributeValue(
-            applicationElement(processIdentifier), Self.enhancedUserInterfaceAttribute, kCFBooleanTrue)
-        return isAccessibilityAwake(in: processIdentifier)
+    private static func bundleIdentifier(of processIdentifier: Int32) -> String {
+        NSRunningApplication(processIdentifier: processIdentifier)?.bundleIdentifier ?? "unknown"
     }
 
     private func applicationElement(_ processIdentifier: Int32) -> AXUIElement {
