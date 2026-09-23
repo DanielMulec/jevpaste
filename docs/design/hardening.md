@@ -3,7 +3,7 @@
 Slice: [Harden installation and daily use](https://github.com/DanielMulec/jevpaste/issues/28) (body + inherited
 list). Shell = `Sources/JevPasteApp`. Everything visible goes through the one indicator; notices use the existing
 wait-while-a-Paste-Attempt-shows mechanism of `HistoryNoticeSurface`, generalised to `IndicatorNoticeSurface` +
-`IndicatorNotice` (content, duration; `HistoryNotice` becomes one producer of it).
+`IndicatorNotice` (content, duration; the history notices become `IndicatorNotice(historyUnavailable:)` etc.).
 
 ## Items → mechanism, visible form, proof
 | # | item | mechanism | visible form | unit-tested | live |
@@ -18,7 +18,7 @@ wait-while-a-Paste-Attempt-shows mechanism of `HistoryNoticeSurface`, generalise
 | 8 | outcome log | `OutcomeMessage.logName` → `refused.noEditableTarget`, `failed.timedOut`, `inserted` | log only | one parametrised test | L1–L3 logs |
 | 9 | focus-return weak self | poll captures `self` strongly: the chain is bounded (≤ 1 s, ~100 polls) and the clock drops each action after it fires, so no cycle outlives it | — | new test: focus return released mid-poll still completes | — |
 | 10 | lone `\r` | test in `ChooserContentTests` (`"a\rb"` → "a … 2 lines"); fix only if red | — | yes | — |
-| 11 | history read failed | verified: `items()` has no caller in the app today; comment at `HistoryNotice` runtime init pointing at [Implement the history UI](https://github.com/DanielMulec/jevpaste/issues/27); nothing removed | — | existing test | — |
+| 11 | history read failed | verified: `items()` has no caller in the app today; comment at `IndicatorNotice(historyRuntimeFailure:)` pointing at [Implement the history UI](https://github.com/DanielMulec/jevpaste/issues/27); nothing removed | — | existing test | — |
 
 ## GATE A decisions
 1. **Grant re-check rule**: at launch and on every ⌘⇧V (no polling); while untrusted, ⌘⇧V shows the grant notice

@@ -14,7 +14,7 @@ enum ClipboardHistoryOpening {
     /// notice naming the cause. Later failures are reported to `notices` from the main actor.
     static func open(
         at fileURL: URL = HistoryStoreLocation.defaultFileURL,
-        notices: HistoryNoticeSurface
+        notices: IndicatorNoticeSurface
     ) -> any HistoryRepository {
         do {
             return try SQLiteHistoryRepository(
@@ -25,7 +25,7 @@ enum ClipboardHistoryOpening {
         } catch {
             let kind = String(describing: error)
             log.error("history unavailable, running without it: \(kind, privacy: .public)")
-            notices.show(HistoryNotice(unavailable: error))
+            notices.show(IndicatorNotice(historyUnavailable: error))
             return UnavailableHistoryRepository()
         }
     }
@@ -33,10 +33,10 @@ enum ClipboardHistoryOpening {
     /// A failure callback for the repository's own queue: it only hops to the main actor and delivers the notice.
     /// It never touches the repository, so it cannot wait on the queue it is running on.
     nonisolated static func reportingFailures(
-        to deliver: @escaping @MainActor (HistoryNotice) -> Void
+        to deliver: @escaping @MainActor (IndicatorNotice) -> Void
     ) -> @Sendable (HistoryStoreFailure) -> Void {
         { failure in
-            Task { @MainActor in deliver(HistoryNotice(runtimeFailure: failure)) }
+            Task { @MainActor in deliver(IndicatorNotice(historyRuntimeFailure: failure)) }
         }
     }
 }

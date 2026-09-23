@@ -9,9 +9,9 @@ Core ports are unchanged (`docs/design/paste-attempt-state-machine.md`). Everyth
   set up. `MenuBarDelegate` still owns only the status item and its "Quit" menu. `--probe` stays as it is.
 - It builds and keeps: `SystemClipboard()` (100 ms polling), `CopyCapture(clipboard:history:)`, and
   `PasteAttemptCoordinator` with `GlobalHotkey()`, `AccessibilityTargetResolver()`, `PasteKeystrokeInserter()`,
-  `JevGatewayDecisionService()`, `RunLoopPasteAttemptClock`, `IndicatorPresenter` over `HistoryNoticeSurface`, `PanelCandidateChooser`,
+  `JevGatewayDecisionService()`, `RunLoopPasteAttemptClock`, `IndicatorPresenter` over `IndicatorNoticeSurface`, `PanelCandidateChooser`,
   plus rules `StructuralCandidateExtraction()` and `SecureTargetAndConcealedItemPreCheck`.
-- Merge note (capture ∥ chooser): `hideWhileChoosing()` passes through `HistoryNoticeSurface`, so a history notice that
+- Merge note (capture ∥ chooser): `hideWhileChoosing()` passes through `IndicatorNoticeSurface`, so a history notice that
   waited during processing appears on the indicator while the chooser is open. Accepted as informational: the chooser is
   its own panel, the notice is short-lived, and the outcome after the choice displays over it as usual.
 - At launch it logs `AXIsProcessTrusted()` and `GatewayCredentials.standard.hasAPIKey` (booleans only).

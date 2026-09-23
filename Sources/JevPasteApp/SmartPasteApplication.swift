@@ -28,7 +28,7 @@ final class SmartPasteApplication {
             return window.convertToScreen(button.convert(button.bounds, to: nil))
         }
         let panel = IndicatorPanel(anchorFrame: statusItemFrame)
-        let notices = HistoryNoticeSurface(wrapping: panel, clock: clock)
+        let notices = IndicatorNoticeSurface(wrapping: panel, clock: clock)
         let presenter = IndicatorPresenter(surface: notices, clock: clock)
         let clipboard = SystemClipboard()
         let capture = CopyCapture(
