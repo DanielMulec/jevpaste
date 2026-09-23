@@ -5,7 +5,7 @@ handoff commit, clean, pushed). Owner: Daniel Mulec. Tracker: GitHub Issues with
 (`gh` authenticated; wiring via GraphQL `addSubIssue` / `addBlockedBy` with header
 `GraphQL-Features: sub_issues,issue_dependencies`).
 
-## Where things stand — PAUSED MID-WAVE 3 (Daniel left for work)
+## Where things stand — PAUSED AFTER WAVE 3 REVIEWS (Daniel left for work); both branches are MERGE-READY
 
 Map: [Build Daniel's Jev-powered macOS smart-paste app](https://github.com/DanielMulec/jevpaste/issues/1).
 **Read its body first** (Destination, Notes = hard rules incl. models and the review chain, Decisions-so-far
@@ -17,8 +17,8 @@ This session ran **wave 3** as two parallel workers (both claimed = assigned to 
 
 | ticket | branch @ head | state |
 |---|---|---|
-| [Add clipboard capture and persistent history](https://github.com/DanielMulec/jevpaste/issues/25) | `capture-history` @ 0071eaa | Gate B + C passed; [report](https://github.com/DanielMulec/jevpaste/issues/25#issuecomment-5789267575); **GPT-6-Sol review running** in pane `wC:p0`, worktree `~/.pi/worktrees/jevpaste/review-capture`, findings appended to its `REVIEW-BRIEF.md` |
-| [Implement the Candidate Chooser UI](https://github.com/DanielMulec/jevpaste/issues/26) | `candidate-chooser` @ f9eff60 | live step A passed (chooser shown, ↓+Enter chose 2nd email, ✓, ⌘V restored); Gate B + C passed; [report](https://github.com/DanielMulec/jevpaste/issues/26#issuecomment-5789291286); **GPT-6-Sol review running** in pane `wC:p11`, worktree `~/.pi/worktrees/jevpaste/review-chooser`, findings appended to its `REVIEW-BRIEF.md` |
+| [Add clipboard capture and persistent history](https://github.com/DanielMulec/jevpaste/issues/25) | `capture-history` @ **d49d87b** | Gate B + C passed; [report](https://github.com/DanielMulec/jevpaste/issues/25#issuecomment-5789267575); review fix → delta **merge** (249 tests); review-chain summary posted as the newest comment on the ticket; full text in `~/.pi/worktrees/jevpaste/review-capture/REVIEW-BRIEF.md` (uncommitted) |
+| [Implement the Candidate Chooser UI](https://github.com/DanielMulec/jevpaste/issues/26) | `candidate-chooser` @ **d10a878** | live step A passed (chooser shown, ↓+Enter chose 2nd email, ✓, ⌘V restored); Gate B + C passed; [report](https://github.com/DanielMulec/jevpaste/issues/26#issuecomment-5789291286) + [addendum](https://github.com/DanielMulec/jevpaste/issues/26#issuecomment-5789338604); review fix → delta **merge** (247 tests); summary on the ticket; full text in `~/.pi/worktrees/jevpaste/review-chooser/REVIEW-BRIEF.md` (uncommitted) |
 
 Both live runs were done by Daniel; both worker Pi instances are still alive in Herdr panes `wC:pY` (capture) and
 `wC:pZ` (chooser) unless the machine was restarted. Live proof gaps to close next session with Daniel:
@@ -27,22 +27,23 @@ Both live runs were done by Daniel; both worker Pi instances are still alive in 
 - seeding decision (pre-launch clipboard → Active Item + recorded) is **provisional** — recommended and
   implemented; Daniel never answered. Opting out = pass `nil` for `contentsAtLaunch` in `SmartPasteApplication`.
 
-225 → 246 (capture) / 244 (chooser) tests; `make check` green on each branch alone. **They have not been merged
-together yet** — expect a semantic merge to resolve (see "Merge plan").
+225 → 249 (capture) / 247 (chooser) tests; `make check` green on each branch alone. **They have not been merged
+together yet** — expect a semantic merge to resolve (see "Merge plan"). Both review chains are complete; nothing
+is waiting on a reviewer.
 
 ## Resume checklist (do in order)
 1. `intercom status` → your id. `herdr agent list` / `herdr pane list` → which of `capture-worker` (`wC:pY`),
-   `chooser-worker` (`wC:pZ`), `review-capture` (`wC:p0`), `review-chooser` (`wC:p11`) still exist.
-2. Read both `~/.pi/worktrees/jevpaste/review-{capture,chooser}/REVIEW-BRIEF.md` — the review is appended below
-   the brief (VERDICT …). For each: BLOCKING items → prompt the worker (`herdr agent prompt <name> "…"` or intercom
-   to its session; give it your new intercom id) to fix on its branch, push, then a "Delta re-review" section by
-   the same reviewer (prompt it again if still listed, else a fresh one); then merge. If a worker is gone, start a
-   fresh Opus instance in its worktree with a short fix brief.
-3. Supervisor judgement on review findings: accept real bugs/duplication; decline scope creep with a one-line
-   reason in the report thread (previous sessions declined e.g. "relabel during delivery").
-   Note for the chooser review: `hideWhileChoosing()` calls the surface's `hide()`, which after the capture merge
-   goes through `HistoryNoticeSurface` — a waiting history notice would then show under the chooser. Decide at
-   merge time (simplest: acceptable; or defer notices while the chooser is open).
+   `chooser-worker` (`wC:pZ`), `review-chooser` (`wC:p11`), `review-capture-delta` (`wC:p12`) still exist. The
+   workers are idle and told not to merge; reviewers are finished. Close what you do not need.
+2. Merge (step 4 below). No further review is needed unless the merge conflict resolution changes behaviour —
+   then one short GPT-6-Sol pass on the merge commit.
+3. Merge-time decision (recorded on the chooser ticket): `IndicatorPresenter.hideWhileChoosing()` calls
+   `surface.hide()`, which after the capture merge goes through `HistoryNoticeSurface` — with d49d87b that hide is
+   **ignored when the presenter shows nothing** and otherwise ends the presenter's display, so a waiting history
+   notice would appear under the open chooser. Simplest: accept (a notice is informational and the chooser is
+   key); or make `HistoryNoticeSurface` hold notices while the chooser is open. Note the choice in the resolution
+   comment. Open non-blocking items to carry into hardening: focus-return completion lost if
+   `TargetAppFocusReturn` is torn down mid-poll; CRLF splitting in `ChooserContent` display rows.
 4. **Merge plan:** merge `capture-history` first (`git merge --no-ff origin/capture-history`, `make check`, push),
    then `candidate-chooser` — expect conflicts in `SmartPasteApplication.swift` (capture changed the presenter
    `surface:` + `capture` lines; chooser changed the `chooser:` line and removed the interim chooser) and possibly
