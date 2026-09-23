@@ -45,7 +45,7 @@ struct IndicatorPresenterTests {
 
     @Test func insertedShowsTheCheckmarkForOneSecondThenHides() {
         presenter.showProcessing {}
-        presenter.showOutcome(.inserted)
+        presenter.showOutcome(.inserted, note: nil)
 
         #expect(surface.displayed == OutcomeMessage(.inserted).content)
         clock.step(by: .milliseconds(999))
@@ -55,7 +55,7 @@ struct IndicatorPresenterTests {
     }
 
     @Test func aReasonStaysForTwoAndAHalfSecondsThenHides() {
-        presenter.showOutcome(.refused(.noEditableTarget))
+        presenter.showOutcome(.refused(.noEditableTarget), note: nil)
 
         clock.step(by: .milliseconds(2499))
         #expect(surface.displayed == OutcomeMessage(.refused(.noEditableTarget)).content)
@@ -63,8 +63,17 @@ struct IndicatorPresenterTests {
         #expect(surface.displayed == nil)
     }
 
+    @Test func aNotedSuccessShowsItsNoteForTwoAndAHalfSeconds() {
+        presenter.showOutcome(.inserted, note: .surroundingTextWithheld)
+
+        clock.step(by: .milliseconds(2499))
+        #expect(surface.displayed == OutcomeMessage(.inserted, note: .surroundingTextWithheld).content)
+        clock.step(by: .milliseconds(1))
+        #expect(surface.displayed == nil)
+    }
+
     @Test func aNewAttemptKeepsItsIndicatorWhenTheEarlierOutcomeWouldHaveHidden() {
-        presenter.showOutcome(.inserted)
+        presenter.showOutcome(.inserted, note: nil)
         clock.step(by: .milliseconds(500))
         presenter.showProcessing {}
 
@@ -86,7 +95,7 @@ struct IndicatorPresenterTests {
     @Test func clickingAnOutcomeOrTheHiddenIndicatorDoesNothing() {
         var cancels = 0
         presenter.showProcessing { cancels += 1 }
-        presenter.showOutcome(.failed(.timedOut))
+        presenter.showOutcome(.failed(.timedOut), note: nil)
         surface.click()
         clock.step(by: .seconds(3))
         surface.click()
@@ -102,15 +111,15 @@ struct IndicatorPresenterTests {
 
         #expect(surface.displayed == nil)
         #expect(cancels == 0)
-        presenter.showOutcome(.cancelled)
+        presenter.showOutcome(.cancelled, note: nil)
         #expect(surface.displayed == OutcomeMessage(.cancelled).content)
     }
 
     @Test func hidingWhileChoosingCancelsAnArmedAutoHideSoTheLaterOutcomeStays() {
-        presenter.showOutcome(.refused(.noEditableTarget))
+        presenter.showOutcome(.refused(.noEditableTarget), note: nil)
         clock.step(by: .seconds(2))
         presenter.hideWhileChoosing()
-        presenter.showOutcome(.inserted)
+        presenter.showOutcome(.inserted, note: nil)
 
         clock.step(by: .milliseconds(600))
 
@@ -141,7 +150,7 @@ struct IndicatorPresenterTests {
     }
 
     @Test func deliveryLeavesAnEarlierOutcomeAndItsAutoHideAlone() {
-        presenter.showOutcome(.refused(.noEditableTarget))
+        presenter.showOutcome(.refused(.noEditableTarget), note: nil)
         presenter.showDelivering()
         #expect(surface.displayed == OutcomeMessage(.refused(.noEditableTarget)).content)
 

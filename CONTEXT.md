@@ -51,7 +51,7 @@ One Smart Paste from ⌘⇧V to its visible outcome (inserted, no suitable match
 The Target pinned at the start of a Paste Attempt and re-verified immediately before insertion. If it no longer matches, nothing is inserted.
 
 **Pre-check**:
-A local refusal evaluated before any Paste Attempt leaves the machine: no editable Target, secure field, or a concealed or suspected-secret Active Item. Refusals are visible and never contact Jev.
+A local refusal evaluated before any Paste Attempt leaves the machine: no editable Target, secure field, or a concealed or suspected-secret Active Item. Refusals are visible and never contact Jev. A suspected secret in the Target Context's surrounding text is not a refusal: that text is withheld from Jev and the outcome shows a note.
 
 **Restore Window**:
 The brief interval after insertion during which the clipboard temporarily holds the Paste Result before the original contents are restored. A copy made by the user in this window is kept in preference to restoring.

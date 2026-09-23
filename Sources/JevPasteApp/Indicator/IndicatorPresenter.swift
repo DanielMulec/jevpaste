@@ -54,9 +54,11 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         Self.log.notice("delivering indicator shown")
     }
 
-    func showOutcome(_ outcome: PasteAttemptOutcome) {
-        Self.log.notice("outcome \(OutcomeMessage.logName(for: outcome), privacy: .public)")
-        show(OutcomeMessage(outcome))
+    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?) {
+        let noteName = note.map { " note=\($0)" } ?? ""
+        Self.log.notice(
+            "outcome \(OutcomeMessage.logName(for: outcome), privacy: .public)\(noteName, privacy: .public)")
+        show(OutcomeMessage(outcome, note: note))
     }
 
     /// The Candidate Chooser opened in the indicator's place: hides it, and a click can no longer cancel. The

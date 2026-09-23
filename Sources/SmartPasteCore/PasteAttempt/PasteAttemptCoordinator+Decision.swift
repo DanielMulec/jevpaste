@@ -8,7 +8,8 @@ extension PasteAttemptCoordinator {
         phase = .deciding
         let number = attempt.number
         let request = DecisionRequest(
-            sourceDocument: attempt.item.text, targetContext: attempt.target.context, candidates: attempt.candidates
+            sourceDocument: attempt.item.text, targetContext: attempt.contextToSend.context,
+            candidates: attempt.candidates
         )
         ports.decisionService.requestDecision(request) { [weak self] reply in
             guard let self, self.attempt?.number == number, phase == .deciding else { return }

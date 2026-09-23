@@ -44,7 +44,7 @@ struct IndicatorNoticeSurfaceTests {
         notices.show(writeFailed)
         #expect(screen.displayed == .processing(cancellable: true))
 
-        presenter.showOutcome(.inserted)
+        presenter.showOutcome(.inserted, note: nil)
         #expect(screen.displayed == OutcomeMessage(.inserted).content)
 
         clock.step(by: .seconds(1))
@@ -58,7 +58,7 @@ struct IndicatorNoticeSurfaceTests {
         notices.show(writeFailed)
         #expect(screen.displayed == .retrying(cancellable: false))
 
-        presenter.showOutcome(.noSuitableMatch)
+        presenter.showOutcome(.noSuitableMatch, note: nil)
         notices.show(readFailed)
         #expect(screen.displayed == OutcomeMessage(.noSuitableMatch).content)
 

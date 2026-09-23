@@ -101,6 +101,8 @@ final class FakePresenter: PasteOutcomePresenter {
     private(set) var processingShownAt: Duration?
     private(set) var retryingShownCount = 0
     private(set) var outcomes: [PasteAttemptOutcome] = []
+    /// The note shown with each outcome, in step with `outcomes`.
+    private(set) var notes: [PasteAttemptNote?] = []
     private(set) var deliveringShownCount = 0
     /// Called when Core announces delivery, so a test can see what had happened by then.
     var onShowDelivering: (@MainActor () -> Void)?
@@ -123,8 +125,9 @@ final class FakePresenter: PasteOutcomePresenter {
         onShowDelivering?()
     }
 
-    func showOutcome(_ outcome: PasteAttemptOutcome) {
+    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?) {
         outcomes.append(outcome)
+        notes.append(note)
     }
 
     /// Esc pressed while our processing indicator is visible.
@@ -173,7 +176,8 @@ struct StubCandidateExtraction: CandidateExtraction {
     }
 }
 
-/// Pre-check stub: refuses secure fields, and Active Items starting with a stand-in secret prefix.
+/// Pre-check stub: refuses secure fields, and Active Items starting with a stand-in secret prefix; withholds
+/// surrounding text that contains the prefix.
 struct StubPreCheck: PreCheck {
     static let secretPrefix = "secret-"
 
@@ -181,5 +185,13 @@ struct StubPreCheck: PreCheck {
         if target.isSecureField { return .secureField }
         if item.text.hasPrefix(Self.secretPrefix) { return .suspectedSecret }
         return nil
+    }
+
+    func screenedContext(of target: BoundTarget) -> ScreenedTargetContext {
+        guard target.context.surroundingText.contains(Self.secretPrefix) else {
+            return ScreenedTargetContext(context: target.context, note: nil)
+        }
+        let withheld = TargetContext(fieldLabel: target.context.fieldLabel)
+        return ScreenedTargetContext(context: withheld, note: .surroundingTextWithheld)
     }
 }

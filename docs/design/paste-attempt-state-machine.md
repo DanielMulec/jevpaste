@@ -52,7 +52,7 @@ protocol HistoryRepository: Sendable { func record(_ item: ClipboardItem) }
 @MainActor protocol PasteOutcomePresenter {
     func showProcessing(onCancel: @escaping @MainActor () -> Void)   // Esc on our indicator
     func showRetrying()                                              // 429 back-off in progress
-    func showOutcome(_ outcome: PasteAttemptOutcome)                 // ✓, reason, note; hides processing
+    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?) // ✓/reason + note; hides processing
 }
 @MainActor protocol CandidateChooser {   // adapter returns focus to the Bound Target's app before replying
     func presentChoice(among candidates: [Candidate], for target: BoundTarget,
@@ -63,7 +63,10 @@ protocol CandidateExtraction: Sendable {
     func candidates(in item: ClipboardItem) -> [Candidate]
     func sameTypeAlternatives(to chosen: Candidate, among candidates: [Candidate]) -> [Candidate]  // ≥2 → chooser
 }
-protocol PreCheck: Sendable { func refusal(for item: ClipboardItem, in target: BoundTarget) -> PreCheckRefusal? }
+protocol PreCheck: Sendable {   // adapter: LocalPreChecks (Core), see pre-checks.md
+    func refusal(for item: ClipboardItem, in target: BoundTarget) -> PreCheckRefusal?
+    func screenedContext(of target: BoundTarget) -> ScreenedTargetContext  // pinned at ⌘⇧V, sent in every request
+}
 ```
 
 ## Phases and transitions (`idle` → … → outcome shown → `idle`)

@@ -36,6 +36,21 @@ struct OutcomeMessageTests {
     }
 
     @Test(arguments: [
+        (PasteAttemptOutcome.inserted, "Pasted · nearby text withheld (suspected secret)"),
+        (.noSuitableMatch, "No suitable match · nearby text withheld (suspected secret)"),
+        (.failed(.timedOut), "Jev took longer than 5 s · nearby text withheld (suspected secret)"),
+    ])
+    func withheldSurroundingTextIsNotedAfterTheOutcomeForTwoAndAHalfSeconds(
+        outcome: PasteAttemptOutcome, text: String
+    ) {
+        let message = OutcomeMessage(outcome, note: .surroundingTextWithheld)
+
+        #expect(message.content.text == text)
+        #expect(message.content.symbolName == OutcomeMessage(outcome).content.symbolName)
+        #expect(message.displayDuration == .milliseconds(2500))
+    }
+
+    @Test(arguments: [
         (PasteAttemptOutcome.inserted, "inserted"),
         (.insertedWithoutRestore, "insertedWithoutRestore"),
         (.noSuitableMatch, "noSuitableMatch"),
