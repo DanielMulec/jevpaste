@@ -67,6 +67,17 @@ struct AccessibilityWakeTests {
         #expect(source.wakeRequests == [7, 8])
     }
 
+    @Test func eachWokenProcessKeepsItsOwnWakeWindow() {
+        _ = resolver.resolveFocusedTarget()
+        source.frontmost = FrontmostApplication(processIdentifier: 8, name: "Other")
+        _ = resolver.resolveFocusedTarget()
+        clock.advance(by: .seconds(1))
+        source.frontmost = Self.chatGPT
+
+        #expect(resolver.resolveFocusedTarget() == .waking(applicationName: "ChatGPT"))
+        #expect(source.wakeRequests == [7, 8])
+    }
+
     @Test func noFrontmostAppIsNoEditableTarget() {
         source.frontmost = nil
 
