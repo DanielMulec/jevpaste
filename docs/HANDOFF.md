@@ -39,6 +39,8 @@ GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues
   panes and extra workers (Daniel's preference).
 - Worker shells have no Accessibility; only the signed bundle can post events. For probe automation, add a signal
   trigger (e.g. SIGUSR1 → same delivery path) to the signed app rather than trying osascript.
+- Reviewer prompts must end with an `intercom send <supervisor-id>` step — a reviewer told only to "write the
+  verdict and stop" finishes silently and the supervisor waits forever (happened 2026-09-23; Daniel had to relay).
 
 **Wave 3 is complete.** `main` @ f610b8b: `capture-history` (b6517b5) and `candidate-chooser` (f610b8b) merged,
 `make check` = 271 tests / 50 suites. Both tickets closed with resolution + live-proof comments; map gists added.
