@@ -44,8 +44,9 @@ and is deterministic over a manual clock.
 ## States (one reused panel, one session at a time)
 `closed` → `open(selectedIndex)` → `returningFocus` → `closed`. Only `open` reacts to keys, clicks and resign-key;
 the transition out of `open` happens before the panel is ordered out, so the resign-key caused by our own close and
-any late Esc/click are ignored → exactly one reply. A new `presentChoice` while a session is not `closed` ends the
-old one silently with `nil` (Core's attempt-number guard drops it) — defensive only, Core never does this.
+any late Esc/click are ignored → exactly one reply. A `presentChoice` while a choice is open is declined at once with
+`nil`, the open choice untouched (every caller gets one reply) — defensive only, Core never does this. The
+answered choice is cleared before `reply`, so a reply that opens the next choice synchronously finds the chooser free.
 
 ## The processing indicator under the chooser (decided at GATE A)
 By the time Jev answered (> 150 ms) the indicator usually shows "Jev is choosing… click to cancel", inert in the

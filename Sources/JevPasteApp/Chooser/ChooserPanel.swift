@@ -105,7 +105,7 @@ private final class ChooserKeyView: NSView {
         case KeyCode.downArrow: onKey?(.moveDown)
         case KeyCode.returnKey, KeyCode.keypadEnter: onKey?(.chooseSelected)
         case KeyCode.escape: onKey?(.cancel(.escape))
-        default: super.keyDown(with: event)
+        default: break  // ignored, without the system beep
         }
     }
 }

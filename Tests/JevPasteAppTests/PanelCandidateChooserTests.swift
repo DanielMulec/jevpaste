@@ -139,6 +139,36 @@ struct PanelCandidateChooserTests {
         #expect(log.replies == [Self.emails[0]])
         #expect(activator.activated == [Self.chrome])
     }
+
+    @Test func aSecondChoiceWhileOneIsOpenIsDeclinedAtOnceAndTheOpenOneStillAnswers() {
+        let first = present()
+        let second = ReplyLog()
+
+        chooser.presentChoice(among: Array(Self.emails.prefix(2)), for: Self.emailField) { second.replies.append($0) }
+        #expect(second.replies == [nil])
+        #expect(first.replies.isEmpty)
+        surface.send(.choose(row: 2))
+
+        #expect(first.replies == [Self.emails[2]])
+    }
+
+    @Test func aReplyThatOpensTheNextChoiceSynchronouslyLeavesItOpen() {
+        let next = ReplyLog()
+        chooser.presentChoice(among: Self.emails, for: Self.emailField) { _ in
+            chooser.presentChoice(among: Array(Self.emails.prefix(2)), for: Self.emailField) {
+                next.replies.append($0)
+            }
+        }
+
+        surface.send(.chooseSelected)
+        #expect(surface.shown?.rows.count == 2)
+        #expect(next.replies.isEmpty)
+        surface.send(.moveDown)
+        surface.send(.chooseSelected)
+
+        #expect(next.replies == [Self.emails[1]])
+    }
+
 }
 
 /// Collects a chooser's replies; a class, so the reply closure and the test see the same list.

@@ -30,12 +30,18 @@ final class PanelCandidateChooser: CandidateChooser {
         }
     }
 
+    /// Opens the chooser. A call while a choice is still open is declined at once with `nil` and leaves the open
+    /// choice untouched, so every caller gets exactly one reply; Core never does this, as it runs one attempt at a
+    /// time. A reply that opens the next choice synchronously finds the chooser answered and free.
     func presentChoice(
         among candidates: [Candidate],
         for target: BoundTarget,
         reply: @escaping @MainActor (Candidate?) -> Void
     ) {
-        openChoice?.reply(nil)
+        guard openChoice == nil else {
+            Self.log.error("chooser already open; declined a second choice")
+            return reply(nil)
+        }
         openChoice = OpenChoice(
             candidates: candidates, processIdentifier: target.identity.processIdentifier, reply: reply
         )
@@ -89,17 +95,11 @@ final class PanelCandidateChooser: CandidateChooser {
     private static func logFocusReturn(_ result: FocusReturnResult) {
         switch result {
         case .frontmost(let elapsed):
-            log.notice("target app reactivated in \(elapsed.wholeMilliseconds, privacy: .public) ms")
+            log.notice("target app reactivated in \(Int(elapsed.timeInterval * 1000), privacy: .public) ms")
         case .notFrontmost(let elapsed):
-            log.notice("target app not frontmost after \(elapsed.wholeMilliseconds, privacy: .public) ms")
+            log.notice("target app not frontmost after \(Int(elapsed.timeInterval * 1000), privacy: .public) ms")
         case .appGone:
             log.notice("target app gone")
         }
-    }
-}
-
-extension Duration {
-    fileprivate var wholeMilliseconds: Int64 {
-        components.seconds * 1000 + components.attoseconds / 1_000_000_000_000_000
     }
 }
