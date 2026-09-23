@@ -40,7 +40,10 @@ final class HistoryNoticeSurface: IndicatorSurface {
         surface.display(content)
     }
 
+    /// Ends the presenter's display. A hide while the presenter shows nothing is stale (its display was already
+    /// replaced) and is ignored, so it can never cut a notice short.
     func hide() {
+        guard presenterIsShowing else { return }
         presenterIsShowing = false
         if let waitingNotice {
             self.waitingNotice = nil

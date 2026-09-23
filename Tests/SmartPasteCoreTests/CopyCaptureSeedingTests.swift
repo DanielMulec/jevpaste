@@ -9,7 +9,7 @@ struct CopyCaptureSeedingTests {
     private let history = FakeHistoryRepository()
 
     private func capture(contentsAtLaunch: ClipboardItem?) -> CopyCapture {
-        CopyCapture(clipboard: clipboard, history: history, contentsAtLaunch: contentsAtLaunch)
+        CopyCapture(clipboard: clipboard, history: history, contentsAtLaunch: { contentsAtLaunch })
     }
 
     @Test func textPresentAtLaunchBecomesTheActiveItemAndIsRecorded() {
@@ -54,5 +54,35 @@ struct CopyCaptureSeedingTests {
 
         #expect(capture.activeItem == ClipboardItem(text: "Wren Castellan"))
         #expect(history.items() == [ClipboardItem(text: "Wren Castellan"), atLaunch])
+    }
+
+    /// The seed is read only after observation has started, so a copy landing in between is never lost: it is the
+    /// seed, and the observer's later report of it is recorded again as a harmless re-copy (same identity, moved
+    /// to the top).
+    @Test func copyBetweenStartingObservationAndReadingTheSeedBecomesTheSeed() {
+        let later = ClipboardItem(text: "Wren Castellan")
+
+        let capture = CopyCapture(clipboard: clipboard, history: history) { [clipboard] in
+            clipboard.simulateForeignCopyNotYetObserved(later.text)
+            return later
+        }
+        clipboard.deliverPendingChanges()
+
+        #expect(capture.activeItem == later)
+        #expect(history.items() == [later])
+        #expect(history.recordedItems == [later, later])
+    }
+
+    /// The launch race: a copy lands after the clipboard was first looked at but before observation starts. Since
+    /// the seed is read after observation starts, that copy is the seed, recorded once.
+    @Test func copyJustBeforeObservationStartsIsNeverLost() {
+        clipboard.simulateForeignCopy("Tamsin Vorlage")
+        clipboard.foreignCopyJustBeforeObservationStarts = "Wren Castellan"
+
+        let capture = CopyCapture(clipboard: clipboard, history: history) { [clipboard] in clipboard.currentItem() }
+        clipboard.deliverPendingChanges()
+
+        #expect(capture.activeItem == ClipboardItem(text: "Wren Castellan"))
+        #expect(history.recordedItems == [ClipboardItem(text: "Wren Castellan")])
     }
 }

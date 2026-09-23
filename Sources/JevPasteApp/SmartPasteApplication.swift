@@ -33,7 +33,7 @@ final class SmartPasteApplication {
         let capture = CopyCapture(
             clipboard: clipboard,
             history: ClipboardHistoryOpening.open(notices: notices),
-            contentsAtLaunch: clipboard.currentItem()
+            contentsAtLaunch: { clipboard.currentItem() }
         )
         coordinator = PasteAttemptCoordinator(
             ports: PasteAttemptPorts(

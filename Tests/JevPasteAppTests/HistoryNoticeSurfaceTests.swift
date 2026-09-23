@@ -77,6 +77,16 @@ struct HistoryNoticeSurfaceTests {
         #expect(screen.displayed == .processing(cancellable: true))
     }
 
+    @Test func aStalePresenterHideLeavesAShowingNoticeForItsFullDuration() {
+        notices.show(writeFailed)
+
+        notices.hide()
+        #expect(screen.displayed == writeFailed.content)
+
+        clock.step(by: .milliseconds(2500))
+        #expect(screen.displayed == nil)
+    }
+
     @Test func clickingProcessingThroughTheNoticeSurfaceStillCancels() {
         var cancels = 0
         presenter.showProcessing { cancels += 1 }

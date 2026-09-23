@@ -10,7 +10,7 @@ Slice: [Add clipboard capture and persistent history](https://github.com/DanielM
 - `history = ClipboardHistoryOpening.open(notices: noticeSurface)`: tries `SQLiteHistoryRepository(fileURL:
   HistoryStoreLocation.defaultFileURL, retentionLimit: 500, onFailure:)`; on throw returns
   `UnavailableHistoryRepository` (the renamed interim discarding type, moved to `JevPasteApp/History/`).
-- `CopyCapture(clipboard:history:contentsAtLaunch: clipboard.currentItem())`.
+- `CopyCapture(clipboard:history:contentsAtLaunch: { clipboard.currentItem() })`.
 
 ## Failure paths and their visible form (`HistoryNotice`, pure mapping)
 | path | log (`jevpaste`/`History`, kinds only) | indicator | duration |
@@ -29,7 +29,8 @@ Smart Paste works on the Active Item without history. HistoryStore already logs 
   (processing, retrying **or** an outcome).
 - `show(notice)`: presenter idle → display it and schedule its hide; presenter busy → keep it pending (only the
   newest pending notice; older ones are logged already) and display it when the presenter next calls `hide()`.
-- A presenter `display` while a notice is up replaces it and cancels the notice's hide timer.
+- A presenter `display` while a notice is up replaces it and cancels the notice's hide timer; a stale presenter
+  `hide()` (presenter shows nothing) is ignored, so it never cuts a notice short.
 - Clicks on a notice reach the presenter, which ignores them outside processing/retrying.
 Deferred, not dropped: a failed write during the Restore Window would otherwise be invisible.
 
@@ -41,8 +42,10 @@ it into an item needs the plain-text type and the concealed-marker list, both in
 marker check *before* reading content. So the adapter derives the item and Core receives it:
 - MacInterop: the existing private `SystemClipboard.currentItem(on:)` becomes `public func currentItem() ->
   ClipboardItem?` (not on the `Clipboard` port; markers checked first, as for polling).
-- Core (`CopyCapture` only): `init(clipboard:history:contentsAtLaunch: ClipboardItem? = nil)`; the live-copy path
-  and the seed share one private `adopt(_ item:)` (Active Item; `record` unless concealed).
+- Core (`CopyCapture` only): `init(clipboard:history:contentsAtLaunch: @MainActor () -> ClipboardItem?)`, called
+  **after** `startObservingChanges` (whose baseline is the change count at subscription): a copy landing before
+  the baseline is the seed, never lost; one landing between baseline and read is the seed and is reported once
+  more by the poll — a same-identity re-copy (upsert to top), harmless. Seed and live copies share `adopt(_:)`.
 
 ## Threading
 `onFailure` runs on the repository's serial queue. The handler only captures the `@MainActor` notice surface and
