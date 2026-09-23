@@ -93,4 +93,27 @@ struct IndicatorPresenterTests {
 
         #expect(cancels == 0)
     }
+
+    @Test func hidingWhileChoosingRemovesTheIndicatorAndItsCancelUntilTheOutcome() {
+        var cancels = 0
+        presenter.showProcessing { cancels += 1 }
+        presenter.hideWhileChoosing()
+        surface.click()
+
+        #expect(surface.displayed == nil)
+        #expect(cancels == 0)
+        presenter.showOutcome(.cancelled)
+        #expect(surface.displayed == OutcomeMessage(.cancelled).content)
+    }
+
+    @Test func hidingWhileChoosingCancelsAnArmedAutoHideSoTheLaterOutcomeStays() {
+        presenter.showOutcome(.refused(.noEditableTarget))
+        clock.step(by: .seconds(2))
+        presenter.hideWhileChoosing()
+        presenter.showOutcome(.inserted)
+
+        clock.step(by: .milliseconds(600))
+
+        #expect(surface.displayed == OutcomeMessage(.inserted).content)
+    }
 }

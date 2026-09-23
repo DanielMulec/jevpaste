@@ -26,11 +26,6 @@ struct OutcomeMessage: Equatable {
     private static let successDuration = Duration.seconds(1)
     private static let reasonDuration = Duration.milliseconds(2500)
 
-    /// Shown instead of "Cancelled" when the interim Candidate Chooser declined to choose among several matches.
-    static let chooserNotBuilt = OutcomeMessage(
-        reason: IndicatorContent(symbolName: "list.bullet.circle", text: "Several matches — chooser not built yet")
-    )
-
     init(_ outcome: PasteAttemptOutcome) {
         switch outcome {
         case .inserted:

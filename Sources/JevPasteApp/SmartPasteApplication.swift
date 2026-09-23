@@ -23,10 +23,11 @@ final class SmartPasteApplication {
             """
         )
         let clock = RunLoopPasteAttemptClock()
-        let panel = IndicatorPanel { [weak statusItem] in
+        let statusItemFrame: @MainActor () -> NSRect? = { [weak statusItem] in
             guard let button = statusItem?.button, let window = button.window else { return nil }
             return window.convertToScreen(button.convert(button.bounds, to: nil))
         }
+        let panel = IndicatorPanel(anchorFrame: statusItemFrame)
         let notices = HistoryNoticeSurface(wrapping: panel, clock: clock)
         let presenter = IndicatorPresenter(surface: notices, clock: clock)
         let clipboard = SystemClipboard()
@@ -44,7 +45,11 @@ final class SmartPasteApplication {
                 decisionService: JevGatewayDecisionService(),
                 clock: clock,
                 presenter: presenter,
-                chooser: UnbuiltCandidateChooser(presenter: presenter)
+                chooser: PanelCandidateChooser(
+                    surface: ChooserPanel(anchorFrame: statusItemFrame),
+                    focusReturn: TargetAppFocusReturn(activator: WorkspaceApplicationActivator(), clock: clock),
+                    indicator: presenter
+                )
             ),
             rules: PasteAttemptRules(
                 candidateExtraction: StructuralCandidateExtraction(),

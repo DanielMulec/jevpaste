@@ -9,8 +9,11 @@ Core ports are unchanged (`docs/design/paste-attempt-state-machine.md`). Everyth
   set up. `MenuBarDelegate` still owns only the status item and its "Quit" menu. `--probe` stays as it is.
 - It builds and keeps: `SystemClipboard()` (100 ms polling), `CopyCapture(clipboard:history:)`, and
   `PasteAttemptCoordinator` with `GlobalHotkey()`, `AccessibilityTargetResolver()`, `PasteKeystrokeInserter()`,
-  `JevGatewayDecisionService()`, `RunLoopPasteAttemptClock`, `IndicatorPresenter`, `UnbuiltCandidateChooser`,
+  `JevGatewayDecisionService()`, `RunLoopPasteAttemptClock`, `IndicatorPresenter` over `HistoryNoticeSurface`, `PanelCandidateChooser`,
   plus rules `StructuralCandidateExtraction()` and `SecureTargetAndConcealedItemPreCheck`.
+- Merge note (capture ∥ chooser): `hideWhileChoosing()` passes through `HistoryNoticeSurface`, so a history notice that
+  waited during processing appears on the indicator while the chooser is open. Accepted as informational: the chooser is
+  its own panel, the notice is short-lived, and the outcome after the choice displays over it as usual.
 - At launch it logs `AXIsProcessTrusted()` and `GatewayCredentials.standard.hasAPIKey` (booleans only).
 - Active Item = the text on the clipboard at launch, then each newer copy; history is persistent — see
   `docs/design/capture-and-history.md` (capture+history slice).
@@ -21,7 +24,7 @@ Core ports are unchanged (`docs/design/paste-attempt-state-machine.md`). Everyth
 | `RunLoopPasteAttemptClock` | `PasteAttemptClock` | `now` = `ContinuousClock.now`; `schedule` = one-shot `Timer` added to `RunLoop.main` in `.common` modes (as `TimerPollingSchedule`), action via `MainActor.assumeIsolated`; the returned `ScheduledAction` invalidates the timer | unit: fires once after the delay on a spun main run loop; not before; cancelled never fires |
 | `SecureTargetAndConcealedItemPreCheck` | `PreCheck` | `.secureField` if `target.isSecureField`, else `.suspectedSecret` if `item.isConcealed`, else `nil`. Replaced by "Implement Pre-check rules" | unit: all four combinations |
 | `UnavailableHistoryRepository` | `HistoryRepository` | fallback when the history file is unusable (was the interim `DiscardingHistoryRepository`); see `capture-and-history.md` | unit: keeps nothing |
-| `UnbuiltCandidateChooser` | `CandidateChooser` | tells the presenter the next `.cancelled` means "chooser not built", then replies `nil` synchronously → Core finishes `.cancelled`. Never guesses | unit: replies `nil` once; the outcome text is the chooser one; a later plain cancel reads "Cancelled" |
+| `PanelCandidateChooser` | `CandidateChooser` | key-capable non-activating `ChooserPanel` below the status item; ↑/↓, Enter/click chooses, Esc/click-away cancels; hides the indicator, activates the Bound Target's app and polls frontmost (10 ms, ≤ 1 s) before replying once — see `candidate-chooser.md` | unit: content, selection, reply-once, focus-return bound over fakes + stepped clock |
 | `IndicatorPresenter` | `PasteOutcomePresenter` | see below | unit: state/timing logic over a fake panel and a manual clock |
 
 All shell types are `@MainActor` (AppKit, timers). Nothing blocks the main actor; Jev replies arrive via Core's
