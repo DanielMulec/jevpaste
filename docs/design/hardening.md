@@ -38,7 +38,7 @@ wait-while-a-Paste-Attempt-shows mechanism of `HistoryNoticeSurface`, generalise
 
 ## Live-run plan (each gated; batched into one ask where Daniel is needed)
 - L1: `make install`, launch; `log show --last 5m --predicate 'subsystem == "jevpaste"'` shows
-  `grant check trusted=true` and no notice appears (Daniel glances once).
+  `grant check at launch trusted=true` and no notice appears (Daniel glances once).
 - L2: Daniel opens the menu → "Open at Login" off; clicks it → `sfltool dumpbtm`/`SMAppService` status enabled
   (log line `login item status enabled`); quit + relaunch → menu shows ✓; click again to leave it as Daniel wants.
 - L3: slow-Jev not forceable, so: Daniel copies the synthetic signature, ⌘⇧V in a Chrome textarea and clicks the
