@@ -64,8 +64,15 @@ struct OutcomeMessage: Equatable {
         }
     }
 
+    /// Fixed names, so an associated value (an app name) never reaches the log.
     private static func caseName(of refusal: PreCheckRefusal) -> String {
-        String("\(refusal)".prefix { $0 != "(" })
+        switch refusal {
+        case .noActiveItem: "noActiveItem"
+        case .noEditableTarget: "noEditableTarget"
+        case .targetWaking: "targetWaking"
+        case .secureField: "secureField"
+        case .suspectedSecret: "suspectedSecret"
+        }
     }
 
     private init(reason: IndicatorContent) {

@@ -43,8 +43,13 @@ struct OutcomeMessageTests {
         (PasteAttemptOutcome.inserted, "inserted"),
         (.insertedWithoutRestore, "insertedWithoutRestore"),
         (.noSuitableMatch, "noSuitableMatch"),
+        (.refused(.noActiveItem), "refused.noActiveItem"),
         (.refused(.noEditableTarget), "refused.noEditableTarget"),
+        (.refused(.secureField), "refused.secureField"),
+        (.refused(.suspectedSecret), "refused.suspectedSecret"),
         (.refused(.targetWaking(applicationName: "ChatGPT")), "refused.targetWaking"),
+        (.refused(.targetWaking(applicationName: "Notes (Beta)")), "refused.targetWaking"),
+        (.refused(.targetWaking(applicationName: ".secureField")), "refused.targetWaking"),
         (.cancelled, "cancelled"),
         (.failed(.timedOut), "failed.timedOut"),
     ])
