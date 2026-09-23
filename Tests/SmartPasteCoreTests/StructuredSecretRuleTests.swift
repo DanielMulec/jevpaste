@@ -53,6 +53,9 @@ struct StructuredSecretRuleTests {
         "mongodb+srv://probe:s3cr%40t@cluster0.example.net/?retryWrites=true",
         "redis://:swordfish@cache.example.org:6379",
         "see https://admin:letmein@intranet.example.org/wiki",
+        // Accepted: `docs.example.org:443` here is syntactically userinfo (user `docs.example.org`, password
+        // `443`), so the shape alone cannot tell it from a credential.
+        "https://docs.example.org:443@archive.example.org/",
     ])
     func connectionStringCredentialsMatch(text: String) {
         #expect(SuspectedSecretRule.connectionStringCredentials.matches(text))
@@ -65,6 +68,8 @@ struct StructuredSecretRuleTests {
         "https://example.org:8443/path",
         "mailto:ada@example.org",
         "ftp://host.example.org/a:b@c",
+        "https://alice:note@/docs",
+        "https://alice:note@",
     ])
     func connectionStringCredentialsIgnore(text: String) {
         #expect(!SuspectedSecretRule.connectionStringCredentials.matches(text))

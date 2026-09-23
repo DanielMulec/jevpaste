@@ -31,7 +31,7 @@ extension SuspectedSecretRule {
     }
 
     /// A URL-style connection string with an inline password: `scheme://user:password@host`, where the password
-    /// is not empty (the user may be, as in `redis://:password@host`). Only the authority is read — up to the
+    /// and host are not empty (the user may be, as in `redis://:password@host`). Only the authority is read — up to the
     /// first `/`, `?`, `#` or whitespace — so `https://host/users/a@b` does not match.
     public static let connectionStringCredentials = SuspectedSecretRule(name: "connectionStringCredentials") { text in
         text.offsets(of: schemeSeparator).contains { offset in
@@ -42,7 +42,9 @@ extension SuspectedSecretRule {
             guard let userInfoEnd = authority.firstIndex(of: atSign),
                 let passwordStart = authority[..<userInfoEnd].firstIndex(of: colon)
             else { return false }
-            return passwordStart + 1 < userInfoEnd
+            let hasPassword = passwordStart + 1 < userInfoEnd
+            let hasHost = userInfoEnd + 1 < authority.endIndex
+            return hasPassword && hasHost
         }
     }
 

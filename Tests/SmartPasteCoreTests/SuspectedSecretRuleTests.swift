@@ -56,3 +56,16 @@ struct PrefixedTokenRuleTests {
         #expect(!rule.matches(text), "\(rule.name)")
     }
 }
+
+/// `openAIStyleKey` favours recall over precision, per "Choose clipboard-history storage and practical secret
+/// protection": detection is a visibility aid, never a guarantee. A standalone `sk-` slug of 20+ characters looks
+/// exactly like a key, so it is blocked — an accepted false positive, pinned here so a change to it is deliberate.
+struct OpenAIStyleKeyTradeOffTests {
+    @Test(arguments: [
+        "See sk-2026-09-24-release-notes-for-team",
+        "https://example.org/docs/sk-2026-09-24-release-notes-for-team",
+    ])
+    func aStandaloneSkSlugIsAnAcceptedFalsePositive(text: String) {
+        #expect(SuspectedSecretRule.openAIStyleKey.matches(text))
+    }
+}
