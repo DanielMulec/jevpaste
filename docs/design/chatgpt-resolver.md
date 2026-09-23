@@ -43,14 +43,24 @@ titles or descriptions.
 - **S3** only if still unresolved: set `AXEnhancedUserInterface=true`; same checkpoints. → H1, H3, H4.
 - A second press in the same app process runs S0 first → persistence.
 
-## Live round (one `ask`)
-Quit the installed JevPaste; Daniel quits and reopens ChatGPT (fresh process = attributes unset); clicks into a
-throwaway chat's composer; one ⌘⇧V; waits ~8 s; second ⌘⇧V. Control: one ⌘⇧V in a Chrome `data:` textarea.
-Then relaunch the installed app. Verdict mapping: first stage that resolves = confirmed mechanism; stages before
-it killed. H4 is confirmed only if `app=success` while `sw=-25212` at the same checkpoint.
+## Result (live round 2026-09-23, fresh ChatGPT process, then Chrome control)
+- **H1 confirmed.** Set `AXEnhancedUserInterface` → `-25208` (notImplemented) yet reads back `true`; tree stays 7
+  nodes through +1 s, system-wide focus resolves (`AXTextArea`, selection settable) by +3 s without a walk. Second
+  press in the same process resolves at S0: the flag persists for the process lifetime.
+- **Killed:** H2 (`AXManualAccessibility` set `-25205`, reads unsupported, 3 s + walks: 7 nodes); H4 (app-level
+  read fails and succeeds together with system-wide); H5 (walk covers all 7 nodes, `queueLeft=0`). H3: 1–3 s, walk
+  irrelevant. Chrome resolved at S0 (its flag was already `true`, set by another AX client).
 
-## Fix direction (after confirmation, app-agnostic)
-In `AXFocusSource`: on `noValue`, tell the frontmost application element an assistive client is present (the
-confirmed attribute), then walk and retry within a bounded budget. Keyed on the failure, never on a bundle id;
-attributes an app does not implement cost one IPC. Side effects of `AXEnhancedUserInterface` (known to disturb
-window animation in some apps) are weighed at GATE B2 if H1 wins over H2.
+## Fix (Daniel's decision: on-demand wake, no in-place wait, typed refusal)
+- **Core:** the `TargetResolver` port returns `TargetResolution` — `.resolved(BoundTarget)`, `.noEditableTarget`,
+  `.waking(applicationName:)`; the coordinator refuses `.waking` with `PreCheckRefusal.targetWaking(applicationName:)`.
+  No Jev call, nothing written — like every Pre-check. ⌘⇧V is the retry.
+- **MacInterop:** when focus is unreadable after the existing walk, `FocusedTargetResolver` looks at the frontmost
+  application: if we woke this pid < 5 s ago → `.waking` again (no second set); else if its
+  `AXEnhancedUserInterface` is already `true` → `.noEditableTarget` (it is awake; nothing is focused); else set it
+  and, **only if it reads back `true`**, → `.waking` (apps that ignore it stay `.noEditableTarget`). Keyed on the
+  failure and the attribute's read-back, never on a bundle id. Never reset (resetting re-sleeps the tree). Cost for
+  an app that does not implement it: two IPCs on a press that fails anyway.
+- **Shell:** `OutcomeMessage` renders "Waking <app> for Smart Paste — press ⌘⇧V again in a moment" (2.5 s).
+- **Side effect accepted:** Chromium/Electron run full accessibility mode (CPU/memory) for the rest of that process.
+- **Open question:** pre-waking at app activation (instant first press) — deferred by Daniel.
