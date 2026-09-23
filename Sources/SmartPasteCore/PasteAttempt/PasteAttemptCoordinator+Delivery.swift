@@ -12,6 +12,7 @@ extension PasteAttemptCoordinator {
         guard ports.targetResolver.isStillFocused(attempt.target.identity) else {
             return finish(.failed(.targetChanged))
         }
+        ports.presenter.showDelivering()
         let original = ports.clipboard.snapshot()
         let ownWrite = ports.clipboard.write(pasteResult.text)
         capture.markOwnWrite(ownWrite)

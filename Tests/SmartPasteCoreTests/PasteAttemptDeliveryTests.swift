@@ -44,4 +44,27 @@ struct PasteAttemptDeliveryTests {
         #expect(harness.presenter.outcomes == [.insertedWithoutRestore])
         #expect(harness.capture.activeItem == ClipboardItem(text: foreignCopy))
     }
+
+    @Test func deliveryTellsThePresenterOnceBeforeItWritesTheClipboard() {
+        let harness = PasteAttemptHarness()
+        var stepsWhenTold: [DeliveryLog.Entry]?
+        harness.presenter.onShowDelivering = { stepsWhenTold = harness.log.steps }
+
+        harness.pasteChoosing("ada@example.com")
+        harness.clock.advance(by: .milliseconds(120))
+
+        #expect(stepsWhenTold == [])
+        #expect(harness.presenter.deliveringShownCount == 1)
+    }
+
+    @Test func aTargetThatChangedBeforeDeliveryIsNeverAnnouncedAsDelivering() {
+        let harness = PasteAttemptHarness()
+
+        harness.hotkey.press()
+        harness.targetResolver.focusedTarget = nil
+        harness.jev.choose("ada@example.com")
+
+        #expect(harness.presenter.deliveringShownCount == 0)
+        #expect(harness.presenter.outcomes == [.failed(.targetChanged)])
+    }
 }

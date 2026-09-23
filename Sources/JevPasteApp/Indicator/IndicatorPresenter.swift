@@ -44,6 +44,8 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         Self.log.notice("retrying after Jev asked us to wait")
     }
 
+    func showDelivering() {}
+
     func showOutcome(_ outcome: PasteAttemptOutcome) {
         Self.log.notice("outcome \(OutcomeMessage.logName(for: outcome), privacy: .public)")
         show(OutcomeMessage(outcome))
