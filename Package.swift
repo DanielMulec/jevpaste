@@ -28,7 +28,9 @@ let package = Package(
         .testTarget(name: "JevGatewayTests", dependencies: ["JevGateway", "SmartPasteCore", testingDependency]),
         .testTarget(name: "HistoryStoreTests", dependencies: ["HistoryStore", "SmartPasteCore", testingDependency]),
         .testTarget(name: "MacInteropTests", dependencies: ["MacInterop", "SmartPasteCore", testingDependency]),
-        .testTarget(name: "JevPasteAppTests", dependencies: ["JevPasteApp", "SmartPasteCore", testingDependency]),
+        .testTarget(
+            name: "JevPasteAppTests", dependencies: ["JevPasteApp", "HistoryStore", "SmartPasteCore", testingDependency]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )

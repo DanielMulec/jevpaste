@@ -77,14 +77,33 @@ final class FakeClipboard: Clipboard {
         return replaceContents(with: snapshot, text)
     }
 
+    /// Like the real adapter, observation starts from the current change count: earlier changes are never reported.
     func startObservingChanges(_ onChange: @escaping @MainActor (ClipboardChange) -> Void) {
+        if let text = foreignCopyJustBeforeObservationStarts {
+            _ = replaceContents(with: Self.snapshot(of: text), text)
+        }
         observer = onChange
+        pendingChanges = []
+    }
+
+    /// Someone else copies this text at the last instant before observation starts (the launch race).
+    var foreignCopyJustBeforeObservationStarts: String?
+
+    /// The plain text on the clipboard now, as the real adapter's `currentItem()` would read it (unmarked).
+    func currentItem() -> ClipboardItem? {
+        contents.items.first?[Self.plainTextType].flatMap { String(bytes: $0, encoding: .utf8) }
+            .map { ClipboardItem(text: $0) }
     }
 
     /// Someone else copies `text`; observers hear about it immediately.
     func simulateForeignCopy(_ text: String, isConcealed: Bool = false) {
         _ = replaceContents(with: Self.snapshot(of: text), text, isConcealed: isConcealed)
         deliverPendingChanges()
+    }
+
+    /// Someone else copies `text`; observers hear about it only at the next `deliverPendingChanges()`.
+    func simulateForeignCopyNotYetObserved(_ text: String) {
+        _ = replaceContents(with: Self.snapshot(of: text), text)
     }
 
     func deliverPendingChanges() {

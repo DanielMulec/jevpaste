@@ -12,15 +12,15 @@ Core ports are unchanged (`docs/design/paste-attempt-state-machine.md`). Everyth
   `JevGatewayDecisionService()`, `RunLoopPasteAttemptClock`, `IndicatorPresenter`, `UnbuiltCandidateChooser`,
   plus rules `StructuralCandidateExtraction()` and `SecureTargetAndConcealedItemPreCheck`.
 - At launch it logs `AXIsProcessTrusted()` and `GatewayCredentials.standard.hasAPIKey` (booleans only).
-- Active Item = the first copy after launch. Clipboard contents present before launch are not seeded
-  (open question for the capture+history slice). Until then ⌘⇧V shows "Nothing copied yet".
+- Active Item = the text on the clipboard at launch, then each newer copy; history is persistent — see
+  `docs/design/capture-and-history.md` (capture+history slice).
 
 ## Shell adapters
 | adapter | port | mechanism | tested |
 |---|---|---|---|
 | `RunLoopPasteAttemptClock` | `PasteAttemptClock` | `now` = `ContinuousClock.now`; `schedule` = one-shot `Timer` added to `RunLoop.main` in `.common` modes (as `TimerPollingSchedule`), action via `MainActor.assumeIsolated`; the returned `ScheduledAction` invalidates the timer | unit: fires once after the delay on a spun main run loop; not before; cancelled never fires |
 | `SecureTargetAndConcealedItemPreCheck` | `PreCheck` | `.secureField` if `target.isSecureField`, else `.suspectedSecret` if `item.isConcealed`, else `nil`. Replaced by "Implement Pre-check rules" | unit: all four combinations |
-| `DiscardingHistoryRepository` | `HistoryRepository` | `record` does nothing. Replaced by the capture+history slice | none (no behaviour) |
+| `UnavailableHistoryRepository` | `HistoryRepository` | fallback when the history file is unusable (was the interim `DiscardingHistoryRepository`); see `capture-and-history.md` | unit: keeps nothing |
 | `UnbuiltCandidateChooser` | `CandidateChooser` | tells the presenter the next `.cancelled` means "chooser not built", then replies `nil` synchronously → Core finishes `.cancelled`. Never guesses | unit: replies `nil` once; the outcome text is the chooser one; a later plain cancel reads "Cancelled" |
 | `IndicatorPresenter` | `PasteOutcomePresenter` | see below | unit: state/timing logic over a fake panel and a manual clock |
 
@@ -85,7 +85,7 @@ Live-proven only: the panel's rendering and non-activation, hotkey → real past
 6. Evidence: Daniel's `done`/`nothing`/`failed` report plus the `jevpaste` log lines (kinds only). Then I quit the app.
 
 ## Open questions (carried into the report)
-Pre-launch clipboard not seeded; `DecisionService` cancel token still absent (a cancelled request still runs);
+No Launch Adoption of the pre-launch clipboard (resolved by the capture+history slice); `DecisionService` cancel token still absent (a cancelled request still runs);
 no Jev pre-warm at launch (cold call ~1.2 s).
 The label still says "click to cancel" during the ≤ 150 ms delivery step, where a click has no effect (Core has no
 port call at delivery start) — for the hardening slice.

@@ -6,7 +6,8 @@ import SmartPasteCore
 import os
 
 /// The composition root: wires the real adapters and the tracer bullet's interim ones into one Paste Attempt
-/// coordinator, so ⌘⇧V performs a Smart Paste of the Active Item (the newest copy made after launch).
+/// coordinator, so ⌘⇧V performs a Smart Paste of the Active Item (the newest copy, or the text on the clipboard
+/// at launch). Copies persist in Clipboard History.
 @MainActor
 final class SmartPasteApplication {
     private static let log = Logger(subsystem: "jevpaste", category: "Launch")
@@ -26,9 +27,14 @@ final class SmartPasteApplication {
             guard let button = statusItem?.button, let window = button.window else { return nil }
             return window.convertToScreen(button.convert(button.bounds, to: nil))
         }
-        let presenter = IndicatorPresenter(surface: panel, clock: clock)
+        let notices = HistoryNoticeSurface(wrapping: panel, clock: clock)
+        let presenter = IndicatorPresenter(surface: notices, clock: clock)
         let clipboard = SystemClipboard()
-        let capture = CopyCapture(clipboard: clipboard, history: DiscardingHistoryRepository())
+        let capture = CopyCapture(
+            clipboard: clipboard,
+            history: ClipboardHistoryOpening.open(notices: notices),
+            contentsAtLaunch: { clipboard.currentItem() }
+        )
         coordinator = PasteAttemptCoordinator(
             ports: PasteAttemptPorts(
                 hotkey: GlobalHotkey(),
