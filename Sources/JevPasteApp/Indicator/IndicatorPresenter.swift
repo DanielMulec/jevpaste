@@ -45,7 +45,7 @@ final class IndicatorPresenter: PasteOutcomePresenter {
     }
 
     func showOutcome(_ outcome: PasteAttemptOutcome) {
-        Self.log.notice("outcome \(String(describing: outcome), privacy: .public)")
+        Self.log.notice("outcome \(OutcomeMessage.logName(for: outcome), privacy: .public)")
         show(OutcomeMessage(outcome))
     }
 

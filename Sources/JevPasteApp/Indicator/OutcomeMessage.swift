@@ -51,6 +51,15 @@ struct OutcomeMessage: Equatable {
         }
     }
 
+    /// The outcome's kind for diagnostic logs, unqualified: `inserted`, `refused.noEditableTarget`, `failed.timedOut`.
+    static func logName(for outcome: PasteAttemptOutcome) -> String {
+        switch outcome {
+        case .refused(let refusal): "refused.\(refusal)"
+        case .failed(let failure): "failed.\(failure)"
+        default: "\(outcome)"
+        }
+    }
+
     private init(reason: IndicatorContent) {
         self.init(content: reason, displayDuration: Self.reasonDuration)
     }
