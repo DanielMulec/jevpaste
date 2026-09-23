@@ -99,3 +99,16 @@ One `intercom ask 01a0cc6f` per step needing Daniel.
   clipboard for him; print `~/.config/jevpaste/env`.
 - Reply from the chooser before focus return completes, or reply with row text instead of the original `Candidate`.
 - Exceed 400 lines per file; skip `make check` before commits (run one plain `swift build` in a fresh worktree first).
+
+## Suggested skills (under `~/.agents/skills/` unless noted)
+- `tdd` — any fix (e.g. keeping a history notice waiting while choosing) goes red → green at the agreed seams.
+- `codebase-design` — before moving the choosing signal between presenter and `HistoryNoticeSurface` (seam placement).
+- `resolving-merge-conflicts` — the `SmartPasteApplication.swift` / `app-shell.md` conflicts with `capture-history`.
+- `pi-intercom` (pi-intercom package) — supervisor protocol: `send` per step, `ask` at gates and before `make install`.
+- `diagnosing-bugs` — if Esc/click-away fails live (e.g. resign-key not firing, focus not returning).
+- `prototype` — only if a throwaway AppKit probe is needed to isolate key/resign-key behaviour outside the app.
+
+Links: report https://github.com/DanielMulec/jevpaste/issues/26#issuecomment-5789291286 · addendum
+https://github.com/DanielMulec/jevpaste/issues/26#issuecomment-5789338604 · lifecycle
+[issue 8](https://github.com/DanielMulec/jevpaste/issues/8) · capture branch design `docs/design/capture-and-history.md`
+(on `capture-history`).
