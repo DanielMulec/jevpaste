@@ -1,7 +1,7 @@
 # Handoff — capture-history (issue #25: Add clipboard capture and persistent history)
 
 Worktree `~/.pi/worktrees/jevpaste/capture-history`, branch `capture-history`, forked from `main` 0ef117e.
-Head before this handoff: `d49d87b` (pushed, **not merged**). `make check` green: 249 tests in 47 suites.
+Head before this handoff: `d49d87b`; ticket [Add clipboard capture and persistent history](https://github.com/DanielMulec/jevpaste/issues/25) (pushed, **not merged**). `make check` green: 249 tests in 47 suites.
 Report: https://github.com/DanielMulec/jevpaste/issues/25#issuecomment-5789267575 · Design:
 `docs/design/capture-and-history.md` · Brief: `docs/briefs/capture-history-brief.md` · Review:
 `~/.pi/worktrees/jevpaste/review-capture/REVIEW-BRIEF.md` (GPT-6-Sol, verdict fix → fixed in d49d87b).
@@ -9,11 +9,11 @@ Report: https://github.com/DanielMulec/jevpaste/issues/25#issuecomment-578926757
 ## 1. Commits
 | sha | what |
 |---|---|
-| eac99e6 | design doc (GATE A approved) |
-| e22601e | Core `CopyCapture` seeding + `SystemClipboard.currentItem()`; `ScratchPasteboard.copyLikeAnotherApp` extracted from `ClipboardObservationTests` |
-| 50910b2 | `HistoryNotice` (failure → text/duration) + `HistoryNoticeSurface` decorator; `JevPasteAppTests` depends on `HistoryStore` |
-| 0071eaa | `ClipboardHistoryOpening`, `UnavailableHistoryRepository` (renamed/moved interim), composition root, `app-shell.md` rows |
-| d49d87b | review fixes: seed read after observation starts (closure), fake clipboard baselines; stale presenter `hide()` ignored |
+| [eac99e6](https://github.com/DanielMulec/jevpaste/commit/eac99e6) | design doc (GATE A approved) |
+| [e22601e](https://github.com/DanielMulec/jevpaste/commit/e22601e) | Core `CopyCapture` seeding + `SystemClipboard.currentItem()`; `ScratchPasteboard.copyLikeAnotherApp` extracted from `ClipboardObservationTests` |
+| [50910b2](https://github.com/DanielMulec/jevpaste/commit/50910b2) | `HistoryNotice` (failure → text/duration) + `HistoryNoticeSurface` decorator; `JevPasteAppTests` depends on `HistoryStore` |
+| [0071eaa](https://github.com/DanielMulec/jevpaste/commit/0071eaa) | `ClipboardHistoryOpening`, `UnavailableHistoryRepository` (renamed/moved interim), composition root, `app-shell.md` rows |
+| [d49d87b](https://github.com/DanielMulec/jevpaste/commit/d49d87b) | review fixes: seed read after observation starts (closure), fake clipboard baselines; stale presenter `hide()` ignored |
 
 ## 2. Architecture (all in `Sources/JevPasteApp` unless stated)
 - **Seeding** — Core `CopyCapture.init(clipboard:history:contentsAtLaunch: @MainActor () -> ClipboardItem? = { nil })`.
@@ -88,3 +88,10 @@ Report: https://github.com/DanielMulec/jevpaste/issues/25#issuecomment-578926757
   `~/.config/jevpaste/env`.
 - Edit chooser-owned files (`IndicatorPresenter`, `OutcomeMessage`, `IndicatorPanel`, `Chooser/`) on this branch
   without asking. Keep files ≤ 400 lines; `make check` before every commit.
+
+## Suggested skills
+- `~/.agents/skills/tdd/SKILL.md` — every fix here goes red→green (prove new tests red against the old code, as in d49d87b).
+- `~/.agents/skills/codebase-design/SKILL.md` — for the `hideWhileBusy` seam decision (§4): keep the presenter the owner of attempt states.
+- `~/.agents/skills/resolving-merge-conflicts/SKILL.md` — for the `SmartPasteApplication.swift` / `app-shell.md` conflicts with `candidate-chooser`.
+- `pi-intercom` skill — supervisor `01a0cc6f`: `send` after each step, `ask` at gates and before any `make install`.
+- `~/.agents/skills/code-review/SKILL.md` — to self-check `git diff main...capture-history` against the brief before a new review pass.
