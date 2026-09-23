@@ -69,7 +69,8 @@ public final class SystemClipboard: Clipboard {
     }
 
     /// The text on the clipboard right now as a Clipboard Item, or `nil` when it holds no text. Read once at
-    /// launch to seed the Active Item; not part of the `Clipboard` port. Markers are checked before the content.
+    /// launch for Launch Adoption of the Active Item; not part of the `Clipboard` port. Markers are checked before
+    /// the content.
     public func currentItem() -> ClipboardItem? {
         Self.currentItem(on: pasteboard)
     }

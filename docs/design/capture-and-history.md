@@ -34,7 +34,7 @@ Smart Paste works on the Active Item without history. HistoryStore already logs 
 - Clicks on a notice reach the presenter, which ignores them outside processing/retrying.
 Deferred, not dropped: a failed write during the Restore Window would otherwise be invisible.
 
-## Seeding the Active Item at launch (GATE A decision)
+## Launch Adoption (GATE A decision; confirmed by Daniel)
 Rule: the text on the clipboard at launch is treated exactly like a live copy — it becomes the Active Item and is
 recorded unless concealed; no text (empty clipboard, image only) → no Active Item.
 Shape (deviation from the brief's "init takes `snapshot()`"): `ClipboardSnapshot` is opaque to Core, and turning
@@ -44,8 +44,9 @@ marker check *before* reading content. So the adapter derives the item and Core 
   ClipboardItem?` (not on the `Clipboard` port; markers checked first, as for polling).
 - Core (`CopyCapture` only): `init(clipboard:history:contentsAtLaunch: @MainActor () -> ClipboardItem?)`, called
   **after** `startObservingChanges` (whose baseline is the change count at subscription): a copy landing before
-  the baseline is the seed, never lost; one landing between baseline and read is the seed and is reported once
-  more by the poll — a same-identity re-copy (upsert to top), harmless. Seed and live copies share `adopt(_:)`.
+  the baseline is adopted at launch, never lost; one landing between baseline and read is adopted at launch and is
+  reported once more by the poll — a same-identity re-copy (upsert to top), harmless. Launch Adoption and live
+  copies share `adopt(_:)`.
 
 ## Threading
 `onFailure` runs on the repository's serial queue. The handler only captures the `@MainActor` notice surface and
@@ -53,16 +54,16 @@ does `Task { @MainActor in noticeSurface.show(HistoryNotice(runtimeFailure: fail
 `items()` or any repository method. Everything else is on the main actor as before.
 
 ## Tested vs live-proven
-- Core (`CopyCaptureSeedingTests`, fake clipboard + `FakeHistoryRepository`): seed text → active + recorded;
-  concealed → active, not recorded; `nil` → no Active Item, nothing recorded; a later live copy replaces the seed.
+- Core (`LaunchAdoptionTests`, fake clipboard + `FakeHistoryRepository`): launch text → active + recorded;
+  concealed → active, not recorded; `nil` → no Active Item, nothing recorded; a later live copy replaces it.
 - MacInterop: `currentItem()` over a scratch pasteboard: text; marked → concealed; no text → `nil`.
 - Shell (`Tests/JevPasteAppTests`): `HistoryNotice` mapping (every failure kind, read vs write); the surface over
   `RecordingIndicatorSurface` + `SteppedClock` (idle show + hide at 2.5/5 s; deferred behind processing/retrying/
   outcome, shown after the presenter hides; presenter replaces a notice and the old timer does not hide it);
   `UnavailableHistoryRepository` keeps nothing; the failure handler called off the main thread delivers the mapped
   notice on the main actor; opening with an unusable file URL (directory in the way) yields the fallback + notice.
-- Live only: the real file `~/Library/Application Support/jevpaste/history.sqlite`, panel rendering, seeding
-  from the general pasteboard.
+- Live only: the real file `~/Library/Application Support/jevpaste/history.sqlite`, panel rendering, Launch
+  Adoption from the general pasteboard.
 
 ## Live-run plan (step 3; ask before `make install`)
 1. `make install`, launch; `log show` for `jevpaste` History lines (no failure expected).
@@ -70,6 +71,6 @@ does `Task { @MainActor in noticeSurface.show(HistoryNotice(runtimeFailure: fail
    quits via the menu; relaunches.
 3. I read only synthetic rows: `sqlite3 <file> "SELECT trim(text) FROM clipboard_item WHERE text LIKE
    'JEVPASTE-HISTORY-%' ORDER BY copy_sequence DESC"` (expected BETA, ALPHA) — never Daniel's own copies.
-4. Seeding: app quit; Daniel copies `Tamsin Vorlage` / `tamsin.vorlage@example.com` / `+49 40 5550 9876`;
+4. Launch Adoption: app quit; Daniel copies `Tamsin Vorlage` / `tamsin.vorlage@example.com` / `+49 40 5550 9876`;
    launches; opens the tracer bullet's Chrome `data:` "Email address" textarea; ⌘⇧V → `tamsin.vorlage@example.com`
    inserted, ✓. I quit the app.

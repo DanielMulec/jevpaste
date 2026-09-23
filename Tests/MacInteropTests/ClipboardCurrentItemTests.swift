@@ -3,7 +3,8 @@ import MacInterop
 import SmartPasteCore
 import Testing
 
-/// `currentItem()` reads what is on the clipboard right now, so the app can seed the Active Item at launch.
+/// `currentItem()` reads what is on the clipboard right now, so the app can adopt it as the Active Item at launch
+/// (Launch Adoption).
 @MainActor
 struct ClipboardCurrentItemTests {
     private let scratch = ScratchPasteboard()

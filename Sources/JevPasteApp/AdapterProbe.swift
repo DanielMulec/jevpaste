@@ -26,8 +26,8 @@ final class AdapterProbe: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         log.write("start accessibilityTrusted=\(AXIsProcessTrusted()) postEventAccess=\(CGPreflightPostEventAccess())")
-        let seeded = clipboard.restore(Self.syntheticOriginal)
-        log.write("seeded synthetic original changeCount=\(seeded)")
+        let placed = clipboard.restore(Self.syntheticOriginal)
+        log.write("placed synthetic original changeCount=\(placed)")
         clipboard.startObservingChanges { [log] change in
             let item = change.item.map { "chars=\($0.text.count) concealed=\($0.isConcealed)" } ?? "none"
             log.write("observed change changeCount=\(change.changeCount) item=\(item)")

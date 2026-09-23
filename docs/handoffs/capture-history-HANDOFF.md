@@ -10,20 +10,20 @@ Report: https://github.com/DanielMulec/jevpaste/issues/25#issuecomment-578926757
 | sha | what |
 |---|---|
 | [eac99e6](https://github.com/DanielMulec/jevpaste/commit/eac99e6) | design doc (GATE A approved) |
-| [e22601e](https://github.com/DanielMulec/jevpaste/commit/e22601e) | Core `CopyCapture` seeding + `SystemClipboard.currentItem()`; `ScratchPasteboard.copyLikeAnotherApp` extracted from `ClipboardObservationTests` |
+| [e22601e](https://github.com/DanielMulec/jevpaste/commit/e22601e) | Core `CopyCapture` Launch Adoption + `SystemClipboard.currentItem()`; `ScratchPasteboard.copyLikeAnotherApp` extracted from `ClipboardObservationTests` |
 | [50910b2](https://github.com/DanielMulec/jevpaste/commit/50910b2) | `HistoryNotice` (failure → text/duration) + `HistoryNoticeSurface` decorator; `JevPasteAppTests` depends on `HistoryStore` |
 | [0071eaa](https://github.com/DanielMulec/jevpaste/commit/0071eaa) | `ClipboardHistoryOpening`, `UnavailableHistoryRepository` (renamed/moved interim), composition root, `app-shell.md` rows |
-| [d49d87b](https://github.com/DanielMulec/jevpaste/commit/d49d87b) | review fixes: seed read after observation starts (closure), fake clipboard baselines; stale presenter `hide()` ignored |
+| [d49d87b](https://github.com/DanielMulec/jevpaste/commit/d49d87b) | review fixes: launch contents read after observation starts (closure), fake clipboard baselines; stale presenter `hide()` ignored |
 
 ## 2. Architecture (all in `Sources/JevPasteApp` unless stated)
-- **Seeding** — Core `CopyCapture.init(clipboard:history:contentsAtLaunch: @MainActor () -> ClipboardItem? = { nil })`.
+- **Launch Adoption** (formerly "seeding"; renamed on Daniel's request — the synthetic test row is a *fixture*) — Core `CopyCapture.init(clipboard:history:contentsAtLaunch: @MainActor () -> ClipboardItem? = { nil })`.
   It calls `startObservingChanges` **first**, then the closure, then `adopt(_:)` (the shared live-copy path: Active
   Item; `record` unless concealed). Why a closure of a `ClipboardItem`, not a `ClipboardSnapshot`: the snapshot is
   opaque to Core and the concealed-marker check (MacInterop, must precede content reads per #6) lives in the
   adapter. `SystemClipboard.currentItem()` (MacInterop) is public on the adapter only, **not** on the `Clipboard`
   port. Root passes `{ clipboard.currentItem() }`. Why after subscribing: `SystemClipboard` baselines
   `lastObservedCount` at subscription; reading first lost a copy landing in between. A copy between baseline and
-  read is seeded and reported once more by the poll → recorded twice, deduped by history (move-to-top).
+  read is adopted at launch and reported once more by the poll → recorded twice, deduped by history (move-to-top).
 - **`History/ClipboardHistoryOpening`** (`@MainActor enum`): `open(at: = defaultFileURL, notices:)` tries
   `SQLiteHistoryRepository(fileURL:retentionLimit: 500, onFailure:)`; on throw logs the kind (`jevpaste`/`History`),
   shows `HistoryNotice(unavailable:)` at once and returns `UnavailableHistoryRepository()`. `reportingFailures(to:)`
@@ -44,7 +44,7 @@ Report: https://github.com/DanielMulec/jevpaste/issues/25#issuecomment-578926757
   the `CopyCapture(...)` call. Core ports unchanged.
 
 ## 3. Review findings
-- BLOCKING launch race (seed read before subscription) → fixed d49d87b. Tests `copyJustBeforeObservationStarts…`
+- BLOCKING launch race (launch contents read before subscription) → fixed d49d87b. Tests `copyJustBeforeObservationStarts…`
   (later item Active, recorded once) and `copyBetweenStartingObservationAndReadingTheSeed…` (recorded twice =
   upsert); both proven red with the old order. `FakeClipboard.startObservingChanges` now drops earlier changes
   like the adapter and has `foreignCopyJustBeforeObservationStarts`.
@@ -73,11 +73,10 @@ Report: https://github.com/DanielMulec/jevpaste/issues/25#issuecomment-578926757
 
 ## 5. Open questions / live-proof gaps
 - Live (a): after two synthetic copies + quit + relaunch, `sqlite3` read them back newest first — proven.
-- Live (b): seed from pre-launch copy → ⌘⇧V logged `outcome inserted`, Daniel saw ✓; the textarea's exact text
+- Live (b): Launch Adoption of the pre-launch copy → ⌘⇧V logged `outcome inserted`, Daniel saw ✓; the textarea's exact text
   (expected `tamsin.vorlage@example.com`) is **not confirmed** by Daniel. Live run predates d49d87b (logic
   unchanged in the common path; not re-proven).
-- Seeding decision (launch clipboard recorded in history) is **provisional** pending Daniel; opting out = pass
-  `{ nil }` in the root or drop `record` for the seed.
+- Launch Adoption (launch clipboard becomes the Active Item and is recorded) — **confirmed by Daniel**; keep as is.
 - "History read failed" is unreachable until the History UI calls `items()`.
 - `sqlite3`'s `trim()` strips spaces only — compare with `LIKE`, not `trim()`, when checking multi-line rows.
 

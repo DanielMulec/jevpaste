@@ -14,6 +14,10 @@ The collection of retained Clipboard Items available for later selection and reu
 The Clipboard Item selected as the source for the next smart paste. A new copy or an explicit history selection replaces the active item.
 _Avoid_: Latest item (an older item may be active)
 
+**Launch Adoption**:
+At launch, the text already on the clipboard is adopted exactly like a live copy: it becomes the Active Item and is recorded in Clipboard History unless concealed. No text → no Active Item.
+_Avoid_: Seeding (ambiguous with test fixtures), prefill
+
 **Target**:
 The focused editable destination into which a Paste Result is intended to be inserted.
 

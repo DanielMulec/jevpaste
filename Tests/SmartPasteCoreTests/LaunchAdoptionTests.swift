@@ -1,10 +1,10 @@
 import SmartPasteCore
 import Testing
 
-/// The text on the clipboard when the app launches counts as a copy: it becomes the Active Item and is recorded in
-/// Clipboard History unless it is concealed.
+/// Launch Adoption: the text on the clipboard when the app launches counts as a copy — it becomes the Active Item
+/// and is recorded in Clipboard History unless it is concealed.
 @MainActor
-struct CopyCaptureSeedingTests {
+struct LaunchAdoptionTests {
     private let clipboard = FakeClipboard(log: DeliveryLog(clock: ManualClock()), initialText: "")
     private let history = FakeHistoryRepository()
 
@@ -56,10 +56,10 @@ struct CopyCaptureSeedingTests {
         #expect(history.items() == [ClipboardItem(text: "Wren Castellan"), atLaunch])
     }
 
-    /// The seed is read only after observation has started, so a copy landing in between is never lost: it is the
-    /// seed, and the observer's later report of it is recorded again as a harmless re-copy (same identity, moved
-    /// to the top).
-    @Test func copyBetweenStartingObservationAndReadingTheSeedBecomesTheSeed() {
+    /// The launch contents are read only after observation has started, so a copy landing in between is never lost:
+    /// it is adopted at launch, and the observer's later report of it is recorded again as a harmless re-copy (same
+    /// identity, moved to the top).
+    @Test func copyBetweenStartingObservationAndReadingTheLaunchContentsIsAdoptedAtLaunch() {
         let later = ClipboardItem(text: "Wren Castellan")
 
         let capture = CopyCapture(clipboard: clipboard, history: history) { [clipboard] in
@@ -74,7 +74,7 @@ struct CopyCaptureSeedingTests {
     }
 
     /// The launch race: a copy lands after the clipboard was first looked at but before observation starts. Since
-    /// the seed is read after observation starts, that copy is the seed, recorded once.
+    /// the launch contents are read after observation starts, that copy is adopted at launch, recorded once.
     @Test func copyJustBeforeObservationStartsIsNeverLost() {
         clipboard.simulateForeignCopy("Tamsin Vorlage")
         clipboard.foreignCopyJustBeforeObservationStarts = "Wren Castellan"
