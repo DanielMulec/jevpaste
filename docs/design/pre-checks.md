@@ -15,7 +15,7 @@ Slice: [Implement Pre-check rules](https://github.com/DanielMulec/jevpaste/issue
 
 ## Suspected-secret rules (gitleaks-style shapes, no entropy; one named `static let` each)
 Scanned over the UTF-8 bytes. "Boundary" = the byte before the match is not an ASCII letter, digit, `_` or `-`.
-| rule | matches | test (`SuspectedSecretRuleTests`) |
+| rule | matches | test (`SuspectedSecretRuleTests`, `PrefixedTokenRuleTests`, `StructuredSecretRuleTests`) |
 |---|---|---|
 | `pemPrivateKey` | `-----BEGIN ` … `PRIVATE KEY-----` on one line (RSA/EC/OPENSSH/ENCRYPTED/plain) | positive + public-key/certificate negative |
 | `awsAccessKey` | boundary `AKIA` + ≥16 `[A-Z0-9]` | positive + short/lowercase negative |
@@ -25,22 +25,25 @@ Scanned over the UTF-8 bytes. "Boundary" = the byte before the match is not an A
 | `openAIStyleKey` | boundary `sk-` + ≥20 `[A-Za-z0-9_-]` (OpenAI, Anthropic) | positive + `task-…`/short negative |
 | `googleAPIKey` | boundary `AIza` + ≥35 `[A-Za-z0-9_-]` | positive + short negative |
 | `jsonWebToken` | boundary, three `.`-separated base64url segments, first two start `eyJ`, each ≥10 | positive + two-part negative |
-| `connectionStringCredentials` | `scheme://user:password@host` — non-empty user and password before the first `/?#`/whitespace | postgres/mongodb/redis + `https://host/a@b` and user-only negatives |
+| `connectionStringCredentials` | `scheme://user:password@host` — non-empty password (user may be empty, `redis://:pw@`) before the first `/?#`/whitespace | postgres/mongodb/redis + `https://host/a@b`, user-only, empty-password negatives |
 
 Linear time, no regex: every prefix rule reads at most its fixed minimum body after each prefix hit; the JWT and
 connection-string scans start only at boundaries / `://` and stop at the first delimiter, so no byte is re-read
 more than a constant number of times. Proof test: adversarial 256 KB inputs (`sk-sk-…`, `eyJ.eyJ.…`,
-`a://a://…`, `-----BEGIN -----BEGIN …`) finish under 2 s in a debug build (a quadratic scan would take minutes).
+`a://a://…`, `-----BEGIN -----BEGIN …`, …) finish under 5 s in a debug build (measured 0.1–0.8 s; with the JWT
+token-start guard removed the suite ran > 120 s — a quadratic scan fails by orders of magnitude).
 
 ## Types and files (`Sources/SmartPasteCore/PreChecks/`)
-- `SuspectedSecretRule.swift` — the rule value (`name`, `matches(_ bytes:)`), prefix-token matcher.
-- `SuspectedSecretRules.swift` — the set (`standard`, `firstMatch(in: String) -> SuspectedSecretRule?`), the nine
-  named rules; `StructuredSecretShapes.swift` — PEM, JWT, connection-string scanners (byte helpers shared).
+- `ScannedText.swift` — UTF-8 bytes + the shared linear scans (`offsets(of:)`, `startsToken(at:)`, capped `run`),
+  `ByteClass`. `SuspectedSecretRule.swift` — the rule value (`name`, `matches(_:)`) and the six prefix-token rules.
+- `StructuredSecretShapes.swift` — PEM, JWT, connection-string rules. `SuspectedSecretRules.swift` — the set
+  (`standard`, `firstMatch(in:) -> SuspectedSecretRule?`).
 - `LocalPreChecks.swift` — the Core `PreCheck` adapter: refusals 1–3 and the context screening below.
 - `Values/ScreenedTargetContext.swift` — `ScreenedTargetContext` + `PasteAttemptNote`.
 - Shell: `SmartPasteApplication` composes `LocalPreChecks()`; the interim type and its test are deleted;
   `OutcomeMessage` appends the note. Tests: `Tests/SmartPasteCoreTests/{SuspectedSecretRuleTests,
-  SuspectedSecretLinearTimeTests, LocalPreChecksTests, PasteAttemptContextScreeningTests}.swift`, app wording test.
+  StructuredSecretRuleTests, SuspectedSecretRulesTests, LocalPreChecksTests, PasteAttemptContextScreeningTests}
+  .swift`; app: `OutcomeMessageTests`, `IndicatorPresenterTests` (note wording and duration).
 
 ## GATE A — secrets in the Target Context (not a refusal)
 1. **Where:** the `PreCheck` seam gains `screenedContext(of: BoundTarget) -> ScreenedTargetContext`; the
