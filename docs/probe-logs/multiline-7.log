@@ -1,0 +1,11 @@
+2026-09-23T19:09:05Z start accessibilityTrusted=true postEventAccess=true
+2026-09-23T19:09:05Z listening for ⌘⇧V (multiline)
+2026-09-23T19:10:06Z press 1: target app=net.whatsapp.WhatsApp secure=false
+2026-09-23T19:10:06Z press 1: delivered variant=LF chars=62 lf=2 cr=0 lines=3
+2026-09-23T19:10:06Z press 1: restored items=1 restoredByteForByte=true
+2026-09-23T19:10:09Z press 2: target app=net.whatsapp.WhatsApp secure=false
+2026-09-23T19:10:09Z press 2: delivered variant=CRLF chars=62 lf=2 cr=2 lines=3
+2026-09-23T19:10:10Z press 2: restored items=1 restoredByteForByte=true
+2026-09-23T19:10:12Z press 3: target app=net.whatsapp.WhatsApp secure=false
+2026-09-23T19:10:12Z press 3: delivered variant=LF-TRAIL chars=63 lf=3 cr=0 lines=4
+2026-09-23T19:10:12Z press 3: restored items=1 restoredByteForByte=true

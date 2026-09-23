@@ -1,0 +1,6 @@
+2026-09-23T18:56:05Z start accessibilityTrusted=true postEventAccess=true
+2026-09-23T18:56:05Z listening for ⌘⇧V (multiline)
+2026-09-23T18:57:58Z SIGUSR1 trigger
+2026-09-23T18:57:58Z press 1: target app=com.mitchellh.ghostty secure=false
+2026-09-23T18:57:58Z press 1: delivered variant=LF chars=62 lf=2 cr=0 lines=3
+2026-09-23T18:57:58Z press 1: restored items=1 restoredByteForByte=true

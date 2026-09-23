@@ -1,0 +1,22 @@
+2026-09-23T18:46:11Z start accessibilityTrusted=true postEventAccess=true
+2026-09-23T18:46:11Z listening for ⌘⇧V (multiline)
+2026-09-23T18:46:56Z press 1: target app=com.google.Chrome secure=false
+2026-09-23T18:46:56Z press 1: delivered variant=LF chars=62 lf=2 cr=0 lines=3
+2026-09-23T18:46:56Z press 1: restored items=1 restoredByteForByte=true
+2026-09-23T18:46:56Z press 1: readBack markersPresent=[true, true, true] chars=62 lf=2 cr=0 lines=3
+2026-09-23T18:47:20Z press 2: target app=com.google.Chrome secure=false
+2026-09-23T18:47:20Z press 2: delivered variant=CRLF chars=62 lf=2 cr=2 lines=3
+2026-09-23T18:47:20Z press 2: restored items=1 restoredByteForByte=true
+2026-09-23T18:47:20Z press 2: readBack markersPresent=[true, true, true] chars=62 lf=2 cr=0 lines=3
+2026-09-23T18:47:22Z press 3: target app=com.google.Chrome secure=false
+2026-09-23T18:47:22Z press 3: delivered variant=LF-TRAIL chars=63 lf=3 cr=0 lines=4
+2026-09-23T18:47:23Z press 3: restored items=1 restoredByteForByte=true
+2026-09-23T18:47:23Z press 3: readBack markersPresent=[true, true, true] chars=63 lf=3 cr=0 lines=4
+2026-09-23T18:47:28Z press 4: target app=com.google.Chrome secure=false
+2026-09-23T18:47:28Z press 4: delivered variant=LF chars=62 lf=2 cr=0 lines=3
+2026-09-23T18:47:28Z press 4: restored items=1 restoredByteForByte=true
+2026-09-23T18:47:29Z press 4: readBack markersPresent=[true, true, true] chars=62 lf=2 cr=0 lines=3
+2026-09-23T18:47:31Z press 5: target app=com.google.Chrome secure=false
+2026-09-23T18:47:31Z press 5: delivered variant=CRLF chars=62 lf=2 cr=2 lines=3
+2026-09-23T18:47:32Z press 5: restored items=1 restoredByteForByte=true
+2026-09-23T18:47:32Z press 5: readBack markersPresent=[true, true, true] chars=62 lf=2 cr=0 lines=3

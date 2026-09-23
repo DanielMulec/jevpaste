@@ -19,6 +19,10 @@ enum MenuBarApplication {
         if let flag = arguments.firstIndex(of: "--probe"), arguments.indices.contains(flag + 1) {
             return AdapterProbe(logPath: arguments[flag + 1])
         }
+        // PROTOTYPE (issue #14, branch multiline-probe, never merged).
+        if let flag = arguments.firstIndex(of: "--multiline-probe"), arguments.indices.contains(flag + 1) {
+            return MultilineProbe(logPath: arguments[flag + 1])
+        }
         return MenuBarDelegate()
     }
 }

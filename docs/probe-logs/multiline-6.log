@@ -1,0 +1,30 @@
+2026-09-23T19:06:47Z start accessibilityTrusted=true postEventAccess=true
+2026-09-23T19:06:47Z listening for ⌘⇧V (multiline)
+2026-09-23T19:07:04Z press 1: no editable target front=com.openai.codex focusedElement=no status=-25212
+2026-09-23T19:07:04Z press 1: unresolved-delivery
+2026-09-23T19:07:04Z press 1: delivered variant=LF chars=62 lf=2 cr=0 lines=3
+2026-09-23T19:07:04Z press 1: restored items=1 restoredByteForByte=true
+2026-09-23T19:07:29Z press 2: no editable target front=com.openai.codex focusedElement=no status=-25212
+2026-09-23T19:07:29Z press 2: unresolved-delivery
+2026-09-23T19:07:29Z press 2: delivered variant=CRLF chars=62 lf=2 cr=2 lines=3
+2026-09-23T19:07:30Z press 2: restored items=1 restoredByteForByte=true
+2026-09-23T19:07:35Z press 3: no editable target front=com.openai.codex focusedElement=no status=-25212
+2026-09-23T19:07:35Z press 3: unresolved-delivery
+2026-09-23T19:07:35Z press 3: delivered variant=LF-TRAIL chars=63 lf=3 cr=0 lines=4
+2026-09-23T19:07:35Z press 3: restored items=1 restoredByteForByte=true
+2026-09-23T19:07:37Z press 4: no editable target front=com.openai.codex focusedElement=no status=-25212
+2026-09-23T19:07:37Z press 4: unresolved-delivery
+2026-09-23T19:07:37Z press 4: delivered variant=LF chars=62 lf=2 cr=0 lines=3
+2026-09-23T19:07:37Z press 4: restored items=1 restoredByteForByte=true
+2026-09-23T19:07:40Z press 5: no editable target front=com.openai.codex focusedElement=no status=-25212
+2026-09-23T19:07:40Z press 5: unresolved-delivery
+2026-09-23T19:07:40Z press 5: delivered variant=CRLF chars=62 lf=2 cr=2 lines=3
+2026-09-23T19:07:40Z press 5: restored items=1 restoredByteForByte=true
+2026-09-23T19:07:42Z press 6: no editable target front=com.openai.codex focusedElement=no status=-25212
+2026-09-23T19:07:42Z press 6: unresolved-delivery
+2026-09-23T19:07:42Z press 6: delivered variant=LF-TRAIL chars=63 lf=3 cr=0 lines=4
+2026-09-23T19:07:42Z press 6: restored items=1 restoredByteForByte=true
+2026-09-23T19:07:44Z press 7: no editable target front=com.openai.codex focusedElement=no status=-25212
+2026-09-23T19:07:44Z press 7: unresolved-delivery
+2026-09-23T19:07:44Z press 7: delivered variant=LF chars=62 lf=2 cr=0 lines=3
+2026-09-23T19:07:44Z press 7: restored items=1 restoredByteForByte=true
