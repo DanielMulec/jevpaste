@@ -43,7 +43,7 @@ final class AdapterProbe: NSObject, NSApplicationDelegate {
     private func pastePressed() {
         presses += 1
         let marker = "JEVPASTE-PROBE-\(presses)"
-        guard let target = resolver.resolveFocusedTarget() else {
+        guard case .resolved(let target) = resolver.resolveFocusedTarget() else {
             log.write("press \(presses): no editable target")
             return
         }

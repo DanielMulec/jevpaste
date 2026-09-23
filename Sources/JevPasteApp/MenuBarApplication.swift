@@ -19,9 +19,6 @@ enum MenuBarApplication {
         if let flag = arguments.firstIndex(of: "--probe"), arguments.indices.contains(flag + 1) {
             return AdapterProbe(logPath: arguments[flag + 1])
         }
-        if arguments.contains("--diagnose-focus") {
-            return FocusDiagnostic()
-        }
         return MenuBarDelegate()
     }
 }

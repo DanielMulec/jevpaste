@@ -126,13 +126,17 @@ final class FakeClipboard: Clipboard {
 @MainActor
 final class FakeTargetResolver: TargetResolver {
     var focusedTarget: BoundTarget?
+    /// The app reported as waking its Accessibility when nothing is focused.
+    private let wakingApplication: String?
 
-    init(focusedTarget: BoundTarget?) {
+    init(focusedTarget: BoundTarget?, wakingApplication: String? = nil) {
         self.focusedTarget = focusedTarget
+        self.wakingApplication = wakingApplication
     }
 
-    func resolveFocusedTarget() -> BoundTarget? {
-        focusedTarget
+    func resolveFocusedTarget() -> TargetResolution {
+        if let focusedTarget { return .resolved(focusedTarget) }
+        return wakingApplication.map { .waking(applicationName: $0) } ?? .noEditableTarget
     }
 
     func isStillFocused(_ target: TargetIdentity) -> Bool {

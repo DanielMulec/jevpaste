@@ -28,7 +28,12 @@ public final class PasteAttemptCoordinator {
     private func hotkeyPressed() {
         guard phase == .idle else { return }
         guard let item = capture.activeItem else { return refuse(.noActiveItem) }
-        guard let target = ports.targetResolver.resolveFocusedTarget() else { return refuse(.noEditableTarget) }
+        let target: BoundTarget
+        switch ports.targetResolver.resolveFocusedTarget() {
+        case .resolved(let resolved): target = resolved
+        case .noEditableTarget: return refuse(.noEditableTarget)
+        case .waking(let applicationName): return refuse(.targetWaking(applicationName: applicationName))
+        }
         if let refusal = rules.preCheck.refusal(for: item, in: target) { return refuse(refusal) }
         let candidates = rules.candidateExtraction.candidates(in: item)
         guard !candidates.isEmpty else { return ports.presenter.showOutcome(.noSuitableMatch) }

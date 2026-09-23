@@ -54,13 +54,18 @@ struct OutcomeMessage: Equatable {
         }
     }
 
-    /// The outcome's kind for diagnostic logs, unqualified: `inserted`, `refused.noEditableTarget`, `failed.timedOut`.
+    /// The outcome's kind for diagnostic logs, unqualified and without associated values: `inserted`,
+    /// `refused.noEditableTarget`, `refused.targetWaking`, `failed.timedOut`.
     static func logName(for outcome: PasteAttemptOutcome) -> String {
         switch outcome {
-        case .refused(let refusal): "refused.\(refusal)"
+        case .refused(let refusal): "refused.\(caseName(of: refusal))"
         case .failed(let failure): "failed.\(failure)"
         default: "\(outcome)"
         }
+    }
+
+    private static func caseName(of refusal: PreCheckRefusal) -> String {
+        String("\(refusal)".prefix { $0 != "(" })
     }
 
     private init(reason: IndicatorContent) {
@@ -76,6 +81,8 @@ struct OutcomeMessage: Equatable {
         switch refusal {
         case .noActiveItem: "Nothing copied yet"
         case .noEditableTarget: "No text field focused"
+        case .targetWaking(let applicationName):
+            "Waking \(applicationName) for Smart Paste — press ⌘⇧V again in a moment"
         case .secureField: "Secure field — not supported"
         case .suspectedSecret: "Suspected secret — blocked"
         }

@@ -10,6 +10,8 @@ final class AXFocusSource: FocusSource {
     private static let messagingTimeoutSeconds: Float = 1
     /// Chromium's tree sleeps until walked; one ordinary walk of this many elements wakes it (probe).
     private static let wakeWalkNodeLimit = 300
+    /// Chromium's "an assistive technology is present" switch; Electron apps keep their web tree off without it.
+    private static let enhancedUserInterfaceAttribute = "AXEnhancedUserInterface" as CFString
 
     private let systemWide = AXUIElementCreateSystemWide()
 
@@ -41,9 +43,9 @@ final class AXFocusSource: FocusSource {
     /// Chromium answers `noValue` for the focused element until its tree has been walked once.
     private func wakeFrontmostAppAndRetry() -> AXElementNode? {
         guard let application = NSWorkspace.shared.frontmostApplication else { return nil }
-        let applicationElement = AXUIElementCreateApplication(application.processIdentifier)
         var window: CFTypeRef?
-        AXUIElementCopyAttributeValue(applicationElement, kAXFocusedWindowAttribute as CFString, &window)
+        AXUIElementCopyAttributeValue(
+            applicationElement(application.processIdentifier), kAXFocusedWindowAttribute as CFString, &window)
         guard let root = AXElementNode.node(from: window) else { return nil }
         var queue = [root]
         var next = 0
@@ -52,5 +54,30 @@ final class AXFocusSource: FocusSource {
             next += 1
         }
         return focusedNode()
+    }
+
+    func frontmostApplication() -> FrontmostApplication? {
+        guard let application = NSWorkspace.shared.frontmostApplication else { return nil }
+        return FrontmostApplication(
+            processIdentifier: application.processIdentifier,
+            name: application.localizedName ?? application.bundleIdentifier ?? "the app"
+        )
+    }
+
+    func isAccessibilityAwake(in processIdentifier: Int32) -> Bool {
+        var value: CFTypeRef?
+        let status = AXUIElementCopyAttributeValue(
+            applicationElement(processIdentifier), Self.enhancedUserInterfaceAttribute, &value)
+        return status == .success && (value as? Bool) == true
+    }
+
+    func wakeAccessibility(in processIdentifier: Int32) -> Bool {
+        AXUIElementSetAttributeValue(
+            applicationElement(processIdentifier), Self.enhancedUserInterfaceAttribute, kCFBooleanTrue)
+        return isAccessibilityAwake(in: processIdentifier)
+    }
+
+    private func applicationElement(_ processIdentifier: Int32) -> AXUIElement {
+        AXUIElementCreateApplication(processIdentifier)
     }
 }
