@@ -16,59 +16,30 @@ GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues
   questions into their ticket **report comment**. `docs/handoffs/*` holds only two historical wave-3 files;
   their still-live facts are in "Durable notes" below.
 
-## Where things stand (2026-09-24 evening — wave 6 closed, wave 7 = acceptance suite started)
-`main` @ c3ee822+ (last: handoff). Worker branch `acceptance` = origin @ **5c2ef17** (worker idle at GATE B). Installed `~/Applications/JevPaste.app` = **clean main aeb2dd9**
-(Direct Paste + history UI), running, Open-at-Login on. 379 tests / 68 suites. Resolved this session:
-- [Implement Direct Paste for single-line items](https://github.com/DanielMulec/jevpaste/issues/34) — merged f8ce110;
-  live-proven Chrome ×2, Herdr shell ×2 (trailing newline stripped, nothing executed), ChatGPT composer, two-line
-  regression. Review APPROVE 0 blocking (2 nits applied, no delta pass).
-- [Implement the history UI](https://github.com/DanielMulec/jevpaste/issues/27) — merged aeb2dd9; 9 functional steps
-  live-proven; **look judged "No" by Daniel** → [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37)
-  (prototype, blocked by #29, deferred: "get the app complete first"). Review APPROVE → 2 nits fixed → delta APPROVE.
-- New: [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36) (grilling,
-  blocked by #29) — cold-AX wake fired on a Direct Paste; pointless on that path.
+## Where things stand (2026-09-24 late evening — wave 7 closed: acceptance suite merged)
+`main` @ 1040eb6+ (merge of `acceptance`), pushed. Installed `~/Applications/JevPaste.app` = **main 1040eb6**, running,
+Open-at-Login on. 385 tests / 70 suites. **No worker in flight; no live worktrees besides research spikes.**
+Resolved this session:
+- [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) — merged 1040eb6. Matrix
+  passes except the Herdr `sudo` cell → [Decide what the secure-field pre-check uses when the OS secure-input flag is
+  absent](https://github.com/DanielMulec/jevpaste/issues/38) (grilling, unblocked, **Daniel: post-timeline** — do the
+  four wave-7 tickets first). 150 ms target: left as is (Daniel). Trigger stays in `main`. Review chain: two
+  GPT-6-Sol passes (unframed digest → fixed + revalidated 7/7; missing log evidence → appended), supervisor final look.
 
-**One worker in flight:** [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) —
-branch `acceptance` @ 5c2ef17, worktree `~/.pi/worktrees/jevpaste/acceptance`, Herdr tab `acceptance` (pane wC:p1Q-ish — check `herdr agent list`), worker intercom `01a0d47a-b3d1-7342`, brief
-`docs/briefs/acceptance-suite-brief.md`. **GATE A approved by Daniel (option 1)** — flag-gated `SIGUSR1` trigger stays in `main` behind
-`--accept-signal-trigger` (`Sources/JevPasteApp/Launch/AcceptanceTrigger.swift`, 52588e9). **GATE B approved** —
-automated matrix done @ 9f30b18 (`docs/acceptance/results.md`): 22 presses over Chrome (DevTools MCP), Herdr,
-TextEdit; **one failed cell: a `sudo` Password: prompt inside a Herdr pane does not engage macOS secure input, so
-the secure-field pre-check did not refuse (single line Direct-Pasted into the buffer, not submitted); plain Ghostty
-control refused correctly → Herdr-specific gap** → becomes a ticket after the suite. Responsiveness: Jev indicator
-159–181 ms (timer starts at 150 ms by design), Jev inserts 380–729 ms warm / 1339 ms cold, Direct Paste ✓ 128–154 ms.
-**Remaining: the Daniel block (~6 min, staged, worker idle):** Chrome chooser Esc (C), history-select → Rejev-paste
-(G), WhatsApp "Message yourself" and ChatGPT composer (A + trailing \n, multi-line, secret). Then GATE C report. **Automation rule (Daniel):** the worker
-does everything it can alone — **Chrome via the Chrome DevTools MCP server** (`chrome-devtools` in
-`~/.pi/agent/mcp.json`, `npx chrome-devtools-mcp@latest --channel=stable --auto-connect`, lazy: `mcp({connect:…})`
-first; verified 2026-09-24: lists Daniel's real tabs, opens/snapshots/closes a `data:` page), terminals via Herdr,
-TextEdit via `open`. Daniel only for WhatsApp and ChatGPT, in one batched block. GATE A decides the **⌘⇧V trigger**
-for unattended runs (proposal: `SIGUSR1` → hotkey handler, behind a launch flag, as `multiline-probe` did) — Daniel
-must approve it as test scaffolding.
-
-## Open tickets (all children of the map)
-| ticket | type | state |
+## Open tickets (all children of the map, all now UNBLOCKED — one per session, all with Daniel)
+| ticket | type | note |
 |---|---|---|
-| [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) | task | claimed, GATE B passed, Daniel block pending |
-| [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31) | grilling | blocked by 29 |
-| [Skip Jev when the target gives it nothing to reason about](https://github.com/DanielMulec/jevpaste/issues/35) | grilling | blocked by 29 |
-| [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36) | grilling | blocked by 29 |
-| [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37) | prototype | blocked by 29 |
+| [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31) | grilling | |
+| [Skip Jev when the target gives it nothing to reason about](https://github.com/DanielMulec/jevpaste/issues/35) | grilling | keep independent from #34's single-line rule |
+| [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36) | grilling | acceptance saw ChatGPT AX go cold after ~4.5 min idle |
+| [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37) | prototype | Daniel: "get the app complete first" |
+| [Decide what the secure-field pre-check uses when the OS secure-input flag is absent](https://github.com/DanielMulec/jevpaste/issues/38) | grilling | post-timeline |
 
 ## Next session — in order
-1. Read the map body and this file. `intercom status` → your id (this session's `01a0d43b` is dead; tell the
-   worker the new id first thing).
-2. `herdr agent list`: `acceptance` alive → `intercom send 01a0d47a-b3d1-7342 "new supervisor id <ID>. Daniel is
-   here — stage the Daniel block (step 4)"`. Dead → `herdr tab create --cwd ~/.pi/worktrees/jevpaste/acceptance
-   --label acceptance --no-focus`, start pi `anthropic/claude-opus-5-5:medium`, prompt "read
-   docs/briefs/acceptance-suite-brief.md; branch acceptance is at 5c2ef17, GATE A+B approved; stage the Daniel
-   block (step 4); supervisor intercom id <ID>".
-3. Relay the Daniel block in plain words (four parts: C, G, WhatsApp, ChatGPT); "move the mouse to the top edge"
-   for anything under the menu-bar icon; he must not ⌘C during it. Then GATE C (report), then file the Herdr
-   secure-prompt finding as a ticket (grilling: what should the secure pre-check use when the OS flag is absent —
-   a no-echo heuristic? a terminal-specific rule? Daniel dislikes per-app hacks) blocked by nothing.
-4. Review (fresh GPT-6-Sol, REVIEW-BRIEF.md pattern below), merge, resolution, map gist, cleanup, reinstall main.
-5. Then the four blocked tickets open at once — all grilling/prototype with Daniel; one per session.
+1. Read the map body and this file. `intercom status` → your id.
+2. Pick one of 31 / 35 / 36 with Daniel (grilling + domain-modeling); recommend **35** first (smallest, sharpens the
+   resolver contract), then 36, then 31. 37 and 38 wait.
+3. Any implementation the decision produces → new worker in a Herdr tab per the protocol below.
 
 ## Supervisor role (Daniel's standing instructions, this session)
 - **You orchestrate only.** Workers do ALL hands-on work, including prototypes — Daniel rejected the supervisor
@@ -142,13 +113,13 @@ must approve it as test scaffolding.
   approved to live in `main` as test scaffolding (off by default) so unattended runs can fire ⌘⇧V.
 
 ## Environment facts
-- Installed `~/Applications/JevPaste.app` = **clean main aeb2dd9** (Direct Paste + history UI in), running, Open-at-Login **ON**
+- Installed `~/Applications/JevPaste.app` = **main 1040eb6**, running, Open-at-Login **ON**
   (SMAppService [enabled, allowed, notified]). The `jevpaste-dev` identity keeps the Accessibility grant.
 - `~/Library/Application Support/jevpaste/history.sqlite` (0600) holds synthetic rows, fixtures and rows of
   Daniel's real clipboard — never print it; read only `JEVPASTE-…` rows.
 - Jev key at `~/.config/jevpaste/env` (never print). Jev live ~1.1–1.7 s cold, ~0.2–0.5 s warm.
-- Worktrees present: research spikes (`jev`, `macos`, `macos-probe`, `quality`, `signing`, `spike-contract`) +
-  `chatgpt-resolver` (stale, merged — remove) + **`acceptance`** (live worker). Kept branches, no worktree: `multiline-probe`, `history-probe`.
+- Worktrees present: research spikes only (`jev`, `macos`, `macos-probe`, `quality`, `signing`, `spike-contract`).
+  Kept branches, no worktree: `multiline-probe`, `history-probe`. `acceptance` deleted after merge.
 - `/tmp/jevpaste-chooser.txt`, `/tmp/jevpaste-chooser-test.html`, `/tmp/jevpaste-harden.txt` are stale live-run
   fixtures; recreate per run. **Payload rule:** candidates are whole lines — pure values per line.
 
@@ -193,3 +164,12 @@ must approve it as test scaffolding.
   log, don't call it a defect; ask him not to ⌘C during a live block.
 - Scripts with arrow keys: the history list is newest-first — "↑ to reach an older row".
 - `gh issue create --body-file` + GraphQL `addSubIssue`/`addBlockedBy` occasionally 503 — retry once.
+
+## Wave-7 lessons (new)
+- **Reviewers want evidence in the committed log, not in the worker's session.** Brief workers: every helper output
+  that backs a claim (digests, counts) goes into the run log at run time — redacted, never contents.
+- Chrome DevTools MCP `hasFocus()` is emulated: it is **not** a key-window gate. When Daniel is using Chrome, synthetic
+  pastes can land in his other window. Gate on frontmost bundle **and** `select_page`/bringToFront, or wait for him.
+- `close_page` ids shift — re-list and verify title immediately before closing (a worker closed Daniel's x.com tab).
+- Daniel's switching apps mid-run is normal ("that was multiple times me, sorry"); the abort gate handles it — just
+  ask for "go" again.
