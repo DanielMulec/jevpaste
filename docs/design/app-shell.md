@@ -6,7 +6,7 @@ Core ports are unchanged (`docs/design/paste-attempt-state-machine.md`). Everyth
 
 ## Composition root — `SmartPasteApplication`
 - `@MainActor final class`, created by `MenuBarDelegate.applicationDidFinishLaunching` after the status item is
-  set up. `MenuBarDelegate` owns the status item and its menu ("Open at Login", "Quit"). `--probe` stays as it is.
+  set up. `MenuBarDelegate` owns the status item and its menu ("Clipboard History…", "Open at Login", "Quit"; history panel: `history-ui.md`). `--probe` stays as it is.
 - It builds and keeps: `SystemClipboard()` (100 ms polling), `CopyCapture(clipboard:history:)`, and
   `PasteAttemptCoordinator` with `GlobalHotkey()`, `AccessibilityTargetResolver()`, `PasteKeystrokeInserter()`,
   `JevGatewayDecisionService()`, `RunLoopPasteAttemptClock`, `IndicatorPresenter` over `IndicatorNoticeSurface`, `PanelCandidateChooser`,
