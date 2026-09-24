@@ -1,4 +1,4 @@
-# Handoff — jevpaste supervisor (Wayfinder map in execution phase, mid wave 6)
+# Handoff — jevpaste supervisor (Wayfinder map in execution phase, wave 7 = acceptance suite)
 
 Written for a fresh supervisor session that has never seen the previous one. Repo:
 `/Users/danielmulec/Projekte/experiments/jevpaste` (private, `DanielMulec/jevpaste`, `main` clean and pushed).
@@ -16,57 +16,46 @@ GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues
   questions into their ticket **report comment**. `docs/handoffs/*` holds only two historical wave-3 files;
   their still-live facts are in "Durable notes" below.
 
-## Where things stand (2026-09-24 morning session — wave 6, paused for Daniel's day job)
-`main` @ 46549dc+ (last: "Brief: exact state-machine doc path"): `chatgpt-resolver` merged as 87a32b8 (330 tests / 62
-suites). Resolved and closed this session:
-- [Restore Smart Paste in the ChatGPT desktop app](https://github.com/DanielMulec/jevpaste/issues/33) — merged; live
-  proof on two ChatGPT cold starts, Finder control clean. **`com.openai.codex` IS the ChatGPT desktop app** (post-training
-  rename) — never question it again; Daniel has had to say it three times.
-- [Implement Pre-check rules](https://github.com/DanielMulec/jevpaste/issues/20) — live proof recorded (follow-up comment).
-- [Skip Jev for a single line, and skip Jev when there is nothing to reason about](https://github.com/DanielMulec/jevpaste/issues/32)
-  — grilled: **Direct Paste** (glossary term, `CONTEXT.md`) for a single-line Active Item — whole item, no Jev, outer
-  line breaks stripped, absolute, plain ✓, pre-checks stay in front (Daniel's standing option: drop them if they cause
-  friction). Rule 2 (nothing to reason about) deferred past the first version.
-- Key finding: **Jev answers *none of these* for every candidate in unlabelled targets** (ChatGPT composer, bare
-  textarea, shell prompt). Every successful live paste used a labelled field. Surrounding text is always collected, so
-  "no context" must be defined by which fields are present (label/placeholder/heading) — that is ticket #35.
+## Where things stand (2026-09-24 evening — wave 6 closed, wave 7 = acceptance suite started)
+`main` @ 76ff585 (last: acceptance-suite brief). Installed `~/Applications/JevPaste.app` = **clean main aeb2dd9**
+(Direct Paste + history UI), running, Open-at-Login on. 379 tests / 68 suites. Resolved this session:
+- [Implement Direct Paste for single-line items](https://github.com/DanielMulec/jevpaste/issues/34) — merged f8ce110;
+  live-proven Chrome ×2, Herdr shell ×2 (trailing newline stripped, nothing executed), ChatGPT composer, two-line
+  regression. Review APPROVE 0 blocking (2 nits applied, no delta pass).
+- [Implement the history UI](https://github.com/DanielMulec/jevpaste/issues/27) — merged aeb2dd9; 9 functional steps
+  live-proven; **look judged "No" by Daniel** → [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37)
+  (prototype, blocked by #29, deferred: "get the app complete first"). Review APPROVE → 2 nits fixed → delta APPROVE.
+- New: [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36) (grilling,
+  blocked by #29) — cold-AX wake fired on a Direct Paste; pointless on that path.
 
-**Two workers in flight, both review-clean at GATE B, both pushed, both idle waiting for the live block** (their
-Herdr panes may be dead by the next session — if `herdr agent list` shows them gone, the branches carry everything;
-start a fresh instance in the worktree with "read docs/briefs/<x>-brief.md, the branch is at GATE B, continue from
-step 4 (live proof)"):
-| ticket | branch @ head | worktree | pane | state |
-|---|---|---|---|---|
-| [Implement Direct Paste for single-line items](https://github.com/DanielMulec/jevpaste/issues/34) | `direct-paste` @ 3e25e16 | `~/.pi/worktrees/jevpaste/direct-paste` | `wC:p1H` (tab `direct-paste`) | 345 tests; GATE B approved; **goes first** in the live block |
-| [Implement the history UI](https://github.com/DanielMulec/jevpaste/issues/27) | `history-ui` @ 143378b | `~/.pi/worktrees/jevpaste/history-ui` | `wC:p1G` (tab `history-ui`) | 362 tests; GATE B approved; live block staged in `~/.pi/worktrees/jevpaste/history-ui-live/` (LIVE-RUN.md, setup scripts) |
-
-Neither is installed. Installed app = clean `main` 87a32b8. The two branches touch disjoint files (direct-paste:
-`PasteAttempt/*`, presenter port `showOutcome(_:note:path:)`; history-ui: `CopyCapture`, `HistoryPanel/*`,
-composition root, `StatusItemPanelParts`) — expect a trivial merge; the history-ui composition-root change and the
-new `showOutcome` signature are the touchpoints. Merge direct-paste first, then history-ui (rebase/merge main into it).
+**One worker in flight:** [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) —
+branch `acceptance`, worktree `~/.pi/worktrees/jevpaste/acceptance`, Herdr tab `acceptance`, brief
+`docs/briefs/acceptance-suite-brief.md`. Started at step 1 (plan + GATE A). **Automation rule (Daniel):** the worker
+does everything it can alone — **Chrome via the Chrome DevTools MCP server** (`chrome-devtools` in
+`~/.pi/agent/mcp.json`, `npx chrome-devtools-mcp@latest --channel=stable --auto-connect`, lazy: `mcp({connect:…})`
+first; verified 2026-09-24: lists Daniel's real tabs, opens/snapshots/closes a `data:` page), terminals via Herdr,
+TextEdit via `open`. Daniel only for WhatsApp and ChatGPT, in one batched block. GATE A decides the **⌘⇧V trigger**
+for unattended runs (proposal: `SIGUSR1` → hotkey handler, behind a launch flag, as `multiline-probe` did) — Daniel
+must approve it as test scaffolding.
 
 ## Open tickets (all children of the map)
 | ticket | type | state |
 |---|---|---|
-| [Implement Direct Paste for single-line items](https://github.com/DanielMulec/jevpaste/issues/34) | task | claimed, at GATE B, needs live proof → review → merge; blocks #29 |
-| [Implement the history UI](https://github.com/DanielMulec/jevpaste/issues/27) | task | claimed, at GATE B, needs live proof → review → merge; blocks #29 |
-| [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) | task | blocked by 27, 34 |
+| [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) | task | claimed, worker at step 1 |
 | [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31) | grilling | blocked by 29 |
-| [Skip Jev when the target gives it nothing to reason about](https://github.com/DanielMulec/jevpaste/issues/35) | grilling | blocked by 29 (after the first version, Daniel) |
+| [Skip Jev when the target gives it nothing to reason about](https://github.com/DanielMulec/jevpaste/issues/35) | grilling | blocked by 29 |
+| [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36) | grilling | blocked by 29 |
+| [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37) | prototype | blocked by 29 |
 
 ## Next session — in order
-1. Read the map body and this file. `intercom status` → your id (this session's `01a0d1b6` is dead; the briefs name
-   it — tell each worker the new id in your first message).
-2. Check `herdr agent list`. Workers alive → `intercom send` each: new supervisor id + "hold". Dead → restart per above.
-3. **One live block with Daniel (~15 min), Direct Paste first:** tell the direct-paste worker "install now"; it hands
-   you the instruction block (a: labelled Chrome field; b: Herdr prompt, not executed; c: ChatGPT composer, not sent —
-   first press after a cold start may say "Waking ChatGPT…"; d: two-line item → Jev regression). Relay to Daniel in
-   plain words. Then the history-ui worker installs its build and its 10-step script runs (Rejev-paste, focus return,
-   refusal, fresh copy, delete, Clear History → **Cancel** — it is his real history, click-away).
-   Ask "stop for tonight?" between the two if he flags.
-4. Reviews (one fresh GPT-6-Sol per branch, REVIEW-BRIEF.md, mandatory `intercom send` last step), merges
-   (direct-paste first), resolution comments, map gists, cleanup. Reinstall clean `main` at the end.
-5. Then the acceptance suite (#29) is the frontier: brief a worker; its ChatGPT step uses a single-line item.
+1. Read the map body and this file. `intercom status` → your id (this session's `01a0d43b` is dead; tell the
+   worker the new id first thing).
+2. `herdr agent list`: `acceptance` alive → `intercom send` new id + "continue". Dead → new tab in the worktree,
+   "read docs/briefs/acceptance-suite-brief.md, branch is at <state>, continue from step N".
+3. Gates A/B/C per the brief; the Daniel block (WhatsApp + ChatGPT) is one batch, relayed in plain words,
+   "move the mouse to the top edge" for anything under the menu-bar icon.
+4. Review (fresh GPT-6-Sol, REVIEW-BRIEF.md pattern below), merge, resolution, map gist, cleanup, reinstall main.
+5. Then the four blocked tickets open at once — all grilling/prototype with Daniel; one per session.
 
 ## Supervisor role (Daniel's standing instructions, this session)
 - **You orchestrate only.** Workers do ALL hands-on work, including prototypes — Daniel rejected the supervisor
@@ -129,13 +118,13 @@ new `showOutcome` signature are the touchpoints. Merge direct-paste first, then 
 - GPT-6-Sol reviews took ~3 min each on these branch sizes; don't wait on them synchronously.
 
 ## Environment facts
-- Installed `~/Applications/JevPaste.app` = **merged main 87a32b8** (pre-checks + ChatGPT resolver in), running, Open-at-Login **ON**
+- Installed `~/Applications/JevPaste.app` = **clean main aeb2dd9** (Direct Paste + history UI in), running, Open-at-Login **ON**
   (SMAppService [enabled, allowed, notified]). The `jevpaste-dev` identity keeps the Accessibility grant.
 - `~/Library/Application Support/jevpaste/history.sqlite` (0600) holds synthetic rows, fixtures and rows of
   Daniel's real clipboard — never print it; read only `JEVPASTE-…` rows.
 - Jev key at `~/.config/jevpaste/env` (never print). Jev live ~1.1–1.7 s cold, ~0.2–0.5 s warm.
 - Worktrees present: research spikes (`jev`, `macos`, `macos-probe`, `quality`, `signing`, `spike-contract`) +
-  **`chatgpt-resolver`** (live worker branch, see above). Kept branches, no worktree: `multiline-probe`, `history-probe`.
+  `chatgpt-resolver` (stale, merged — remove) + **`acceptance`** (live worker). Kept branches, no worktree: `multiline-probe`, `history-probe`.
 - `/tmp/jevpaste-chooser.txt`, `/tmp/jevpaste-chooser-test.html`, `/tmp/jevpaste-harden.txt` are stale live-run
   fixtures; recreate per run. **Payload rule:** candidates are whole lines — pure values per line.
 
@@ -167,3 +156,16 @@ new `showOutcome` signature are the touchpoints. Merge direct-paste first, then 
   `--body-file`.
 - Daniel wanted two *separate* rules (single line; nothing to reason about) — a ticket that fuses them as one
   question with sub-cases annoyed him. Keep independent rules independent in the write-up.
+
+## Wave-6 lessons, second half (new)
+- Review brief pattern that worked twice tonight: detached worktree at the branch head, `REVIEW-BRIEF.md` with
+  "What the branch claims", "Required method" (make check, read all changed files, five specific questions with
+  file:line, tests via seams), verdict format, mandatory `intercom send`. Delta re-review = append "Delta re-review
+  request" to the same file, stop the old agent, **new tab + fresh instance**, prompt "handle ONLY the delta section".
+- Reviewers may need `npm ci --ignore-scripts` before `make check` (jscpd) — say so in the brief.
+- Daniel's menu bar auto-hides: he rarely sees the ✓; the log is the proof of outcome. Say "move the mouse to the
+  top edge" whenever a note under the icon matters.
+- He clicks away instead of pressing Esc, and copies things between staging and pressing — reconcile against the
+  log, don't call it a defect; ask him not to ⌘C during a live block.
+- Scripts with arrow keys: the history list is newest-first — "↑ to reach an older row".
+- `gh issue create --body-file` + GraphQL `addSubIssue`/`addBlockedBy` occasionally 503 — retry once.
