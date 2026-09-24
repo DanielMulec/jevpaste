@@ -1,0 +1,36 @@
+2026-09-24 20:12:50.084 Df JevPaste[61545:254adb8] [jevpaste:Launch] launch apiKeyPresent=true
+2026-09-24 20:12:50.108 Df JevPaste[61545:254adb8] [jevpaste:Launch] grant check at launch trusted=true
+2026-09-24 20:12:50.110 Df JevPaste[61545:254adb8] [jevpaste:Launch] acceptance signal trigger on
+2026-09-24 20:16:34.838 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-24 20:16:35.626 I  JevPaste[61545:254c232] [jevpaste:JevGateway] Jev decided over 5 options in 0.95732675 seconds
+2026-09-24 20:16:35.631 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] processing indicator hidden while choosing
+2026-09-24 20:16:35.663 Df JevPaste[61545:254adb8] [jevpaste:CandidateChooser] chooser opened with 3 alternatives
+2026-09-24 20:16:39.021 Df JevPaste[61545:254adb8] [jevpaste:CandidateChooser] cancelled (esc)
+2026-09-24 20:16:39.033 Df JevPaste[61545:254adb8] [jevpaste:CandidateChooser] target app reactivated in 0 ms
+2026-09-24 20:16:39.033 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] outcome cancelled via=jev
+2026-09-24 20:16:54.848 Df JevPaste[61545:254adb8] [jevpaste:HistoryPanel] opened with 50 rows
+2026-09-24 20:16:58.275 Df JevPaste[61545:254adb8] [jevpaste:HistoryPanel] selected row 0
+2026-09-24 20:16:58.287 Df JevPaste[61545:254adb8] [jevpaste:HistoryPanel] focus return frontmost(after: 5e-07 seconds)
+2026-09-24 20:17:01.093 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] outcome inserted via=directPaste
+2026-09-24 20:17:50.501 Df JevPaste[61545:254adb8] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-24 20:17:50.741 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] outcome inserted via=directPaste
+2026-09-24 20:17:58.258 Df JevPaste[61545:254adb8] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-24 20:17:58.519 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-24 20:17:58.834 I  JevPaste[61545:254caf0] [jevpaste:JevGateway] Jev decided over 4 options in 0.46899675 seconds
+2026-09-24 20:17:58.834 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] outcome noSuitableMatch via=jev
+2026-09-24 20:18:06.012 Df JevPaste[61545:254adb8] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-24 20:18:06.115 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] outcome refused.suspectedSecret
+2026-09-24 20:20:36.065 Df JevPaste[61545:254adb8] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-24 20:20:36.255 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] outcome inserted via=directPaste
+2026-09-24 20:25:05.203 Df JevPaste[61545:254adb8] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-24 20:25:05.211 Df JevPaste[61545:254adb8] [jevpaste:TargetResolver] focus unreadable app=com.openai.codex enhancedUI=false
+2026-09-24 20:25:05.212 Df JevPaste[61545:254adb8] [jevpaste:TargetResolver] wake requested app=com.openai.codex set=-25208 readBack=true
+2026-09-24 20:25:05.212 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] outcome refused.targetWaking
+2026-09-24 20:25:12.972 Df JevPaste[61545:254adb8] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-24 20:25:13.032 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] outcome refused.suspectedSecret
+2026-09-24 20:25:26.675 Df JevPaste[61545:254adb8] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-24 20:25:26.888 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-24 20:25:27.314 I  JevPaste[61545:255006e] [jevpaste:JevGateway] Jev decided over 4 options in 0.58095025 seconds
+2026-09-24 20:25:27.314 Df JevPaste[61545:254adb8] [jevpaste:PasteAttempt] outcome noSuitableMatch via=jev
+2026-09-24 20:30:11.825 Df JevPaste[67477:2551c68] [jevpaste:Launch] launch apiKeyPresent=true
+2026-09-24 20:30:11.849 Df JevPaste[67477:2551c68] [jevpaste:Launch] grant check at launch trusted=true
