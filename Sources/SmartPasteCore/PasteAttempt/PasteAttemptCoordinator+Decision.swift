@@ -4,12 +4,12 @@ extension PasteAttemptCoordinator {
     static let containsValueThreshold = 0.5
 
     func requestDecision() {
-        guard let attempt else { return }
+        guard let attempt, let consultation = attempt.jevConsultation else { return }
         phase = .deciding
         let number = attempt.number
         let request = DecisionRequest(
-            sourceDocument: attempt.item.text, targetContext: attempt.contextToSend.context,
-            candidates: attempt.candidates
+            sourceDocument: attempt.item.text, targetContext: consultation.contextToSend.context,
+            candidates: consultation.candidates
         )
         ports.decisionService.requestDecision(request) { [weak self] reply in
             guard let self, self.attempt?.number == number, phase == .deciding else { return }
@@ -29,16 +29,16 @@ extension PasteAttemptCoordinator {
     }
 
     private func decided(_ decision: Decision) {
-        guard let attempt else { return }
+        guard let attempt, let candidates = attempt.jevConsultation?.candidates else { return }
         guard case .candidate(let chosen) = decision.choice,
             decision.containsValueProbability >= Self.containsValueThreshold
         else { return finish(.noSuitableMatch) }
-        guard attempt.accepts(chosen, offeredAmong: attempt.candidates) else { return finish(.failed(.invalidResult)) }
-        let alternatives = rules.candidateExtraction.sameTypeAlternatives(to: chosen, among: attempt.candidates)
+        guard attempt.accepts(chosen, offeredAmong: candidates) else { return finish(.failed(.invalidResult)) }
+        let alternatives = rules.candidateExtraction.sameTypeAlternatives(to: chosen, among: candidates)
         if alternatives.count >= 2 {
             offerChoice(among: alternatives)
         } else {
-            deliver(chosen)
+            deliver(chosen.text)
         }
     }
 
@@ -52,12 +52,14 @@ extension PasteAttemptCoordinator {
             guard let self, self.attempt?.number == number, phase == .choosing else { return }
             guard let choice else { return finish(.cancelled) }
             guard attempt.accepts(choice, offeredAmong: alternatives) else { return finish(.failed(.invalidResult)) }
-            deliver(choice)
+            deliver(choice.text)
         }
     }
 
     private func waitToRetry(after delay: Duration) {
-        guard let attempt, ports.clock.now + delay < attempt.deadline else { return finish(.failed(.timedOut)) }
+        guard let deadline = attempt?.jevConsultation?.deadline, ports.clock.now + delay < deadline else {
+            return finish(.failed(.timedOut))
+        }
         phase = .waitingToRetry
         ports.presenter.showRetrying()
         schedule(after: delay) { coordinator in

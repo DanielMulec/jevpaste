@@ -65,7 +65,7 @@ struct PasteAttemptChooserTests {
         let composed = Candidate(text: "Z\u{FC}rich")
         let alternatives = [composed, Candidate(text: "Bern")]
         let harness = PasteAttemptHarness(
-            candidates: alternatives, sameTypeGroup: alternatives, sourceText: "Z\u{FC}rich, Zu\u{308}rich, Bern"
+            candidates: alternatives, sameTypeGroup: alternatives, sourceText: "Z\u{FC}rich, Zu\u{308}rich\nBern"
         )
         harness.pasteChoosing(composed.text)
 

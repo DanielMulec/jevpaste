@@ -103,6 +103,8 @@ final class FakePresenter: PasteOutcomePresenter {
     private(set) var outcomes: [PasteAttemptOutcome] = []
     /// The note shown with each outcome, in step with `outcomes`.
     private(set) var notes: [PasteAttemptNote?] = []
+    /// The Smart Paste path of each outcome, in step with `outcomes`; `nil` when none was taken.
+    private(set) var paths: [SmartPastePath?] = []
     private(set) var deliveringShownCount = 0
     /// Called when Core announces delivery, so a test can see what had happened by then.
     var onShowDelivering: (@MainActor () -> Void)?
@@ -125,9 +127,10 @@ final class FakePresenter: PasteOutcomePresenter {
         onShowDelivering?()
     }
 
-    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?) {
+    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?) {
         outcomes.append(outcome)
         notes.append(note)
+        paths.append(path)
     }
 
     /// Esc pressed while our processing indicator is visible.

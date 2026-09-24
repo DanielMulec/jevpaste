@@ -53,7 +53,7 @@ struct PasteAttemptDecisionTests {
 
     @Test func canonicallyEquivalentButDifferentlyEncodedAnswerFailsAsInvalidResult() {
         let harness = PasteAttemptHarness(
-            candidates: [Candidate(text: "Z\u{FC}rich")], sourceText: "City: Z\u{FC}rich"
+            candidates: [Candidate(text: "Z\u{FC}rich")], sourceText: "Name: Ada\nCity: Z\u{FC}rich"
         )
 
         harness.pasteChoosing("Zu\u{308}rich")
@@ -72,7 +72,7 @@ struct PasteAttemptDecisionTests {
 
     @Test func differentlyEncodedFormOfAnOfferedCandidateFailsEvenWhenTheSourceContainsIt() {
         let harness = PasteAttemptHarness(
-            candidates: [Candidate(text: "Z\u{FC}rich")], sourceText: "City: Z\u{FC}rich / Zu\u{308}rich"
+            candidates: [Candidate(text: "Z\u{FC}rich")], sourceText: "City: Z\u{FC}rich\nAlso: Zu\u{308}rich"
         )
 
         harness.pasteChoosing("Zu\u{308}rich")

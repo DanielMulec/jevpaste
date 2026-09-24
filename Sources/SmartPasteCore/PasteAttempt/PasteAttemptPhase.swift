@@ -17,10 +17,18 @@ struct RunningAttempt {
     let number: Int
     let item: ClipboardItem
     let target: BoundTarget
+    /// What asking Jev needs; `nil` for a Direct Paste, which never asks.
+    let jevConsultation: JevConsultation?
+    var timers: [any ScheduledAction] = []
+
+    var path: SmartPastePath { jevConsultation == nil ? .directPaste : .jev }
+}
+
+/// The part of a Paste Attempt that only the Jev path has.
+struct JevConsultation {
     /// The Target Context as screened at ⌘⇧V: what every request sends, and the note the outcome carries.
     let contextToSend: ScreenedTargetContext
     let candidates: [Candidate]
     /// When the 5 s clock runs out.
     let deadline: ContinuousClock.Instant
-    var timers: [any ScheduledAction] = []
 }

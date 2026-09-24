@@ -101,6 +101,12 @@ final class FakeClipboard: Clipboard {
         deliverPendingChanges()
     }
 
+    /// Someone else copies something without text (an image); the Active Item stays as it was.
+    func simulateForeignNonTextCopy() {
+        _ = replaceContents(with: ClipboardSnapshot(items: [["public.png": Data([0x89, 0x50])]]), nil)
+        deliverPendingChanges()
+    }
+
     /// Someone else copies `text`; observers hear about it only at the next `deliverPendingChanges()`.
     func simulateForeignCopyNotYetObserved(_ text: String) {
         _ = replaceContents(with: Self.snapshot(of: text), text)
@@ -126,6 +132,8 @@ final class FakeClipboard: Clipboard {
 @MainActor
 final class FakeTargetResolver: TargetResolver {
     var focusedTarget: BoundTarget?
+    /// Focus moves away right after the next resolution, so the re-verification at delivery fails.
+    var focusMovesAwayOnceResolved = false
     /// The app reported as waking its Accessibility when nothing is focused.
     private let wakingApplication: String?
 
@@ -135,7 +143,10 @@ final class FakeTargetResolver: TargetResolver {
     }
 
     func resolveFocusedTarget() -> TargetResolution {
-        if let focusedTarget { return .resolved(focusedTarget) }
+        if let focusedTarget {
+            if focusMovesAwayOnceResolved { self.focusedTarget = nil }
+            return .resolved(focusedTarget)
+        }
         return wakingApplication.map { .waking(applicationName: $0) } ?? .noEditableTarget
     }
 
