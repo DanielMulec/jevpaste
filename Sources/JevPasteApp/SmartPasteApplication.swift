@@ -6,7 +6,7 @@ import os
 
 /// The composition root: wires the real adapters and Core's rules into one Paste Attempt coordinator, so ⌘⇧V
 /// performs a Smart Paste of the Active Item (the newest copy, or the text on the clipboard at launch). Copies
-/// persist in Clipboard History.
+/// persist in Clipboard History; the history panel makes an older one Active (Rejev-paste).
 @MainActor
 final class SmartPasteApplication {
     private static let log = Logger(subsystem: "jevpaste", category: "Launch")
@@ -15,6 +15,8 @@ final class SmartPasteApplication {
     private let coordinator: PasteAttemptCoordinator
     /// "Open at Login" for the status-item menu; its notices share the indicator.
     let loginItem: LoginItemToggle
+    /// "Clipboard History…" in the status-item menu opens it.
+    let historyPanel: HistoryPanelController
 
     init(statusItem: NSStatusItem) {
         Self.log.notice("launch apiKeyPresent=\(GatewayCredentials.standard.hasAPIKey, privacy: .public)")
@@ -27,10 +29,17 @@ final class SmartPasteApplication {
         let notices = IndicatorNoticeSurface(wrapping: panel, clock: clock)
         let presenter = IndicatorPresenter(surface: notices, clock: clock)
         let clipboard = SystemClipboard()
+        let history = ClipboardHistoryOpening.open(notices: notices)
         let capture = CopyCapture(
             clipboard: clipboard,
-            history: ClipboardHistoryOpening.open(notices: notices),
+            history: history,
             contentsAtLaunch: { clipboard.currentItem() }
+        )
+        let activator = WorkspaceApplicationActivator()
+        let focusReturn = TargetAppFocusReturn(activator: activator, clock: clock)
+        historyPanel = HistoryPanelController(
+            surface: HistoryPanel(anchorFrame: statusItemFrame), history: history, capture: capture,
+            focusReturn: focusReturn, activator: activator, notices: notices
         )
         // After the history notice, so a missing grant — the more urgent one — is what shows at launch.
         loginItem = LoginItemToggle(service: MainAppLoginItemService(), notices: notices)
@@ -51,7 +60,7 @@ final class SmartPasteApplication {
                 presenter: presenter,
                 chooser: PanelCandidateChooser(
                     surface: ChooserPanel(anchorFrame: statusItemFrame),
-                    focusReturn: TargetAppFocusReturn(activator: WorkspaceApplicationActivator(), clock: clock),
+                    focusReturn: focusReturn,
                     indicator: presenter
                 )
             ),

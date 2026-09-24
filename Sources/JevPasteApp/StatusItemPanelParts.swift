@@ -30,14 +30,15 @@ final class StatusItemPanel: NSPanel {
     }
 }
 
-/// The rounded HUD background of jevpaste's panels, holding one view that fills it.
+/// The rounded background of jevpaste's panels, holding one view that fills it: the dark HUD material for the
+/// indicator and the chooser; the history panel passes `.popover`, which follows light and dark appearance.
 final class HUDBackgroundView: NSVisualEffectView {
-    init(filledBy content: NSView) {
+    init(filledBy content: NSView, material: NSVisualEffectView.Material = .hudWindow, cornerRadius: Double = 8) {
         super.init(frame: .zero)
-        material = .hudWindow
+        self.material = material
         state = .active
         wantsLayer = true
-        layer?.cornerRadius = 8
+        layer?.cornerRadius = cornerRadius
         addFillingSubview(content)
     }
 
