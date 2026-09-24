@@ -23,7 +23,7 @@ candidates }` · `Decision { choice: .candidate(Candidate) | .noneOfThese, conta
 `PreCheckRefusal = .noEditableTarget | .secureField | .suspectedSecret | .noActiveItem` ·
 `PasteAttemptFailure = .timedOut | .decisionUnavailable | .invalidResult | .targetChanged` ·
 `PasteAttemptOutcome = .inserted | .insertedWithoutRestore | .noSuitableMatch | .refused(PreCheckRefusal)
-| .cancelled | .failed(PasteAttemptFailure)`.
+| .cancelled | .failed(PasteAttemptFailure)` · `SmartPastePath = .jev | .directPaste` (diagnostics only).
 
 ## Ports
 ```swift
@@ -52,7 +52,8 @@ protocol HistoryRepository: Sendable { func record(_ item: ClipboardItem) }
 @MainActor protocol PasteOutcomePresenter {
     func showProcessing(onCancel: @escaping @MainActor () -> Void)   // Esc on our indicator
     func showRetrying()                                              // 429 back-off in progress
-    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?) // ✓/reason + note; hides processing
+    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?,   // ✓/reason + note; hides processing
+                     path: SmartPastePath?)                                    // .jev / .directPaste, log only
 }
 @MainActor protocol CandidateChooser {   // adapter returns focus to the Bound Target's app before replying
     func presentChoice(among candidates: [Candidate], for target: BoundTarget,
@@ -73,6 +74,7 @@ protocol PreCheck: Sendable {   // adapter: LocalPreChecks (Core), see pre-check
 | phase | event | action → next phase |
 |---|---|---|
 | idle | ⌘⇧V, no Active Item / no target / `PreCheck` refusal | `showOutcome(.refused(r))` → idle (no Jev, no write) |
+| idle | ⌘⇧V, checks pass, single-line item (`DirectPasteRule`) | Direct Paste: pin item+target, no Jev, no clocks, no indicator → delivering ([direct-paste.md](direct-paste.md)) |
 | idle | ⌘⇧V, checks pass, candidates empty | `showOutcome(.noSuitableMatch)` → idle |
 | idle | ⌘⇧V, checks pass | pin item+target; start 5 s deadline + 150 ms indicator timer; `requestDecision` → deciding |
 | deciding, retrying, choosing, delivering | ⌘⇧V | ignored |
@@ -94,8 +96,8 @@ protocol PreCheck: Sendable {   // adapter: LocalPreChecks (Core), see pre-check
 | delivering | 120 ms, `changeCount` == own write | `restore` (mark own) → `.inserted` |
 | delivering | 120 ms, `changeCount` changed | skip restore → `.insertedWithoutRestore` (capture already made the foreign copy Active) |
 
-Every outcome cancels all timers of the attempt, then `showOutcome` and → idle. Active Item is never changed
-by the coordinator; a copy during the attempt reaches `CopyCapture` and becomes Active there.
+Every outcome cancels all timers of the attempt, then `showOutcome` (with the attempt's path) and → idle.
+Active Item is never changed by the coordinator; a copy during the attempt reaches `CopyCapture` and becomes Active there.
 
 ## Clocks
 - **5 s deadline**: starts when ⌘⇧V passes the pre-checks; covers Jev calls and 429 back-off; a retry is

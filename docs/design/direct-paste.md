@@ -10,8 +10,9 @@ Slice: [Implement Direct Paste for single-line items](https://github.com/DanielM
   `\r`, trailing blank lines and leading blank lines are all covered). `"  x@y.org\n"` → yes; `"a\n\nb"` → no.
 - **Whitespace-only / empty**: `nil` → existing path: empty Candidates → No Suitable Match, no Jev call. (No
   Pre-check refuses whitespace-only items today.)
-- **Text**: the item verbatim, cut at the first line break of its trailing whitespace run. `"  a b\t\r\n\n"` →
-  `"  a b\t"`; leading whitespace (leading line breaks included) and inner whitespace stay byte for byte.
+- **Text**: outer line breaks stripped, nothing else (GATE A; the decision said *trailing* only — leading breaks are
+  the same hazard at a prompt). Cut after the last break of the leading whitespace run and at the first break of
+  the trailing one: `"\r\n  \r\n\tx \r\n\n"` → `"\tx "`. Spaces and tabs on the line stay byte for byte.
 
 ## Where the branch sits (`hotkeyPressed`)
 ```
@@ -19,9 +20,9 @@ Slice: [Implement Direct Paste for single-line items](https://github.com/DanielM
 DirectPasteRule.text(for: item) != nil → deliver it  (no Jev, no Candidates, no chooser, no indicator, no 5 s clock)
 otherwise → Candidates → Jev … (unchanged)
 ```
-Delivery is the existing step (Bound Target re-verified, own write, ⌘V, 120 ms Restore Window). `deliver`
-takes the text to paste instead of a `Candidate`; the Jev path passes `chosen.text`. `RunningAttempt` keeps its Jev-only data (screened context,
-Candidates, deadline) in an optional `JevConsultation`; `nil` = Direct Paste. A Direct Paste carries no note.
+Delivery is the existing step (Bound Target re-verified, own write, ⌘V, 120 ms Restore Window). `deliver(_ text:)`
+replaces `deliver(_: Candidate)`. `RunningAttempt` keeps Jev-only data (screened context, Candidates, deadline) in
+an optional `JevConsultation`; `nil` = Direct Paste, which carries no note.
 
 ## Outcome and log (item 4)
 The path rides on the **presenter call only**, not on `PasteAttemptOutcome`: new Core enum
@@ -31,8 +32,7 @@ path was taken. `OutcomeMessage` untouched; the visible ✓ is identical. `Indic
 
 ## Tests (Swift Testing)
 - `DirectPasteRuleTests` (parameterised): single line, outer whitespace, CRLF, lone CR, trailing blank lines,
-  leading blank lines, `a\n\nb`, whitespace-only/empty → `nil`; text keeps leading/inner whitespace, strips only
-  trailing breaks.
+  leading blank lines, `a\n\nb`, whitespace-only/empty → `nil`; byte-exact slice, spaces/tabs kept.
 - `PasteAttemptDirectPasteTests`: no Jev request; pasted text = Direct Paste text; restore / foreign copy /
   target changed as usual; no indicator at 150 ms, no timeout at 5 s; a phone number still pastes into an Email
   field; Pre-check refusal wins (order); whitespace-only → No Suitable Match, no Jev; multi-line asks Jev
