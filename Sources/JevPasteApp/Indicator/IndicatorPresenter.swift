@@ -54,11 +54,20 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         Self.log.notice("delivering indicator shown")
     }
 
-    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?) {
-        let noteName = note.map { " note=\($0)" } ?? ""
-        Self.log.notice(
-            "outcome \(OutcomeMessage.logName(for: outcome), privacy: .public)\(noteName, privacy: .public)")
+    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?) {
+        let line = Self.outcomeLogLine(outcome, note: note, path: path)
+        Self.log.notice("\(line, privacy: .public)")
         show(OutcomeMessage(outcome, note: note))
+    }
+
+    /// The diagnostic line for an outcome: its kind, the path taken and the note — fixed names only, no payload.
+    /// `outcome inserted via=directPaste`, `outcome inserted via=jev note=surroundingTextWithheld`.
+    static func outcomeLogLine(
+        _ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?
+    ) -> String {
+        let pathName = path.map { " via=\($0)" } ?? ""
+        let noteName = note.map { " note=\($0)" } ?? ""
+        return "outcome \(OutcomeMessage.logName(for: outcome))\(pathName)\(noteName)"
     }
 
     /// The Candidate Chooser opened in the indicator's place: hides it, and a click can no longer cancel. The
