@@ -16,9 +16,12 @@ GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues
   questions into their ticket **report comment**. `docs/handoffs/*` holds only two historical wave-3 files;
   their still-live facts are in "Durable notes" below.
 
-## Where things stand (2026-09-24 late evening — wave 7 closed: acceptance suite merged)
-`main` @ 1040eb6+ (merge of `acceptance`), pushed. Installed `~/Applications/JevPaste.app` = **main 1040eb6**, running,
-Open-at-Login on. 385 tests / 70 suites. **No worker in flight; no live worktrees besides research spikes.**
+## Where things stand (2026-09-24 night — v1 declared; wave 7 + app icon merged)
+`main` = merge of `app-icon` (7a1bee0), pushed. Installed `~/Applications/JevPaste.app` = that `main`, running, Open-at-Login
+on, **olive icon + template menu-bar glyph live**. 385 tests / 69 suites. **No worker in flight; no live worktrees
+besides research spikes.** Map Notes now carry a dated **"v1 reached"** line; open tickets are the v1.x backlog.
+Also this session: [Give JevPaste an app icon and keep the staging bundle out of Launchpad](https://github.com/DanielMulec/jevpaste/issues/39)
+— merged; `make install` now swaps atomically and deletes `build/JevPaste.app` (it was the second Launchpad entry).
 Resolved this session:
 - [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) — merged 1040eb6. Matrix
   passes except the Herdr `sudo` cell → [Decide what the secure-field pre-check uses when the OS secure-input flag is
@@ -34,6 +37,8 @@ Resolved this session:
 | [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36) | grilling | acceptance saw ChatGPT AX go cold after ~4.5 min idle |
 | [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37) | prototype | Daniel: "get the app complete first" |
 | [Decide what the secure-field pre-check uses when the OS secure-input flag is absent](https://github.com/DanielMulec/jevpaste/issues/38) | grilling | post-timeline |
+
+Daniel (2026-09-24): "declared done AND we continue" — v1.x tickets proceed one per session.
 
 ## Next session — in order
 1. Read the map body and this file. `intercom status` → your id.
@@ -173,3 +178,12 @@ Resolved this session:
 - `close_page` ids shift — re-list and verify title immediately before closing (a worker closed Daniel's x.com tab).
 - Daniel's switching apps mid-run is normal ("that was multiple times me, sorry"); the abort gate handles it — just
   ask for "go" again.
+
+## Icon / image-gen lessons (new)
+- pi's `generate_image` (Antigravity, `gemini-3-pro-image`) works from a Herdr worker. Round 1 with "motif ideas" got
+  gradient/outline stock icons — Daniel: "all ugly". Round 2 with an explicit **art-direction reference** (Claude app
+  icon: one matte colour, one soft solid glyph, explicit negatives: no gradient/outline/shadow/text/3D) landed first
+  try. Lead with a style reference and negatives, not motifs.
+- Show Daniel a contact sheet (PIL, 4 across) via `telegram_attach`; he picks by number.
+- `scripts/make-icon-images.py` regenerates AppIcon + StatusItem{,@2x} deterministically from
+  `docs/icon-candidates/round2-2.png`; status glyph gap widened to ~2 px at 1x for 18 px legibility.
