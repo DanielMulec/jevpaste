@@ -87,8 +87,10 @@ longer to resolve the target. Jev decisions took 0.47–0.96 s.
 
 ## Revalidation of H with the framed digest (2026-09-24, 20:38–20:42, automated)
 `scripts/acceptance/clipboard-vault.swift` now hashes a length-framed encoding (version tag, item count, per item the
-type count and every type name and payload each prefixed by its byte length). `selftest` checks that three inputs the
-old digest confused now hash apart (passes). `save` digests the bytes read back from the saved file. `digest` refuses a
+type count and every type name and payload each prefixed by its byte length). `selftest` hashes three regression pairs that each collided under the old digest (asserted with the
+old algorithm): type/bytes boundary, item boundary, type-count boundary. It checks that the framed digest separates all
+three (`oldCollided=3/3 framedDistinct=3/3`). The version used during the run had one real regression pair plus two
+framing checks. `save` digests the bytes read back from the saved file. `digest` refuses a
 read during which `changeCount` moved, and `restore` exits non-zero on mismatch. `press.sh` is `set -euo pipefail`, needs
 exactly one test-app pid and exits non-zero on a digest mismatch. Same test build (pid 72366, `trusted=true`); production
 was quit at 20:38 and relaunched at 20:42:36 (pid 73711, `trusted=true`). Log:
@@ -104,7 +106,7 @@ was quit at 20:38 and relaunched at 20:42:36 (pid 73711, `trusted=true`). Log:
 | 20:42:07.283 | B | inserted jev | +2 | ✅ | test Email = `acc.b@…` exactly (after `select_page bringToFront`) |
 | 20:42:17.098 | E secret | refused.suspectedSecret | +0 | ✅ | — (no write) |
 
-**H re-confirmed on 7 of 7 presses with the framed digest.** Daniel's clipboard was saved with the framed digest
+**H re-confirmed on 7 of 7 presses with the framed digest.** The helper output (digests shortened to 8…5 hex as printed, change counts, save/restore/post-relaunch checks, selftest) is appended to the log. Daniel's clipboard was saved with the framed digest
 (`af9f5ed7…a7c14`), restored at the end (`matches=true`), re-checked after the production relaunch, and the saved file
 was deleted.
 
@@ -113,7 +115,7 @@ between presses. After `open -a "Google Chrome"` the key window was not the one 
 emulated `hasFocus()` passed the gate. The two B presses landed in the key tab of the other window, a leftover
 `history-ui-live/target.html` test page, whose textarea then held exactly those two synthetic addresses. I cleared it.
 The first A press landed in no text field of the four pages with focused editables. Where it went is unknown, possibly
-an omnibox. It was a single-line synthetic value with no newline, so nothing could have been submitted. One run of
+an omnibox. It was a single-line synthetic value with no line break, and Direct Paste sends only ⌘V (no Return). Whether anything was submitted was not checked. One run of
 two presses launched concurrently by mistake. The stricter `press.sh` aborted both at `kill` (two pids matched), so
 nothing fired, and the pid match is now anchored and must be unique. Fix for re-runs: `select_page … bringToFront:true`
 before each press. The read-back stays the proof of landing.

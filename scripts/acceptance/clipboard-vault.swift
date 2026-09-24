@@ -72,15 +72,25 @@ case ("digest", nil):
     guard NSPasteboard.general.changeCount == changeCount else { print("clipboard changed while reading"); exit(1) }
     print("changeCount=\(changeCount) items=\(items.count) sha256=\(digest(items))")
 case ("selftest", nil):
-    // The unframed digest of 9f30b18 hashed these two alike; the framed one must not.
-    let collisions: [(Items, Items)] = [
+    // Regression cases: each pair hashed alike under the unframed digest of 9f30b18 (checked below with
+    // `unframedDigest`), and must hash apart under the framed one. Boundaries: type/bytes, item, type count.
+    func unframedDigest(_ items: Items) -> String {
+        var hash = SHA256()
+        for item in items {
+            hash.update(data: Data("item".utf8))
+            for key in item.keys.sorted() { hash.update(data: Data(key.utf8)); hash.update(data: item[key]!) }
+        }
+        return hash.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+    let pairs: [(Items, Items)] = [
         ([["a": Data("bc".utf8)]], [["ab": Data("c".utf8)]]),
-        ([["t": Data("xy".utf8)], ["t": Data()]], [["t": Data("x".utf8)], ["t": Data("y".utf8)]]),
-        ([["a": Data(), "b": Data()]], [["a": Data()], ["b": Data()]]),
+        ([["a": Data("itemb".utf8)]], [["a": Data()], ["b": Data()]]),
+        ([["a": Data("b".utf8), "c": Data()]], [["a": Data("bc".utf8)]]),
     ]
-    let distinct = collisions.allSatisfy { digest($0.0) != digest($0.1) }
-    print("selftest distinct=\(distinct)")
-    if !distinct { exit(1) }
+    let oldCollided = pairs.filter { unframedDigest($0.0) == unframedDigest($0.1) }.count
+    let framedDistinct = pairs.filter { digest($0.0) != digest($0.1) }.count
+    print("selftest oldCollided=\(oldCollided)/\(pairs.count) framedDistinct=\(framedDistinct)/\(pairs.count)")
+    if oldCollided != pairs.count || framedDistinct != pairs.count { exit(1) }
 default:
     print("usage: clipboard-vault save|restore <file> | digest [file]")
     exit(2)

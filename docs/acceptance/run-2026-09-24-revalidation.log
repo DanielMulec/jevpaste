@@ -28,3 +28,64 @@
 2026-09-24 20:42:17.110 Df JevPaste[72366:2557323] [jevpaste:PasteAttempt] outcome refused.suspectedSecret
 2026-09-24 20:42:36.125 Df JevPaste[73711:2558ca3] [jevpaste:Launch] launch apiKeyPresent=true
 2026-09-24 20:42:36.147 Df JevPaste[73711:2558ca3] [jevpaste:Launch] grant check at launch trusted=true
+
+# ---- Helper output (clipboard-vault / press.sh), copied from the operator session's tool results ----
+# Redacted as it was printed during the run: digests shortened to first 8 … last 5 hex chars by the session's sed
+# filter; counts and digests only, never clipboard contents. Times are local (CEST). "before" is taken after the
+# fixture was copied, "after" 2–3 s after the trigger.
+# selftest at revalidation time (3-pair version of ba9cccf):
+selftest distinct=true
+# Daniel's clipboard, saved before the test build was launched (vault3, 0600 in a 0700 dir):
+changeCount=1137 items=1 sha256=af9f5ed7…a7c14      (digest before save)
+saved items=1 sha256=af9f5ed7…a7c14
+# press 1 — A (Direct Paste)
+trigger at 20:38:51.526 front=com.google.Chrome
+before: changeCount=1138 items=1 sha256=180d114d…38be5
+after:  changeCount=1140 items=1 sha256=180d114d…38be5
+clipboardSameBytes=true
+# press 2 — A (Direct Paste)
+trigger at 20:39:07.900 front=com.google.Chrome
+before: changeCount=1141 items=1 sha256=180d114d…38be5
+after:  changeCount=1143 items=1 sha256=180d114d…38be5
+clipboardSameBytes=true
+# two concurrent invocations (B, E-secret) by mistake: both aborted at kill, no signal sent, no digest pair
+trigger at 20:39:22.114 front=com.google.Chrome
+scripts/acceptance/press.sh: line 14: kill: 72366 / 72641: arguments must be process or job IDs
+trigger at 20:39:22.114 front=com.google.Chrome
+scripts/acceptance/press.sh: line 14: kill: 72366 / 72640: arguments must be process or job IDs
+# press 3 — D (no suitable match)
+trigger at 20:39:22.820 front=com.google.Chrome
+before: changeCount=1146 items=1 sha256=9c04520c…6544f
+after:  changeCount=1146 items=1 sha256=9c04520c…6544f
+clipboardSameBytes=true
+# gate abort (Daniel brought WhatsApp to the front), no signal sent
+ABORT front=net.whatsapp.WhatsApp expected=com.google.Chrome
+# interim restore of Daniel's clipboard while paused
+restored items=1 sha256=af9f5ed7… matches=true
+# press 4 — B (Jev insert)
+trigger at 20:40:31.635 front=com.google.Chrome
+before: changeCount=1150 items=1 sha256=e9229e16…1077c
+after:  changeCount=1152 items=1 sha256=e9229e16…1077c
+clipboardSameBytes=true
+# press 5 — B (Jev insert)
+trigger at 20:40:58.373 front=com.google.Chrome
+before: changeCount=1153 items=1 sha256=e9229e16…1077c
+after:  changeCount=1155 items=1 sha256=e9229e16…1077c
+clipboardSameBytes=true
+# press 6 — B (Jev insert)
+trigger at 20:42:07.260 front=com.google.Chrome
+before: changeCount=1156 items=1 sha256=e9229e16…1077c
+after:  changeCount=1158 items=1 sha256=e9229e16…1077c
+clipboardSameBytes=true
+# press 7 — E suspected secret
+trigger at 20:42:17.075 front=com.google.Chrome
+before: changeCount=1159 items=1 sha256=1e5493b6…2d8d3
+after:  changeCount=1159 items=1 sha256=1e5493b6…2d8d3
+clipboardSameBytes=true
+# final restore, before and after the production relaunch (pid 73711), and the saved file (then deleted)
+restored items=1 sha256=af9f5ed7… matches=true
+changeCount=1160 items=1 sha256=af9f5ed7…a7c14
+changeCount=1160 items=1 sha256=af9f5ed7…a7c14      (after production relaunch)
+file items=1 sha256=af9f5ed7…a7c14
+# selftest of the current helper (three verified old-collision pairs, run offline after the review; no live run):
+selftest oldCollided=3/3 framedDistinct=3/3
