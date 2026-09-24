@@ -25,12 +25,16 @@ The focused editable destination into which a Paste Result is intended to be ins
 Information about the Target and its surroundings that helps establish what text belongs there.
 
 **Smart Paste**:
-An explicitly requested insertion of the Active Item into the Target: either the excerpt that belongs there, chosen by Jev, or — for a single-line Active Item — a Direct Paste. Insert only; never sends or executes.
+An explicitly requested insertion of the Active Item into the Target: either the excerpt that belongs there, chosen by Jev, or a Direct Paste. Insert only; never sends or executes.
 _Avoid_: Ordinary paste (which inserts clipboard contents without this safety envelope)
 
 **Direct Paste**:
-The Active Item inserted whole, without Jev, Candidates or the Candidate Chooser — verbatim as copied, leading and trailing line breaks stripped so nothing is sent or executed. Happens when the Active Item is a single line (no line break inside, ignoring outer whitespace). Pre-checks still apply.
+The Active Item inserted whole, without Candidates or the Candidate Chooser — verbatim as copied, leading and trailing line breaks stripped so nothing is sent or executed. Three doorways: the Active Item is a single line (no line break inside, ignoring outer whitespace; Jev is not consulted); the Target is a Free-text Target; or the user presses Enter after No Suitable Match. Pre-checks still apply.
 _Avoid_: Plain paste, whole paste, skip-Jev paste
+
+**Free-text Target**:
+A Target that Jev judges to accept any text — a chat or message composer, an editor, a document, a terminal — rather than one specific value. Judged per Paste Attempt from the Target Context, never by a local rule; a Free-text Target receives the whole Active Item as a Direct Paste.
+_Avoid_: Unlabelled target (labels may exist but be unreadable), chat mode
 
 **Paste Result**:
 One exact, contiguous, verbatim excerpt of the Active Item chosen for the Target. Never rewritten, reformatted, combined, or generated.
@@ -40,7 +44,7 @@ _Avoid_: Transformation, rewrite, generated text
 An exact contiguous substring of the Active Item, derived locally, that Jev may choose as the Paste Result.
 
 **No Suitable Match**:
-The visible outcome when no Candidate belongs in the Target; nothing is inserted.
+The visible outcome when no Candidate belongs in the Target; nothing is inserted unless the user then presses Enter to paste the whole Active Item as a Direct Paste.
 
 **Candidate Chooser**:
 The small in-app prompt shown when several excerpts are plausible for the Target; the app never guesses silently.
