@@ -30,7 +30,15 @@ GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues
 
 **One worker in flight:** [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) —
 branch `acceptance`, worktree `~/.pi/worktrees/jevpaste/acceptance`, Herdr tab `acceptance`, brief
-`docs/briefs/acceptance-suite-brief.md`. Started at step 1 (plan + GATE A). **Automation rule (Daniel):** the worker
+`docs/briefs/acceptance-suite-brief.md`. **GATE A approved by Daniel (option 1)** — flag-gated `SIGUSR1` trigger stays in `main` behind
+`--accept-signal-trigger` (`Sources/JevPasteApp/Launch/AcceptanceTrigger.swift`, 52588e9). **GATE B approved** —
+automated matrix done @ 9f30b18 (`docs/acceptance/results.md`): 22 presses over Chrome (DevTools MCP), Herdr,
+TextEdit; **one failed cell: a `sudo` Password: prompt inside a Herdr pane does not engage macOS secure input, so
+the secure-field pre-check did not refuse (single line Direct-Pasted into the buffer, not submitted); plain Ghostty
+control refused correctly → Herdr-specific gap** → becomes a ticket after the suite. Responsiveness: Jev indicator
+159–181 ms (timer starts at 150 ms by design), Jev inserts 380–729 ms warm / 1339 ms cold, Direct Paste ✓ 128–154 ms.
+**Remaining: the Daniel block (~6 min, staged, worker idle):** Chrome chooser Esc (C), history-select → Rejev-paste
+(G), WhatsApp "Message yourself" and ChatGPT composer (A + trailing \n, multi-line, secret). Then GATE C report. **Automation rule (Daniel):** the worker
 does everything it can alone — **Chrome via the Chrome DevTools MCP server** (`chrome-devtools` in
 `~/.pi/agent/mcp.json`, `npx chrome-devtools-mcp@latest --channel=stable --auto-connect`, lazy: `mcp({connect:…})`
 first; verified 2026-09-24: lists Daniel's real tabs, opens/snapshots/closes a `data:` page), terminals via Herdr,
@@ -41,7 +49,7 @@ must approve it as test scaffolding.
 ## Open tickets (all children of the map)
 | ticket | type | state |
 |---|---|---|
-| [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) | task | claimed, worker at step 1 |
+| [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) | task | claimed, GATE B passed, Daniel block pending |
 | [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31) | grilling | blocked by 29 |
 | [Skip Jev when the target gives it nothing to reason about](https://github.com/DanielMulec/jevpaste/issues/35) | grilling | blocked by 29 |
 | [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36) | grilling | blocked by 29 |
@@ -50,10 +58,13 @@ must approve it as test scaffolding.
 ## Next session — in order
 1. Read the map body and this file. `intercom status` → your id (this session's `01a0d43b` is dead; tell the
    worker the new id first thing).
-2. `herdr agent list`: `acceptance` alive → `intercom send` new id + "continue". Dead → new tab in the worktree,
-   "read docs/briefs/acceptance-suite-brief.md, branch is at <state>, continue from step N".
-3. Gates A/B/C per the brief; the Daniel block (WhatsApp + ChatGPT) is one batch, relayed in plain words,
-   "move the mouse to the top edge" for anything under the menu-bar icon.
+2. `herdr agent list`: `acceptance` alive → `intercom send` new id + "Daniel is here, stage the block". Dead → new
+   tab in the worktree, "read docs/briefs/acceptance-suite-brief.md, branch is at 9f30b18 past GATE B, stage the
+   Daniel block (step 4)".
+3. Relay the Daniel block in plain words (four parts: C, G, WhatsApp, ChatGPT); "move the mouse to the top edge"
+   for anything under the menu-bar icon; he must not ⌘C during it. Then GATE C (report), then file the Herdr
+   secure-prompt finding as a ticket (grilling: what should the secure pre-check use when the OS flag is absent —
+   a no-echo heuristic? a terminal-specific rule? Daniel dislikes per-app hacks) blocked by nothing.
 4. Review (fresh GPT-6-Sol, REVIEW-BRIEF.md pattern below), merge, resolution, map gist, cleanup, reinstall main.
 5. Then the four blocked tickets open at once — all grilling/prototype with Daniel; one per session.
 
