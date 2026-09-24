@@ -33,7 +33,7 @@ States: `closed` → `open(query, highlighted, confirmingClearAll)` → `closed`
 ↑/↓ move the highlight (clamped) · Return/Enter select it · click a row selects it · ⌘⌫ deletes the highlighted
 row · ⌫ deletes it only when the search field is empty and the key is not auto-repeating (holding ⌫ to clear a
 query never runs on into history) · ✕ deletes that row · Esc closes (or cancels an open clear confirmation) ·
-click-away closes. Select → `select(_:)`, close, `TargetAppFocusReturn` to the app frontmost at open, and the
+click-away closes; ⌘X/C/V/A/Z edit the query (no Edit menu in an accessory app). Select → `select(_:)`, close, `TargetAppFocusReturn` to the app frontmost at open, and the
 observer shows "Active: <first line ≤ 40 chars>" (`pin.fill`, 2.5 s) via `IndicatorNoticeSurface`, so it waits
 behind a paste outcome and never covers it. Esc → close + focus return, no change. Click-away → close, no focus
 return (the user clicked where they want to be), no change. A copy while open refreshes the panel.
@@ -43,7 +43,7 @@ Status-item menu: "Clipboard History…" / — / "Open at Login" / — / "Quit".
 **Hotkey: none (proposal).** `GlobalHotkey` is fixed to ⌘⇧V; a second shortcut means a MacInterop change, a
 collision choice and another failure notice — not free. Follow-up ticket if Daniel wants one.
 
-## Files (`Sources/JevPasteApp/HistoryPanel/`, each < 150 lines)
+## Files (`Sources/JevPasteApp/HistoryPanel/`, each < 200 lines)
 `HistoryPanelContent` (pure mapping) · `HistoryPanelSurface` (protocol + events) · `HistoryPanelController`
 (logic over the surface, `HistoryRepository`, `CopyCapture`, `TargetAppFocusReturn`, frontmost pid, notices) ·
 `HistoryPanel` (AppKit surface) · `ActiveItemView` · `HistoryRowsView` · `HistoryRowCell` · `HistoryPanelFooter` ·

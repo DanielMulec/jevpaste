@@ -14,9 +14,8 @@ extension IndicatorNotice {
         self.init(warning: "History unavailable — " + Self.reason(for: failure), for: Self.unavailableDuration)
     }
 
-    /// An operation failed after a successful open: reading history, or any write (the write is lost).
-    /// "History read failed" is unreachable today — nothing in the app calls `items()` yet; the history UI will
-    /// (https://github.com/DanielMulec/jevpaste/issues/27, "Implement the history UI"). Keep it.
+    /// An operation failed after a successful open: reading history (the history panel), or any write (the write
+    /// is lost).
     init(historyRuntimeFailure failure: HistoryStoreFailure) {
         let text = Self.isRead(failure) ? "History read failed" : "History write failed"
         self.init(warning: text, for: Self.runtimeFailureDuration)
