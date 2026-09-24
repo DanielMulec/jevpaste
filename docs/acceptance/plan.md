@@ -85,8 +85,8 @@ no Accessibility, so without it every cell needs Daniel. **Recommendation: keep 
 ## Daniel block (one sitting, ~6 min; can be another day; production or my build both work)
 Before: I open everything (Chrome page, WhatsApp "Message yourself", ChatGPT app) and set the clipboard.
 **Do not copy anything during the block.** His menu bar auto-hides: "move the mouse to the top edge".
-1. Chrome tab "JevPaste acceptance" is in front, caret in *Email*. Press ⌘⇧V → a small list of three emails
-   under the menu-bar icon (move the mouse to the top edge to see it). Press Esc. Look: field stays empty.
+1. Chrome tab "JevPaste acceptance" is in front, caret in *Email*. Press ⌘⇧V → a small list of three addresses
+   appears under the menu-bar icon — move the mouse to the top edge to see it. Press Esc. Look: field stays empty.
    *Why: several emails fit — the app must ask, never guess, and Esc must cancel.*
 2. Move the mouse to the top edge, click the clipboard icon → "Clipboard History…", type `REJEV`, press Enter.
    Say "selected". I then paste into the Email field and read it back.
@@ -97,3 +97,5 @@ Before: I open everything (Chrome page, WhatsApp "Message yourself", ChatGPT app
    (⌘A) and Delete in the box. *Why: insert only; a trailing newline must not send.*
 4. Same in the ChatGPT app composer (`JEVPASTE-ACC-A-GPT`). The first press may say "Waking ChatGPT…" —
    expected, I press again. Then ⌘A, Delete. *Why: same, for the ChatGPT app.*
+Steps 3–4 (GATE B note): relay one sentence per press as it happens — press 1 "one line in the box,
+nothing sent"; press 2 "No suitable match, nothing added"; press 3 "Suspected secret, nothing added".
