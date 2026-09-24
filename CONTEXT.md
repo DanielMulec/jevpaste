@@ -25,8 +25,12 @@ The focused editable destination into which a Paste Result is intended to be ins
 Information about the Target and its surroundings that helps establish what text belongs there.
 
 **Smart Paste**:
-An explicitly requested selection of the excerpt of the Active Item that belongs in the Target, followed by insertion. Insert only; never sends or executes.
-_Avoid_: Ordinary paste (which inserts clipboard contents without this transformation)
+An explicitly requested insertion of the Active Item into the Target: either the excerpt that belongs there, chosen by Jev, or — for a single-line Active Item — a Direct Paste. Insert only; never sends or executes.
+_Avoid_: Ordinary paste (which inserts clipboard contents without this safety envelope)
+
+**Direct Paste**:
+The Active Item inserted whole, without Jev, Candidates or the Candidate Chooser — verbatim as copied, trailing line breaks stripped so nothing is sent or executed. Happens when the Active Item is a single line (no line break inside, ignoring outer whitespace). Pre-checks still apply.
+_Avoid_: Plain paste, whole paste, skip-Jev paste
 
 **Paste Result**:
 One exact, contiguous, verbatim excerpt of the Active Item chosen for the Target. Never rewritten, reformatted, combined, or generated.
