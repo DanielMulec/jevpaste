@@ -1,4 +1,4 @@
-# Handoff — jevpaste supervisor (Wayfinder map in execution phase, wave 7 = acceptance suite)
+# Handoff — jevpaste supervisor (v1 shipped; v1.x backlog, next: ticket 35)
 
 Written for a fresh supervisor session that has never seen the previous one. Repo:
 `/Users/danielmulec/Projekte/experiments/jevpaste` (private, `DanielMulec/jevpaste`, `main` clean and pushed).
@@ -40,11 +40,36 @@ Resolved this session:
 
 Daniel (2026-09-24): "declared done AND we continue" — v1.x tickets proceed one per session.
 
-## Next session — in order
-1. Read the map body and this file. `intercom status` → your id.
-2. Pick one of 31 / 35 / 36 with Daniel (grilling + domain-modeling); recommend **35** first (smallest, sharpens the
-   resolver contract), then 36, then 31. 37 and 38 wait.
-3. Any implementation the decision produces → new worker in a Herdr tab per the protocol below.
+## Next session — tonight, Daniel is awake and continuing (2026-09-24, ~21:30)
+**Ticket:** [Skip Jev when the target gives it nothing to reason about](https://github.com/DanielMulec/jevpaste/issues/35)
+— `wayfinder:grilling`, unblocked, unclaimed. Daniel chose to continue tonight with a fresh supervisor.
+
+1. Read the map body, this file, and the ticket body (it lists the three sub-questions). `intercom status` → your id.
+   **Claim** the ticket (`gh issue edit 35 --add-assignee @me`) before any work.
+2. Load `grilling` + `domain-modeling`; skim `CONTEXT.md`, `docs/design/direct-paste.md`, `pre-checks.md`,
+   `paste-attempt-state-machine.md`, `mac-interop.md` (Target Context fields, what is always collected). Core code:
+   `Sources/SmartPasteCore/DirectPaste/DirectPasteRule.swift`, `Values/ScreenedTargetContext.swift`,
+   `PasteAttempt/PasteAttemptCoordinator*.swift`. Zoom into closed tickets on demand: #34 (Direct Paste rule 1),
+   #32 (the original two-rule ticket Daniel split), #33 (ChatGPT resolver — the evidence that unlabelled targets
+   always get "none of these"), #29 (acceptance facts: Jev needs a labelled field; terminals/chat composers → noMatch).
+3. **Grill Daniel** (short numbered questions, recommended answer each, plain words; he answers from his phone):
+   - What counts as "something to reason about": field label? placeholder (generic "Ask anything" too?)? section
+     heading? sibling labels? Surrounding text is always collected, so it can't be the criterion alone.
+   - With nothing to reason about and a **multi-line** item: paste the whole item as one Direct Paste (his stated
+     intent) — confirm; what about the chooser (never opens on that path?); what does the user see (same ✓?).
+   - Do pre-checks (secure field, suspected secret, no editable target) stay on this path? Daniel's standing option:
+     drop them if they cause friction; plain ⌘V has none. Recommend: keep secure-field + secret, they are cheap.
+   - The ticket asks for the app to **log the context shape** (has-label/has-placeholder/has-heading/surrounding
+     chars, never text) — decide whether that is a prerequisite task (a worker adds the log line, Daniel uses the
+     app a day, then decide) or whether he decides now from the #33/#29 evidence. Recommend: decide now, log shape
+     anyway as part of the implementation.
+   - Keep this rule **independent** from rule 1 (single line → Direct Paste); he was annoyed when they were fused.
+4. Record: resolution comment (the rule as a precise statement + examples), close, map gist. If the decision yields
+   implementation, write a worker brief (`docs/briefs/`, template: `pre-checks-brief.md` / `chatgpt-resolver-brief.md`),
+   TDD via seams, live proof automated (Chrome DevTools MCP + Herdr; Daniel only for ChatGPT/WhatsApp, batched
+   early). Then the standard review chain and `make install`.
+5. One ticket per session. After 35: 36 (don't wake on Direct Paste — overlaps with 35's path, decide together
+   only if Daniel wants), then 31, then 37, then 38.
 
 ## Supervisor role (Daniel's standing instructions, this session)
 - **You orchestrate only.** Workers do ALL hands-on work, including prototypes — Daniel rejected the supervisor
@@ -141,10 +166,10 @@ Daniel (2026-09-24): "declared done AND we continue" — v1.x tickets proceed on
 - Wayfinder governs; refer to tickets by linked title.
 
 ## Suggested skills
-- `wayfinder` (every session), `pi-intercom` + herdr CLI (workers), `prototype` (ticket 9's worker brief),
-  `tdd` + `codebase-design` (briefs for 20 and 33), `diagnosing-bugs` (33 is a root-cause hunt),
-  `grilling` + `domain-modeling` (tickets 31, 32 once unblocked), `resolving-merge-conflicts` (multi-worker waves),
-  `writing-for-agents` (briefs and this file).
+- `wayfinder` (every session), `grilling` + `domain-modeling` (ticket 35 now; 36, 31, 38 later), `prototype` (37),
+  `pi-intercom` + herdr CLI (workers/reviewers), `tdd` + `codebase-design` (worker briefs), `telegram-bridge` +
+  `telegram_attach` (Daniel is on his phone; contact sheets and screenshots go to Telegram),
+  `resolving-merge-conflicts` (multi-worker waves), `writing-for-agents` (briefs and this file).
 
 ## Wave-6 lessons (new)
 - **Payload rule, again:** `JEVPASTE-LIVE-33 synthetic test line` is a sentence, not a value — Jev refused it and a
