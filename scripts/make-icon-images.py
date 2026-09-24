@@ -14,6 +14,9 @@ on the macOS grid. Rather than cutting the tile out as drawn, this repaints it c
   into 18x18 / 36x36 with 1 px / 2 px padding. At 18 px the source's gap between the lifted bar and the block
   would be about 1 px and blur shut, so the bar is moved up to widen the gap to about 2 px at 18 px.
 
+The segmentation is specific to round2-2.png's composition: one light glyph, disconnected from the edges, on a
+dark flat tile, on a white canvas. Any other source fails with a message rather than producing a wrong icon.
+
 Needs Pillow and NumPy. Deterministic: the same source always yields the same files.
 """
 
@@ -50,6 +53,11 @@ def analyse(source):
     light = Image.fromarray(((luminance(rgb) > LIGHT_LUMINANCE) * 255).astype(np.uint8)).copy()  # writable
     ImageDraw.floodfill(light, (0, 0), 128)  # the white canvas, connected to the border
     glyph_core = np.asarray(light) == 255
+    if not glyph_core.any():
+        sys.exit(f"error: {source}: no light glyph found inside the tile (expected a light glyph on a dark tile, not touching its border)")
+    cy, cx = np.where(glyph_core)
+    if cx.min() <= xs.min() or cx.max() >= xs.max() or cy.min() <= ys.min() or cy.max() >= ys.max():
+        sys.exit(f"error: {source}: the light glyph touches the tile border; this script expects it inside the tile")
     tile_only = tile_mask & ~np.asarray(Image.fromarray(glyph_core).filter(ImageFilter.MaxFilter(9)))
     tile_colour = np.median(rgb[tile_only], axis=0)
     glyph_colour = np.median(rgb[glyph_core], axis=0)

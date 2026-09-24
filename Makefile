@@ -58,13 +58,18 @@ app:
 	scripts/make-app.sh
 
 install: app
-	rm -rf "$(INSTALLED_APP)"
+	@# Copy beside the installed app first and swap only once the copy is complete, so a failed copy never
+	@# leaves Daniel without an app. The temporary name has no .app extension, so Launch Services ignores it.
 	mkdir -p "$(HOME)/Applications"
-	cp -R "$(BUILT_APP)" "$(INSTALLED_APP)"
+	rm -rf "$(INSTALLED_APP).installing"
+	cp -R "$(BUILT_APP)" "$(INSTALLED_APP).installing"
+	rm -rf "$(INSTALLED_APP)"
+	mv "$(INSTALLED_APP).installing" "$(INSTALLED_APP)"
 	@# The staging bundle is only a copy source; left behind, Launch Services lists it as a second JevPaste in
 	@# Launchpad. Unregister it, then delete it so nothing (Spotlight, Finder) can register it again; the next
-	@# `make app` or `make install` rebuilds it. Re-register the installed copy so it carries the fresh icon.
-	"$(LSREGISTER)" -u "$(BUILT_APP)"
-	rm -rf "$(BUILT_APP)"
+	@# `make app` or `make install` rebuilds it. Non-fatal: the install itself has already succeeded.
+	-"$(LSREGISTER)" -u "$(BUILT_APP)"
+	-rm -rf "$(BUILT_APP)"
+	@# Re-register the installed copy so it carries the fresh icon.
 	"$(LSREGISTER)" -f "$(INSTALLED_APP)"
 	@echo "installed: $(INSTALLED_APP)"
