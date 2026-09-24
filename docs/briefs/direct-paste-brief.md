@@ -23,7 +23,7 @@ Communication protocol:
 3. `CONTEXT.md` (**Direct Paste** and the updated **Smart Paste** entries are the contract), `gh issue view 1`
    **Notes** (hard rules: 400 lines/file incl. tests; no payloads in diagnostic logs; refer to issues by title),
    `gh issue view 16 --comments` (slice plan + acceptance rules), `docs/quality-gate.md`,
-   `docs/design/state-machine.md` (or the Paste Attempt design doc under `docs/design/`), `Makefile`.
+   `docs/design/paste-attempt-state-machine.md`, `Makefile`.
 4. Code you will touch: `Sources/SmartPasteCore/PasteAttempt/PasteAttemptCoordinator.swift` (`hotkeyPressed`
    — the branch goes **after the pre-check** and **before** Candidate derivation),
    `PasteAttemptCoordinator+Delivery.swift` (`deliver(_:)` takes a `Candidate`; a Direct Paste reuses the same
