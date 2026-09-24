@@ -3,7 +3,8 @@
 Build: branch `acceptance` @ 52588e9 (`main` aeb2dd9 + acceptance trigger), `build/JevPaste.app` signed with
 `jevpaste-dev`, launched with `--accept-signal-trigger` (pid 48747, 19:43:41, `grant check at launch trusted=true`).
 Production `~/Applications/JevPaste.app` was quit for the window and relaunched at 19:50:23 (not overwritten).
-Every press = `kill -USR1` after a frontmost-app gate (+ Chrome `document.hasFocus()`/`activeElement`, + Herdr
+Every press = `kill -USR1` after a frontmost-app gate (+ Chrome `document.hasFocus()`/`activeElement` — emulated by
+the DevTools MCP, so not a real key-window check; see Revalidation — + Herdr
 scratch pane focused=true and own pane focused=false). Full log (outcome kinds only, no payloads):
 [`run-2026-09-24.log`](run-2026-09-24.log). Read-backs are of synthetic fixtures only (plan.md → Fixtures).
 
@@ -21,11 +22,15 @@ scratch pane focused=true and own pane focused=false). Full log (outcome kinds o
 | G Rejev-paste | ✅ history select → ⌘⇧V → `inserted via=directPaste`, field = fixture exactly, no Jev line (Daniel) | n/a | n/a | n/a | n/a |
 | H clipboard restore | ✅ every press | ✅ every press | ✅ every press | ✅ every press | ✅ every press |
 
-H in detail: SHA-256 over all pasteboard items/types/bytes, taken after the fixture was copied and 2–4 s after
-the press: identical on all 22 presses (inserting presses: `changeCount` +2 = own write + restore; refusals and
+H in detail (original runs, **unframed digest** — see Revalidation): SHA-256 over all pasteboard items/types/bytes,
+taken after the fixture was copied and 2–4 s after the press: identical on all 22 presses (inserting presses: `changeCount` +2 = own write + restore; refusals and
 no-match: `changeCount` unchanged = zero pasteboard writes). Daniel's real clipboard (saved to a 0600 file before
 the run, never printed) was restored after each target block; digest `ee966c1b…3c52d` matched the saved file
 each time and still matched after production relaunched. Saved file deleted at the end.
+Review (GATE C) found that digest ambiguous: type names and bytes were concatenated without lengths, so e.g. type
+`a`/bytes `bc` and type `ab`/bytes `c` hashed alike, and `save` printed a second pasteboard read rather than the saved
+bytes. For the synthetic single-item text fixtures used here such a collision is implausible, but the digest was not a
+proof. The corrected, length-framed digest re-confirmed H on 7 presses (Revalidation below).
 
 ## Presses (trigger → first feedback → outcome; insertion ≈ outcome − 120 ms Restore Window)
 | time | target | case | outcome | indicator ms | outcome ms | insert ≈ ms | Jev s |
@@ -71,20 +76,58 @@ caret was in the composer. Log: [`run-2026-09-24-daniel.log`](run-2026-09-24-dan
 | 3 WhatsApp "Message yourself" | "ready" … "4. worked" | trig 20:17:50.501 A+`\n` → `inserted via=directPaste` .741; trig 58.258 D → indicator .519, Jev 0.47 s, `noSuitableMatch` .834; trig 20:18:06.012 secret → `refused.suspectedSecret` .115. Clipboard same bytes on all three (changeCount +2 / +0 / +0) |
 | 4 ChatGPT new chat composer | "it did. ready"; "Nothing added, I didnt pay attention to the screen so idk if there was anything like waking chatgpt, suspected secret or similar" | trig 20:20:36.065 A+`\n` → `inserted via=directPaste` .255 (one line, not sent). Then Ghostty became frontmost: the gate aborted presses 2–3 (nothing fired). After Daniel refocused: trig 20:25:05.203 D → `focus unreadable … wake requested` → `refused.targetWaking` .212; trig 12.972 secret → `refused.suspectedSecret` 13.032; retry trig 26.675 D → indicator .888, Jev 0.58 s, `noSuitableMatch` 27.314. Clipboard same bytes on all four |
 
-Daniel did not watch the notices in step 4, so "Waking ChatGPT…", "Suspected secret" and "No suitable match" there are
-proven only by the log. What he did confirm by eye: nothing was added and nothing was sent.
+Daniel did not watch the notices in step 4: the outcomes `refused.targetWaking`, `refused.suspectedSecret` and
+`noSuitableMatch` were **logged**; that the matching notices were displayed is not proven. What he did confirm by eye:
+nothing was added and nothing was sent. "Clipboard same bytes" in this block used the unframed digest (see H).
 
 Responsiveness in the block (from the trigger log line): Direct Paste outcome 240 ms (WhatsApp) and 190 ms (ChatGPT),
 compared with 128–154 ms earlier in Chrome/Herdr/TextEdit. The Jev-path indicator took 261 ms (WhatsApp) and 213 ms
 (ChatGPT). Secret refusals took 103 ms and 60 ms, compared with 4–14 ms earlier. So both Electron/Catalyst composers take
 longer to resolve the target. Jev decisions took 0.47–0.96 s.
 
+## Revalidation of H with the framed digest (2026-09-24, 20:38–20:42, automated)
+`scripts/acceptance/clipboard-vault.swift` now hashes a length-framed encoding (version tag, item count, per item the
+type count and every type name and payload each prefixed by its byte length). `selftest` checks that three inputs the
+old digest confused now hash apart (passes). `save` digests the bytes read back from the saved file. `digest` refuses a
+read during which `changeCount` moved, and `restore` exits non-zero on mismatch. `press.sh` is `set -euo pipefail`, needs
+exactly one test-app pid and exits non-zero on a digest mismatch. Same test build (pid 72366, `trusted=true`); production
+was quit at 20:38 and relaunched at 20:42:36 (pid 73711, `trusted=true`). Log:
+[`run-2026-09-24-revalidation.log`](run-2026-09-24-revalidation.log).
+
+| trigger | fixture | outcome (log) | changeCount | framed digest before = after | landed (read-back) |
+|---|---|---|---|---|---|
+| 20:38:51.535 | A | inserted directPaste | +2 | ✅ | **not in the test field**, location unknown (see below) |
+| 20:39:07.909 | A | inserted directPaste | +2 | ✅ | test Email = fixture exactly |
+| 20:39:22.830 | D | noSuitableMatch | +0 | ✅ | — (no write) |
+| 20:40:31.653 | B | inserted jev | +2 | ✅ | another Chrome window's key tab (see below) |
+| 20:40:58.395 | B | inserted jev | +2 | ✅ | same |
+| 20:42:07.283 | B | inserted jev | +2 | ✅ | test Email = `acc.b@…` exactly (after `select_page bringToFront`) |
+| 20:42:17.098 | E secret | refused.suspectedSecret | +0 | ✅ | — (no write) |
+
+**H re-confirmed on 7 of 7 presses with the framed digest.** Daniel's clipboard was saved with the framed digest
+(`af9f5ed7…a7c14`), restored at the end (`matches=true`), re-checked after the production relaunch, and the saved file
+was deleted.
+
+Stray pastes (a method gap, not an app fault; the app pasted into what really had focus): Daniel was using Chrome
+between presses. After `open -a "Google Chrome"` the key window was not the one holding the test tab, yet the MCP's
+emulated `hasFocus()` passed the gate. The two B presses landed in the key tab of the other window, a leftover
+`history-ui-live/target.html` test page, whose textarea then held exactly those two synthetic addresses. I cleared it.
+The first A press landed in no text field of the four pages with focused editables. Where it went is unknown, possibly
+an omnibox. It was a single-line synthetic value with no newline, so nothing could have been submitted. One run of
+two presses launched concurrently by mistake. The stricter `press.sh` aborted both at `kill` (two pids matched), so
+nothing fired, and the pid match is now anchored and must be unique. Fix for re-runs: `select_page … bringToFront:true`
+before each press. The read-back stays the proof of landing.
+
+**Scope note (multi-line Paste Result):** no multi-line Paste Result was delivered into a terminal or chat composer in
+this suite. On this build, unlabelled targets answer `noSuitableMatch`, so F covers only that fact and the
+trailing-newline Direct Paste. The delivery-path behaviour stays as documented in #14 and is out of scope for #29.
+
 ## I — responsiveness against the #5 targets (reported, not promised)
 - **150 ms visible feedback: missed by design on the Jev path.** "Jev is choosing…" appeared 159–181 ms after the
   press (9 samples, median 167 ms): the 150 ms indicator timer starts after pre-checks and fires on the run loop.
   Refusals show their reason in 1–14 ms; Direct Paste shows ✓ at 128–154 ms (after the 120 ms Restore Window).
-- **1 s p95 insertion:** Jev inserts at 380, 448, 729 ms warm and 1339 ms cold (first Jev call after launch). 5
-  samples are too few for a p95; 1 of 5 over 1 s, the cold one. Jev decisions 0.36–1.32 s (median 0.47 s).
+- **1 s insertion:** Jev inserts at 380, 448, 729 ms warm and 1339 ms cold (first Jev call after launch): 1 of 4
+  over 1 s, the cold one. Four samples support no percentile claim. Jev decisions 0.36–1.32 s (median 0.47 s).
 - **5 s timeout:** not reached (no forced slow Jev possible).
 - Direct Paste inserts ≈ 8–34 ms after the press.
 
@@ -103,6 +146,8 @@ longer to resolve the target. Jev decisions took 0.47–0.96 s.
 
 ## Method notes
 - Chrome field focus via `evaluate_script` (`focus()` / `blur()`) instead of `click`; `hasFocus()` gated each press.
+  The DevTools MCP emulates page focus (every page reports `hasFocus()`/`visible`), so that gate only proves the DOM
+  focus, not the key window. The read-backs are what prove where a paste landed.
 - TextEdit read-back via its autosave of `/tmp/jevpaste-acc/textedit.txt` (no Automation permission needed); the
   window is left open (closing needs a key press); Daniel may close it without saving.
 - Herdr scratch tab `acc-term` created with `--focus`, closed after the block; own pane focus verified restored.
