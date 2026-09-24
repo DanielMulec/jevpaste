@@ -36,7 +36,8 @@ Status: scaffold only — the app shows a menu-bar icon with a Quit item and no 
 | `make check` | the whole local quality gate, offline and fail-fast: strict build → swift-format → SwiftLint → jscpd → `swift test` → Periphery → line-count guard |
 | `make format` | formats `Sources` and `Tests` in place with swift-format |
 | `make app` | release build, assembles `build/JevPaste.app`, writes its `Info.plist` and icon, signs it with `jevpaste-dev` |
-| `make install` | `make app`, then copies it to `~/Applications/JevPaste.app` (constant path; no sudo) |
+| `make install` | `make app`, then copies it to `~/Applications/JevPaste.app` (constant path; no sudo), unregisters and deletes `build/JevPaste.app` so Launchpad shows one JevPaste |
+| `scripts/make-icon-images.py` | regenerates `Resources/AppIcon.png` and `Resources/StatusItem{,@2x}.png` from the picked icon candidate (Pillow, NumPy) |
 | `make acceptance` | placeholder for the real-app acceptance suite; never part of `make check` |
 
 Run it with `open ~/Applications/JevPaste.app`; quit from its menu-bar icon.
