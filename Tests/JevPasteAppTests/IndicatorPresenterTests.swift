@@ -45,7 +45,7 @@ struct IndicatorPresenterTests {
 
     @Test func insertedShowsTheCheckmarkForOneSecondThenHides() {
         presenter.showProcessing {}
-        presenter.showOutcome(.inserted, note: nil, path: nil)
+        presenter.showOutcome(.inserted, note: nil, path: .jev)
 
         #expect(surface.displayed == OutcomeMessage(.inserted).content)
         clock.step(by: .milliseconds(999))
@@ -64,7 +64,7 @@ struct IndicatorPresenterTests {
     }
 
     @Test func aNotedSuccessShowsItsNoteForTwoAndAHalfSeconds() {
-        presenter.showOutcome(.inserted, note: .surroundingTextWithheld, path: nil)
+        presenter.showOutcome(.inserted, note: .surroundingTextWithheld, path: .jev)
 
         clock.step(by: .milliseconds(2499))
         #expect(surface.displayed == OutcomeMessage(.inserted, note: .surroundingTextWithheld).content)
@@ -73,7 +73,7 @@ struct IndicatorPresenterTests {
     }
 
     @Test func aNewAttemptKeepsItsIndicatorWhenTheEarlierOutcomeWouldHaveHidden() {
-        presenter.showOutcome(.inserted, note: nil, path: nil)
+        presenter.showOutcome(.inserted, note: nil, path: .jev)
         clock.step(by: .milliseconds(500))
         presenter.showProcessing {}
 
@@ -95,7 +95,7 @@ struct IndicatorPresenterTests {
     @Test func clickingAnOutcomeOrTheHiddenIndicatorDoesNothing() {
         var cancels = 0
         presenter.showProcessing { cancels += 1 }
-        presenter.showOutcome(.failed(.timedOut), note: nil, path: nil)
+        presenter.showOutcome(.failed(.timedOut), note: nil, path: .jev)
         surface.click()
         clock.step(by: .seconds(3))
         surface.click()
@@ -111,7 +111,7 @@ struct IndicatorPresenterTests {
 
         #expect(surface.displayed == nil)
         #expect(cancels == 0)
-        presenter.showOutcome(.cancelled, note: nil, path: nil)
+        presenter.showOutcome(.cancelled, note: nil, path: .jev)
         #expect(surface.displayed == OutcomeMessage(.cancelled).content)
     }
 
@@ -119,7 +119,7 @@ struct IndicatorPresenterTests {
         presenter.showOutcome(.refused(.noEditableTarget), note: nil, path: nil)
         clock.step(by: .seconds(2))
         presenter.hideWhileChoosing()
-        presenter.showOutcome(.inserted, note: nil, path: nil)
+        presenter.showOutcome(.inserted, note: nil, path: .jev)
 
         clock.step(by: .milliseconds(600))
 
