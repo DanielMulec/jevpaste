@@ -1,4 +1,4 @@
-# Handoff — jevpaste supervisor (v1 shipped; v1.x backlog, next: ticket 40 spike, then 42 / 41)
+# Handoff — jevpaste supervisor (v1 shipped; v1.x backlog, next: build 41 and/or 42)
 
 Written for a fresh supervisor session that has never seen the previous one. Repo:
 `/Users/danielmulec/Projekte/experiments/jevpaste` (private, `DanielMulec/jevpaste`, `main` clean and pushed).
@@ -43,8 +43,7 @@ Resolved this session:
 ## Open tickets (all children of the map — one per session)
 | ticket | type | note |
 |---|---|---|
-| [Spike: does Jev reliably tell free-text places from value fields?](https://github.com/DanielMulec/jevpaste/issues/40) | task, AFK | **next**; worker on `spike/jev-contract`; pass = ≥ 0.8 free-text / ≤ 0.2 fields, 3 runs each |
-| [Implement Free-text Target via Jev's third question](https://github.com/DanielMulec/jevpaste/issues/41) | task | **blocked by 40** (native blockedBy wired); fail → rewrite to local rule D |
+| [Implement Free-text Target via Jev's third question](https://github.com/DanielMulec/jevpaste/issues/41) | task | **next**; spike passed (Daniel accepted one borderline miss) — wording verbatim from the spike report, threshold 0.8, app name + window title kept |
 | [Offer Enter to paste everything after No Suitable Match](https://github.com/DanielMulec/jevpaste/issues/42) | task | unblocked, independent of Jev — can run in parallel with the spike |
 | [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31) | grilling | |
 | [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36) | grilling | acceptance saw ChatGPT AX go cold after ~4.5 min idle |
@@ -54,23 +53,28 @@ Resolved this session:
 Daniel (2026-09-24): "declared done AND we continue" — v1.x tickets proceed one per session.
 
 ## Next session
-**Ticket:** [Spike: does Jev reliably tell free-text places from value fields?](https://github.com/DanielMulec/jevpaste/issues/40)
-— `wayfinder:task`, AFK, unblocked, unclaimed. Optionally in parallel (separate worker, no shared files):
+**Spike done** (2026-09-24, ~20:30): [Spike: does Jev reliably tell free-text places from value fields?](https://github.com/DanielMulec/jevpaste/issues/40#issuecomment-5821700475)
+— free-text 0.83–0.97, value fields 0.03–0.09, search box 0.22 (borderline, Daniel accepted). Worker tab closed;
+`spike/jev-contract` @ ae72c56 pushed, `spikes/free-text/FINDINGS.md` is the primary source.
+
+**Ticket:** [Implement Free-text Target via Jev's third question](https://github.com/DanielMulec/jevpaste/issues/41)
+— `wayfinder:task`, unblocked, unclaimed. Optionally in parallel (separate worker; **shared files:** the coordinator,
+`OutcomeMessage`, `IndicatorPresenter` — serialize, or give #42 the presenter side first):
 [Offer Enter to paste everything after No Suitable Match](https://github.com/DanielMulec/jevpaste/issues/42).
 
-1. Read the map body, this file, the #35 resolution comment (the decision, incl. the exact pass criteria) and the
-   ticket body. `intercom status` → your id. **Claim** (`gh issue edit 40 --add-assignee @me`).
-2. Spike worker: brief in `docs/briefs/` (template: `chatgpt-resolver-brief.md`), worktree = the existing
-   `~/.pi/worktrees/jevpaste/spike-contract` on `spike/jev-contract` (`spikes/abstention/run.py`, `jev.py`,
-   `FINDINGS.md`). Third boolean question in the same evaluate call; `app_name` + `window_title` in `target_context`;
-   ~10 synthetic situations × 3 runs; table in `FINDINGS.md` and in the ticket report comment. Key at
-   `~/.config/jevpaste/env`, free tier ≈ 1 call/s. Spike branches are never merged.
-3. Read the numbers yourself. Pass → [Implement Free-text Target via Jev's third question](https://github.com/DanielMulec/jevpaste/issues/41)
-   is unblocked as written. Fail → rewrite #41 to option D (local unlabelled-target rule: none of
-   label/placeholder/heading/sibling labels **and** a multi-line field) and tell Daniel why.
-4. #42 worker (if run): reuse the key-capable chooser panel for the one Enter key — do not duplicate; Gate A on
-   how long the offer stays and the log line; live proof automated in a labelled Chrome field where Jev says none.
-5. After these: 36 (don't wake on Direct Paste), 31, 37, 38.
+1. Read the map body, this file, the #35 resolution and the #40 report (wording + numbers), then the ticket body.
+   `intercom status` → your id. **Claim** (`gh issue edit 41 --add-assignee @me`).
+2. Worker brief in `docs/briefs/` (template: `pre-checks-brief.md`; put the `free_text` wording in verbatim).
+   Worktree `git worktree add -b free-text-target ~/.pi/worktrees/jevpaste/free-text-target main`. Slice: JevGateway
+   third question + `DecisionReply` carries the probability; `TargetContext.appName`/`windowTitle` read in MacInterop
+   (`NSWorkspace.frontmostApplication.localizedName`, focused window `AXTitle`), title screened like surrounding text;
+   Core constant 0.8, free-text wins over a chosen excerpt, whole item delivered as Direct Paste, chooser never opens;
+   log `via=freeTextTarget p=…`; docs (`jev-gateway.md`, `direct-paste.md`, README privacy note). Gate A design doc first.
+3. Live proof: bare Chrome textarea + Herdr shell automated (DevTools MCP + SIGUSR1 trigger); ChatGPT composer +
+   WhatsApp with Daniel, one batched block early; a labelled Chrome Email field must still get only the excerpt.
+4. Standard chain: `make check` → Gate B (read the core diff) → report comment → one fresh GPT-6-Sol review →
+   fixes → delta → merge `--no-ff` → `make install`. Resolution comment, close, map gist.
+5. After 41/42: 36 (don't wake on Direct Paste), 31, 37, 38.
 
 ## Supervisor role (Daniel's standing instructions, this session)
 - **You orchestrate only.** Workers do ALL hands-on work, including prototypes — Daniel rejected the supervisor
