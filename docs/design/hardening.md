@@ -45,3 +45,10 @@ wait-while-a-Paste-Attempt-shows mechanism of `HistoryNoticeSurface`, generalise
   indicator while "Jev is choosing… click to cancel" shows → "Cancelled", nothing inserted; log `cancel clicked`,
   `outcome cancelled`. Done as the first paste after the L1 launch (cold connection ≈ 1.3 s, the widest
   click window); if Jev answers first, repeat after a few minutes idle.
+
+## Acceptance trigger (test scaffolding, [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29))
+`JevPaste --accept-signal-trigger` (off by default; Open at Login and Finder never pass it): `kill -USR1 <pid>`
+fires the same press handler as ⌘⇧V, inside `GrantCheckingHotkey`, so everything after the key press is production
+code. Worker shells hold no Accessibility grant and cannot post ⌘⇧V; this lets the suite run without Daniel. Log:
+`acceptance signal trigger on` at launch, `acceptance trigger (SIGUSR1)` per press (the suite's press timestamp).
+Kept in `main` behind the flag by Daniel's decision (GATE A), for re-runs. `Launch/AcceptanceTrigger.swift`.

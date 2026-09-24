@@ -1,7 +1,8 @@
 import AppKit
 
 /// Entry point of the jevpaste menu-bar app: an accessory `NSApplication` with one status item, or the adapter
-/// probe when launched with `--probe <log-path>`.
+/// probe when launched with `--probe <log-path>`. `--accept-signal-trigger` is acceptance-suite scaffolding
+/// (`AcceptanceTrigger`).
 @main
 @MainActor
 enum MenuBarApplication {
@@ -19,6 +20,6 @@ enum MenuBarApplication {
         if let flag = arguments.firstIndex(of: "--probe"), arguments.indices.contains(flag + 1) {
             return AdapterProbe(logPath: arguments[flag + 1])
         }
-        return MenuBarDelegate()
+        return MenuBarDelegate(options: LaunchOptions(arguments: arguments))
     }
 }
