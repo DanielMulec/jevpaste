@@ -17,7 +17,7 @@ GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues
   their still-live facts are in "Durable notes" below.
 
 ## Where things stand (2026-09-24 evening — wave 6 closed, wave 7 = acceptance suite started)
-`main` @ 76ff585 (last: acceptance-suite brief). Installed `~/Applications/JevPaste.app` = **clean main aeb2dd9**
+`main` @ c3ee822+ (last: handoff). Worker branch `acceptance` = origin @ **5c2ef17** (worker idle at GATE B). Installed `~/Applications/JevPaste.app` = **clean main aeb2dd9**
 (Direct Paste + history UI), running, Open-at-Login on. 379 tests / 68 suites. Resolved this session:
 - [Implement Direct Paste for single-line items](https://github.com/DanielMulec/jevpaste/issues/34) — merged f8ce110;
   live-proven Chrome ×2, Herdr shell ×2 (trailing newline stripped, nothing executed), ChatGPT composer, two-line
@@ -29,7 +29,7 @@ GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues
   blocked by #29) — cold-AX wake fired on a Direct Paste; pointless on that path.
 
 **One worker in flight:** [Run the real-app acceptance suite](https://github.com/DanielMulec/jevpaste/issues/29) —
-branch `acceptance`, worktree `~/.pi/worktrees/jevpaste/acceptance`, Herdr tab `acceptance`, brief
+branch `acceptance` @ 5c2ef17, worktree `~/.pi/worktrees/jevpaste/acceptance`, Herdr tab `acceptance` (pane wC:p1Q-ish — check `herdr agent list`), worker intercom `01a0d47a-b3d1-7342`, brief
 `docs/briefs/acceptance-suite-brief.md`. **GATE A approved by Daniel (option 1)** — flag-gated `SIGUSR1` trigger stays in `main` behind
 `--accept-signal-trigger` (`Sources/JevPasteApp/Launch/AcceptanceTrigger.swift`, 52588e9). **GATE B approved** —
 automated matrix done @ 9f30b18 (`docs/acceptance/results.md`): 22 presses over Chrome (DevTools MCP), Herdr,
