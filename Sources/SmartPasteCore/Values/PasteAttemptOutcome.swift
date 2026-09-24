@@ -4,6 +4,8 @@ public enum PreCheckRefusal: Equatable, Sendable {
     case noActiveItem
     /// No editable element is focused.
     case noEditableTarget
+    /// The named app's Accessibility is waking; the Target can be found in a moment.
+    case targetWaking(applicationName: String)
     /// The Target is a secure field; not supported.
     case secureField
     /// The Active Item is concealed or looks like a secret.

@@ -61,6 +61,12 @@ struct FocusedElement<Node: AccessibilityNode> {
     let node: Node
 }
 
+/// The app in front, named for the user.
+struct FrontmostApplication: Equatable {
+    let processIdentifier: Int32
+    let name: String
+}
+
 /// Where the resolver learns what has keyboard focus: the system-wide Accessibility element in the app, a fake
 /// in tests.
 @MainActor
@@ -69,4 +75,10 @@ protocol FocusSource {
     func focusedElement() -> FocusedElement<Node>?
     /// `IsSecureEventInputEnabled()`: some app is taking a password right now.
     var isSecureEventInputEnabled: Bool { get }
+    func frontmostApplication() -> FrontmostApplication?
+    /// Whether the app's Accessibility is fully on (`AXEnhancedUserInterface` reads `true`).
+    func isAccessibilityAwake(in processIdentifier: Int32) -> Bool
+    /// Asks the app to turn its Accessibility fully on; `true` when it then reads as on. Its return code is not
+    /// trusted: Electron answers "not implemented" and turns it on anyway.
+    func wakeAccessibility(in processIdentifier: Int32) -> Bool
 }

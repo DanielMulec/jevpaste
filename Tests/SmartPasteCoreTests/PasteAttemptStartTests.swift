@@ -29,12 +29,16 @@ struct PasteAttemptStartTests {
         #expect(harness.jev.requests.count == 1)
     }
 
-    @Test(arguments: [PreCheckRefusal.noActiveItem, .noEditableTarget, .secureField, .suspectedSecret])
+    @Test(arguments: [
+        PreCheckRefusal.noActiveItem, .noEditableTarget, .targetWaking(applicationName: "ChatGPT"), .secureField,
+        .suspectedSecret,
+    ])
     func eachPreCheckRefusesWithoutJevCallOrPasteboardWrite(refusal: PreCheckRefusal) {
         let harness =
             switch refusal {
             case .noActiveItem: PasteAttemptHarness(copySource: false)
             case .noEditableTarget: PasteAttemptHarness(focusedTarget: nil)
+            case .targetWaking(let name): PasteAttemptHarness(focusedTarget: nil, wakingApplication: name)
             case .secureField: PasteAttemptHarness(focusedTarget: Self.passwordField)
             case .suspectedSecret: PasteAttemptHarness(sourceText: StubPreCheck.secretPrefix + "4f9a1c")
             }

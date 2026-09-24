@@ -40,6 +40,11 @@ decisions sit in small internal value types so they are unit-testable without AX
 ## TargetResolver — `AccessibilityTargetResolver`
 - **Mechanism.** System-wide `AXFocusedUIElement` (messaging timeout 1 s). On `noValue`, one ordinary `AXChildren`
   walk (≤ 300 elements) of the frontmost app's focused window (wakes Chromium trees), then one retry. pid = `AXUIElementGetPid`.
+  - *Waking (added by [Restore Smart Paste in the ChatGPT desktop app](https://github.com/DanielMulec/jevpaste/issues/33)):*
+    if focus is still unreadable, the frontmost app's `AXEnhancedUserInterface` is set to `true` unless it already
+    reads `true`; if it then reads `true`, the result is `.waking(applicationName:)` (Core refuses
+    `targetWaking`, ⌘⇧V is the retry), repeated without a new request for 5 s per pid. Electron trees (ChatGPT app)
+    stay asleep through any walk without it. Details: `docs/design/chatgpt-resolver.md`.
   - *Editable:* role `AXTextField`, `AXTextArea`, `AXComboBox`, subrole `AXSecureTextField`/`AXSearchField`, or
     settable `AXSelectedTextRange`. Otherwise `nil` (e.g. a just-launched Catalyst `iOSContentGroup`).
   - *Secure:* subrole or role `AXSecureTextField`, or `IsSecureEventInputEnabled()`.

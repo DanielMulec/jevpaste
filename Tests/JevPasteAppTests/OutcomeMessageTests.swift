@@ -19,6 +19,10 @@ struct OutcomeMessageTests {
         (.noSuitableMatch, "No suitable match"),
         (.refused(.noActiveItem), "Nothing copied yet"),
         (.refused(.noEditableTarget), "No text field focused"),
+        (
+            .refused(.targetWaking(applicationName: "ChatGPT")),
+            "Waking ChatGPT for Smart Paste — press ⌘⇧V again in a moment"
+        ),
         (.refused(.secureField), "Secure field — not supported"),
         (.refused(.suspectedSecret), "Suspected secret — blocked"),
         (.cancelled, "Cancelled"),
@@ -54,7 +58,13 @@ struct OutcomeMessageTests {
         (PasteAttemptOutcome.inserted, "inserted"),
         (.insertedWithoutRestore, "insertedWithoutRestore"),
         (.noSuitableMatch, "noSuitableMatch"),
+        (.refused(.noActiveItem), "refused.noActiveItem"),
         (.refused(.noEditableTarget), "refused.noEditableTarget"),
+        (.refused(.secureField), "refused.secureField"),
+        (.refused(.suspectedSecret), "refused.suspectedSecret"),
+        (.refused(.targetWaking(applicationName: "ChatGPT")), "refused.targetWaking"),
+        (.refused(.targetWaking(applicationName: "Notes (Beta)")), "refused.targetWaking"),
+        (.refused(.targetWaking(applicationName: ".secureField")), "refused.targetWaking"),
         (.cancelled, "cancelled"),
         (.failed(.timedOut), "failed.timedOut"),
     ])

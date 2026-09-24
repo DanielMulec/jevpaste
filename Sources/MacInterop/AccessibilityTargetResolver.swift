@@ -8,7 +8,7 @@ public final class AccessibilityTargetResolver: TargetResolver {
 
     public init() {}
 
-    public func resolveFocusedTarget() -> BoundTarget? {
+    public func resolveFocusedTarget() -> TargetResolution {
         resolver.resolveFocusedTarget()
     }
 

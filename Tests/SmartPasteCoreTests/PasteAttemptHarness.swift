@@ -35,12 +35,13 @@ final class PasteAttemptHarness {
         candidates: [Candidate] = PasteAttemptHarness.candidates,
         sameTypeGroup: [Candidate] = [],
         focusedTarget: BoundTarget? = PasteAttemptHarness.emailField,
+        wakingApplication: String? = nil,
         copySource: Bool = true,
         sourceText: String = PasteAttemptHarness.sourceText
     ) {
         log = DeliveryLog(clock: clock)
         clipboard = FakeClipboard(log: log, initialText: "")
-        targetResolver = FakeTargetResolver(focusedTarget: focusedTarget)
+        targetResolver = FakeTargetResolver(focusedTarget: focusedTarget, wakingApplication: wakingApplication)
         inserter = FakeInserter(log: log)
         presenter = FakePresenter(clock: clock)
         capture = CopyCapture(clipboard: clipboard, history: history)
