@@ -29,6 +29,39 @@ struct AcceptanceTriggerTests {
         #expect(presses == 1)
     }
 
+    @Test func withoutTheFlagTheTriggerIsNeverEvenBuilt() {
+        var built = 0
+        func makeTrigger() -> any PressTrigger {
+            built += 1
+            return trigger
+        }
+
+        _ = AcceptanceTrigger.hotkey(wrapping: hotkey, options: LaunchOptions(arguments: []), trigger: makeTrigger())
+
+        #expect(built == 0)
+    }
+
+    @Test func aSignalPressPassesTheSameAccessibilityGrantCheckAsTheKeyboard() {
+        let trust = FakeAccessibilityTrust()
+        let screen = RecordingIndicatorSurface()
+        let check = AccessibilityGrantCheck(
+            trust: trust, notices: IndicatorNoticeSurface(wrapping: screen, clock: SteppedClock()))
+        let options = LaunchOptions(arguments: ["JevPaste", "--accept-signal-trigger"])
+        var attempts = 0
+        GrantCheckingHotkey(
+            wrapping: AcceptanceTrigger.hotkey(wrapping: hotkey, options: options, trigger: trigger), check: check
+        ).startListening { attempts += 1 }
+
+        trust.isTrusted = false
+        trigger.fire()
+        #expect(attempts == 0)
+        #expect(screen.displayed == IndicatorNotice.accessibilityMissing(for: .seconds(5)).content)
+
+        trust.isTrusted = true
+        trigger.fire()
+        #expect(attempts == 1)
+    }
+
     @Test func withTheFlagTheTriggerAndTheHotkeyReachTheSamePressHandler() {
         var presses = 0
         let options = LaunchOptions(arguments: ["JevPaste", "--accept-signal-trigger"])
