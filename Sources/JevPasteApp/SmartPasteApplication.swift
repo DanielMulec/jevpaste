@@ -18,7 +18,7 @@ final class SmartPasteApplication {
     /// "Clipboard History…" in the status-item menu opens it.
     let historyPanel: HistoryPanelController
 
-    init(statusItem: NSStatusItem) {
+    init(statusItem: NSStatusItem, options: LaunchOptions) {
         Self.log.notice("launch apiKeyPresent=\(GatewayCredentials.standard.hasAPIKey, privacy: .public)")
         let clock = RunLoopPasteAttemptClock()
         let statusItemFrame: @MainActor () -> NSRect? = { [weak statusItem] in
@@ -45,10 +45,11 @@ final class SmartPasteApplication {
         loginItem = LoginItemToggle(service: MainAppLoginItemService(), notices: notices)
         let grantCheck = AccessibilityGrantCheck(trust: ProcessAccessibilityTrust(), notices: notices)
         grantCheck.checkAtLaunch()
-        let hotkey = GlobalHotkey { [weak notices] status in
+        let keyboardHotkey = GlobalHotkey { [weak notices] status in
             guard let notices else { return }
             HotkeyRegistrationReport.failed(status: status, notices: notices)
         }
+        let hotkey = AcceptanceTrigger.hotkey(wrapping: keyboardHotkey, options: options, trigger: SignalPressTrigger())
         coordinator = PasteAttemptCoordinator(
             ports: PasteAttemptPorts(
                 hotkey: GrantCheckingHotkey(wrapping: hotkey, check: grantCheck),

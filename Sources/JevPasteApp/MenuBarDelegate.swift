@@ -4,16 +4,21 @@ import AppKit
 /// "Quit") and starts Smart Paste.
 @MainActor
 final class MenuBarDelegate: NSObject, NSApplicationDelegate {
+    private let options: LaunchOptions
     private var statusItem: NSStatusItem?
     private var smartPaste: SmartPasteApplication?
     // periphery:ignore - held for the app's lifetime: the menu keeps its delegate and item target weakly.
     private var loginItemMenu: LoginItemMenu?
 
+    init(options: LaunchOptions) {
+        self.options = options
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "jevpaste")
         statusItem = item
-        let application = SmartPasteApplication(statusItem: item)
+        let application = SmartPasteApplication(statusItem: item, options: options)
         smartPaste = application
         let loginItemMenu = LoginItemMenu(toggle: application.loginItem)
         self.loginItemMenu = loginItemMenu
