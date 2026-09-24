@@ -30,13 +30,13 @@ which follows light/dark). 520 pt wide, top to bottom:
 States: `closed` → `open(query, highlighted, confirmingClearAll)` → `closed`; events only while open.
 
 ## Key map (search field keeps first responder; keys arrive as editing commands)
-↑/↓ move the highlight (clamped) · Return/Enter select it · click a row selects it · ⌘⌫ deletes the highlighted
+↑/↓ move the highlight (clamped) · Return/Enter select it (ignored while the clear question shows) · click a row selects it · ⌘⌫ deletes the highlighted
 row · ⌫ deletes it only when the search field is empty and the key is not auto-repeating (holding ⌫ to clear a
 query never runs on into history) · ✕ deletes that row · Esc closes (or cancels an open clear confirmation) ·
 click-away closes; ⌘X/C/V/A/Z edit the query (no Edit menu in an accessory app). Select → `select(_:)`, close, `TargetAppFocusReturn` to the app frontmost at open, and the
 observer shows "Active: <first line ≤ 40 chars>" (`pin.fill`, 2.5 s) via `IndicatorNoticeSurface`, so it waits
 behind a paste outcome and never covers it. Esc → close + focus return, no change. Click-away → close, no focus
-return (the user clicked where they want to be), no change. A copy while open refreshes the panel.
+return (the user clicked where they want to be), no change. A copy while open refreshes the panel; the highlight stays on the same item.
 
 ## Opening
 Status-item menu: "Clipboard History…" / — / "Open at Login" / — / "Quit". Opens after the menu closes.

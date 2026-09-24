@@ -189,6 +189,28 @@ final class HistoryPanelControllerTests {
         #expect(history.items().count == 3)
     }
 
+    @Test func enterWhileAskingToClearAllIsIgnored() {
+        controller.open()
+
+        surface.send(.moveDown, .clearAllRequested, .chooseHighlighted)
+
+        #expect(surface.shown != nil)
+        #expect(surface.clearAllQuestion == 3)
+        #expect(capture.activeItem == Self.three)
+        #expect(history.items().count == 3)
+    }
+
+    @Test func aCopyWhileOpenKeepsTheHighlightOnTheSameItem() {
+        controller.open()
+        surface.send(.moveDown)
+
+        clipboard.copy("JEVPASTE-HIST-FOUR\ndelta.four@example.com")
+        #expect(surface.highlighted == 2)
+
+        surface.send(.chooseHighlighted)
+        #expect(capture.activeItem == Self.two)
+    }
+
     @Test func aCopyWhileOpenRefreshesTheRowsAndTheActiveItemWithoutANote() {
         controller.open()
 

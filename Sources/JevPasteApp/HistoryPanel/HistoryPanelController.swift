@@ -62,7 +62,7 @@ final class HistoryPanelController {
             show(highlighting: 0)
         case .moveUp: moveHighlight(by: -1)
         case .moveDown: moveHighlight(by: 1)
-        case .chooseHighlighted: panel.highlighted.map(choose(row:))
+        case .chooseHighlighted: chooseHighlighted(in: panel)
         case .choose(let row): choose(row: row)
         case .deleteHighlighted: panel.highlighted.map(delete(row:))
         case .delete(let row): delete(row: row)
@@ -87,6 +87,13 @@ final class HistoryPanelController {
         let moved = min(max(highlighted + step, 0), panel.matches.count - 1)
         openPanel?.highlighted = moved
         surface.highlight(moved)
+    }
+
+    /// Enter never answers the clear-all question — only its buttons do, and Esc withdraws it — and it does not
+    /// select the row behind the question either: while asking, Enter is ignored.
+    private func chooseHighlighted(in panel: OpenPanel) {
+        guard !panel.isAskingToClearAll, let row = panel.highlighted else { return }
+        choose(row: row)
     }
 
     private func choose(row: Int) {
@@ -144,9 +151,14 @@ final class HistoryPanelController {
         if change.cause == .selected {
             notices.show(IndicatorNotice(activeItemSelected: change.item))
         }
-        if openPanel != nil {
-            show(highlighting: openPanel?.highlighted ?? 0)
+        guard let panel = openPanel else { return }
+        // Keep the highlight on the same item, not the same index: a copy inserts a row above it.
+        let highlightedItem = panel.highlighted.map { panel.matches[$0] }
+        let content = refreshedContent(highlighting: panel.highlighted ?? 0)
+        if let highlightedItem, let row = openPanel?.matches.firstIndex(of: highlightedItem) {
+            openPanel?.highlighted = row
         }
+        surface.show(content, highlighting: openPanel?.highlighted)
     }
 
     /// Re-reads history for the current query and shows it, keeping the highlight at `row` or the last row.
