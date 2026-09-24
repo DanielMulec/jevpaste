@@ -58,9 +58,11 @@ must approve it as test scaffolding.
 ## Next session — in order
 1. Read the map body and this file. `intercom status` → your id (this session's `01a0d43b` is dead; tell the
    worker the new id first thing).
-2. `herdr agent list`: `acceptance` alive → `intercom send` new id + "Daniel is here, stage the block". Dead → new
-   tab in the worktree, "read docs/briefs/acceptance-suite-brief.md, branch is at 9f30b18 past GATE B, stage the
-   Daniel block (step 4)".
+2. `herdr agent list`: `acceptance` alive → `intercom send 01a0d47a-b3d1-7342 "new supervisor id <ID>. Daniel is
+   here — stage the Daniel block (step 4)"`. Dead → `herdr tab create --cwd ~/.pi/worktrees/jevpaste/acceptance
+   --label acceptance --no-focus`, start pi `anthropic/claude-opus-5-5:medium`, prompt "read
+   docs/briefs/acceptance-suite-brief.md; branch acceptance is at 5c2ef17, GATE A+B approved; stage the Daniel
+   block (step 4); supervisor intercom id <ID>".
 3. Relay the Daniel block in plain words (four parts: C, G, WhatsApp, ChatGPT); "move the mouse to the top edge"
    for anything under the menu-bar icon; he must not ⌘C during it. Then GATE C (report), then file the Herdr
    secure-prompt finding as a ticket (grilling: what should the secure pre-check use when the OS flag is absent —
@@ -127,6 +129,17 @@ must approve it as test scaffolding.
   VERDICT/BLOCKING/NON-BLOCKING/DUPLICATION/GAPS/METHOD, five specific questions, `make check` required,
   mandatory `intercom send` last step. Delta re-review = appended "Delta re-review request" + fresh instance.
 - GPT-6-Sol reviews took ~3 min each on these branch sizes; don't wait on them synchronously.
+
+## Chrome DevTools MCP (new 2026-09-24, Daniel-approved)
+- `~/.pi/agent/mcp.json` now has `chrome-devtools`: `npx -y chrome-devtools-mcp@latest --channel=stable
+  --auto-connect --no-usage-statistics` (official Google package, github.com/ChromeDevTools/chrome-devtools-mcp;
+  `@latest` self-updates; previous file backed up as `mcp.json.bak`). Lazy in pi: `mcp({connect:"chrome-devtools"})`
+  first, then ~30 tools (`list_pages`, `new_page`, `select_page`, `take_snapshot`, `click`, `fill`,
+  `evaluate_script`, `close_page`). Attaches to Daniel's **running** Chrome and drives his real tabs — verified.
+- **Standing instruction (Daniel):** workers automate every Chrome step through it and every terminal step through
+  Herdr; he is only needed for WhatsApp/ChatGPT (and chooser/history UI clicks). Brief every worker accordingly.
+- The `--accept-signal-trigger` / `SIGUSR1` press path (`Sources/JevPasteApp/Launch/AcceptanceTrigger.swift`) is
+  approved to live in `main` as test scaffolding (off by default) so unattended runs can fire ⌘⇧V.
 
 ## Environment facts
 - Installed `~/Applications/JevPaste.app` = **clean main aeb2dd9** (Direct Paste + history UI in), running, Open-at-Login **ON**
