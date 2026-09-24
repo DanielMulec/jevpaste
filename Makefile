@@ -16,6 +16,7 @@ SWIFTLINT_TOOLCHAIN := /Library/Developer/CommandLineTools
 
 INSTALLED_APP := $(HOME)/Applications/JevPaste.app
 BUILT_APP := build/JevPaste.app
+LSREGISTER := /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
 
 check: build-strict format-lint lint duplication test dead-code line-counts hook-test
 	@echo "make check: all steps passed"
@@ -60,4 +61,10 @@ install: app
 	rm -rf "$(INSTALLED_APP)"
 	mkdir -p "$(HOME)/Applications"
 	cp -R "$(BUILT_APP)" "$(INSTALLED_APP)"
+	@# The staging bundle is only a copy source; left behind, Launch Services lists it as a second JevPaste in
+	@# Launchpad. Unregister it, then delete it so nothing (Spotlight, Finder) can register it again; the next
+	@# `make app` or `make install` rebuilds it. Re-register the installed copy so it carries the fresh icon.
+	"$(LSREGISTER)" -u "$(BUILT_APP)"
+	rm -rf "$(BUILT_APP)"
+	"$(LSREGISTER)" -f "$(INSTALLED_APP)"
 	@echo "installed: $(INSTALLED_APP)"

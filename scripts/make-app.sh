@@ -1,6 +1,7 @@
 #!/bin/bash
 # Assembles and signs build/JevPaste.app (ADR 0001): release build, Info.plist written here, icon from
-# Resources/AppIcon.png via sips + iconutil, signed with the jevpaste-dev Signing Identity.
+# Resources/AppIcon.png via sips + iconutil, menu-bar image Resources/StatusItem{,@2x}.png (all three derived by
+# scripts/make-icon-images.py), signed with the jevpaste-dev Signing Identity.
 #
 # Never install an ad-hoc build: macOS Accessibility trust keys on the designated requirement, which is
 # anchored to the jevpaste-dev certificate, so rebuilds keep the grant only when signed with it.
@@ -46,6 +47,8 @@ for point_size in 16 32 128 256 512; do
         --out "$iconset_directory/icon_${point_size}x${point_size}@2x.png" >/dev/null
 done
 iconutil --convert icns --output "$APP_PATH/Contents/Resources/AppIcon.icns" "$iconset_directory"
+# Menu-bar template image; NSImage pairs the @2x file with the 1x one by name.
+cp Resources/StatusItem.png Resources/StatusItem@2x.png "$APP_PATH/Contents/Resources/"
 
 cat > "$APP_PATH/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

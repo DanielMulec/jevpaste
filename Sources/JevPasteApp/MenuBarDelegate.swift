@@ -1,7 +1,8 @@
 import AppKit
 
-/// Owns the status item (the SF Symbol `doc.on.clipboard` and a short menu: "Clipboard History…", "Open at Login",
-/// "Quit") and starts Smart Paste.
+/// Owns the status item (the app icon's glyph as a template image, `StatusItem.png` from the bundle, falling back to
+/// the SF Symbol `doc.on.clipboard` when the bundle lacks it, e.g. under `swift run`; and a short menu: "Clipboard
+/// History…", "Open at Login", "Quit") and starts Smart Paste.
 @MainActor
 final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private let options: LaunchOptions
@@ -16,13 +17,24 @@ final class MenuBarDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "jevpaste")
+        item.button?.image = Self.statusItemImage()
         statusItem = item
         let application = SmartPasteApplication(statusItem: item, options: options)
         smartPaste = application
         let loginItemMenu = LoginItemMenu(toggle: application.loginItem)
         self.loginItemMenu = loginItemMenu
         item.menu = makeMenu(loginItem: loginItemMenu)
+    }
+
+    /// A template image so macOS tints it for light, dark and auto-hiding menu bars; `@2x` is picked up by name.
+    private static func statusItemImage() -> NSImage? {
+        guard let image = Bundle.main.image(forResource: "StatusItem") else {
+            return NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "jevpaste")
+        }
+        image.isTemplate = true
+        image.size = NSSize(width: 18, height: 18)
+        image.accessibilityDescription = "jevpaste"
+        return image
     }
 
     private func makeMenu(loginItem: LoginItemMenu) -> NSMenu {
