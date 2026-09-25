@@ -10,8 +10,7 @@ Replaces the refusal half of [chatgpt-resolver.md](chatgpt-resolver.md); the one
 - `AXEnhancedUserInterface` was already `true` in Chrome before every run (set by another client; Chrome was not
   relaunched), so "without the switch" is unmeasurable; setting it again changed nothing (41/45/44 ms). Settled tab: 0 ms.
 - ChatGPT app (#33 live rounds): the switch is required, then the focus resolves 1–3 s later without a walk.
-- ⇒ Minimum that passes: **re-read on a timer; keep the one-shot switch; drop the 300-node wake walk** (#33 killed the
-  walk hypothesis; per-poll walks would cost up to 300 IPCs every tick).
+- ⇒ Minimum: **re-read on a timer, keep the one-shot switch, drop the 300-node wake walk** (killed in #33; costly per read).
 
 ## Core — phase `wakeWaiting`, before the Bound Target
 | phase | event | action → next phase |
@@ -27,8 +26,9 @@ Replaces the refusal half of [chatgpt-resolver.md](chatgpt-resolver.md); the one
 - **Clock rule**: the 5 s Jev deadline is `now + 5 s` at resolution (`askJev` runs then). A wait that already showed
   the indicator switches it to "Jev is choosing…" at once; otherwise the 150 ms indicator timer starts at resolution.
   Direct Paste after a shown wait turns "Waking…" into "Pasting…" (`showDelivering`).
-- State: `WakeWait { number, item, startedAt, applicationName, timers }` beside `RunningAttempt` (no target yet); its
-  number becomes the attempt's, so stale polls and clicks are dropped as today. `RunningAttempt.wakeWait: Duration?`.
+- State: `WakeWait { start: AttemptStart { number, item, pressedAt, wakeWait, isIndicatorShown }, applicationName }`
+  beside `RunningAttempt` (no target yet); timers moved to the coordinator; the number carries over, so stale reads
+  and clicks are dropped as today. `RunningAttempt.wakeWait: Duration?`.
 
 ## MacInterop — `TargetResolution.focusUnreadable(applicationName:)` (was `.waking`)
 - Focus unreadable + a frontmost app → `.focusUnreadable(name)` always; no frontmost app → `.noEditableTarget`.
@@ -36,15 +36,17 @@ Replaces the refusal half of [chatgpt-resolver.md](chatgpt-resolver.md); the one
 - One-shot switch: if the app's `AXEnhancedUserInterface` reads `false`, set it (the read-back makes it one-shot per
   process — the next poll sees `true`). **The 5 s per-pid window is removed**: its only job was to keep saying
   "waking" across presses; the wait now spans the readiness itself and the read-back prevents a second set.
-- Log: `focus unreadable app=<bundle> enhancedUI=` once per unreadable stretch (not per poll); `wake requested` as today.
+- The switch is checked once per process (a remembered pid set), so an app that ignores it is not asked every 50 ms.
+  Log: `focus unreadable app=<bundle> enhancedUI=` once per process (not per read); `wake requested` as before.
 
 ## Presenter seam — one new method, one extra argument
-- `showWaking(applicationName:onCancel:)`: the processing mechanism (same panel, click cancels), content
-  `hourglass`-style symbol + `Waking <App>… click to cancel` (hint as for processing). `showDelivering` accepts it too.
-- `showOutcome(_:note:path:wakeWait:)`, with a protocol-extension overload for `wakeWait: nil` so existing callers
-  stay. Log: `outcome inserted via=directPaste wakeWait=312`; no key when the attempt did not wait.
-- **Esc**: not honoured (click only), as for processing — making the indicator key would move key focus away from
-  the app whose focus we are waiting to read. `CONTEXT.md` says "Esc or a click"; corrected if this stands.
+- `showWaking(applicationName:onCancel:)`: the processing mechanism (same panel, symbol, click cancels), text
+  `Waking <App>… click to cancel`. `showDelivering` turns it into "Pasting…" like processing.
+- `showOutcome(_:note:path:wakeWait:)` (app tests' old calls: a test-target overload with `nil`). Log, whole ms:
+  `outcome inserted via=directPaste wakeWait=312`; no key when the attempt did not wait.
+- **Esc**: not honoured (click only), exactly as on the processing indicator (Gate A). The indicator must not take
+  key focus: that would move focus off the very element whose readability the attempt waits for. `CONTEXT.md`
+  corrected to "a click on the indicator cancels".
 - Refusal: `PreCheckRefusal.targetNotReady(applicationName:)`, text `<App> isn't ready — press ⌘⇧V again`, log
   `refused.targetNotReady`.
 

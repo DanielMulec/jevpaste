@@ -70,8 +70,7 @@ no Accessibility, so without it every cell needs Daniel. **Recommendation: keep 
 3. Per press: `pbcopy` fixture → wait 0.5 s (capture polls every 100 ms) → digest + `changeCount` → gate
    (frontmost bundle via `lsappinfo`; Chrome: `document.hasFocus()` and `activeElement.id`; Herdr: `pane get`
    focused=true) → `kill -USR1 <pid>` → wait → read-back → digest/`changeCount` again → clear field / C-c.
-   Gate fails → abort that cell, no trigger. First press after launch may hit the known cold-AX wake (#36) →
-   recorded, one retry.
+   Gate fails → abort that cell, no trigger. A cold accessibility tree is waited for (Wake Wait, up to 3 s), no retry.
 4. The Mac must stay awake and unlocked (`caffeinate -d` during runs); focus switches between Chrome, Ghostty and
    TextEdit, so Daniel should not type during the ~15 min automated window.
 5. Leftovers: fixtures are recorded in Daniel's history (as in earlier runs); I do not delete them.
@@ -95,7 +94,7 @@ Before: I open everything (Chrome page, WhatsApp "Message yourself", ChatGPT app
    I press three times; then say what is in the box. Look: one line `JEVPASTE-ACC-A-WA`, **not sent**; the
    other two presses show "No suitable match" and "Suspected secret" and add nothing. Then select all
    (⌘A) and Delete in the box. *Why: insert only; a trailing newline must not send.*
-4. Same in the ChatGPT app composer (`JEVPASTE-ACC-A-GPT`). The first press may say "Waking ChatGPT…" —
-   expected, I press again. Then ⌘A, Delete. *Why: same, for the ChatGPT app.*
+4. Same in the ChatGPT app composer (`JEVPASTE-ACC-A-GPT`). A cold start may show "Waking ChatGPT…"
+   briefly — one press still pastes. Then ⌘A, Delete. *Why: same, for the ChatGPT app.*
 Steps 3–4 (GATE B note): relay one sentence per press as it happens — press 1 "one line in the box,
 nothing sent"; press 2 "No suitable match, nothing added"; press 3 "Suspected secret, nothing added".
