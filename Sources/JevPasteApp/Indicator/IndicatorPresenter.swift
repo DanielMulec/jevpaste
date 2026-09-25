@@ -2,7 +2,8 @@ import SmartPasteCore
 import os
 
 /// The `PasteOutcomePresenter`: one reused, non-focus-stealing indicator for processing, retrying and every
-/// outcome. A click while Jev is choosing cancels the Paste Attempt; Esc never reaches it, because it is never key.
+/// outcome. A click while Jev is choosing cancels the Paste Attempt; Esc never reaches it then, because it is not
+/// key. Only the No Suitable Match offer takes key focus, for Enter or Esc.
 @MainActor
 final class IndicatorPresenter: PasteOutcomePresenter {
     private enum State {
@@ -11,6 +12,13 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         case retrying
         case delivering
         case outcome
+        /// No Suitable Match with Enter offered; the indicator holds key focus.
+        case offering
+    }
+
+    private enum OfferAnswer {
+        case accept
+        case dismiss
     }
 
     private static let log = Logger(subsystem: "jevpaste", category: "PasteAttempt")
@@ -20,12 +28,17 @@ final class IndicatorPresenter: PasteOutcomePresenter {
     private var state = State.hidden
     private var onCancel: (@MainActor () -> Void)?
     private var pendingHide: (any ScheduledAction)?
+    private let offerSession: KeyPanelSession<OfferAnswer>
 
-    init(surface: any IndicatorSurface, clock: any PasteAttemptClock) {
+    init(surface: any IndicatorSurface, clock: any PasteAttemptClock, focusReturn: TargetAppFocusReturn) {
         self.surface = surface
         self.clock = clock
+        offerSession = KeyPanelSession(focusReturn: focusReturn, log: Self.log)
         surface.forwardClicks { [weak self] in
             self?.indicatorClicked()
+        }
+        surface.forwardOfferEvents { [weak self] event in
+            self?.offerEventArrived(event)
         }
     }
 
@@ -60,6 +73,23 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         show(OutcomeMessage(outcome, note: note))
     }
 
+    /// Takes key focus for Enter or Esc; the answer goes to Core once focus is back in the Bound Target's app.
+    func showNoSuitableMatchOffer(
+        for target: BoundTarget, onAccept: @escaping @MainActor () -> Void,
+        onDismiss: @escaping @MainActor () -> Void
+    ) {
+        let isNew = offerSession.begin(returningFocusTo: target.identity.processIdentifier) { answer in
+            answer == .accept ? onAccept() : onDismiss()
+        }
+        guard isNew else { return onDismiss() }  // defensive: Core runs one attempt, so one offer, at a time
+        onCancel = nil
+        pendingHide?.cancel()
+        pendingHide = nil
+        state = .offering
+        surface.displayTakingKeyFocus(.noSuitableMatchOffer)
+        Self.log.notice("offer shown")
+    }
+
     /// The diagnostic line for an outcome: its kind, the path taken with Jev's free-text probability, and the note —
     /// fixed names and numbers only, no payload. `outcome inserted via=directPaste`,
     /// `outcome inserted via=freeTextTarget p=0.93`, `outcome noSuitableMatch via=jev p=0.12 note=…`.
@@ -81,11 +111,28 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         Self.log.notice("processing indicator hidden while choosing")
     }
 
+    /// An outcome while offering withdraws the offer (Core's time limit or ⌘⇧V ended it): no answer, focus back.
     private func show(_ message: OutcomeMessage) {
         onCancel = nil
+        let wasOffering = state == .offering
         display(message.content, as: .outcome)
+        if wasOffering { offerSession.abandon() }
         pendingHide = clock.schedule(after: message.displayDuration) { [weak self] in
             self?.hide()
+        }
+    }
+
+    /// Enter accepts, Esc or click-away dismisses; the indicator is hidden before focus goes back.
+    private func offerEventArrived(_ event: IndicatorOfferEvent) {
+        guard state == .offering else { return }
+        state = .hidden
+        switch event {
+        case .accept:
+            Self.log.notice("offer accepted")
+            offerSession.answer(.accept) { surface.hide() }
+        case .dismiss(let dismissal):
+            Self.log.notice("offer dismissed (\(dismissal.rawValue, privacy: .public))")
+            offerSession.answer(.dismiss) { surface.hide() }
         }
     }
 

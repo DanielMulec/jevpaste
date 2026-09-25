@@ -23,8 +23,10 @@ candidates }` · `Decision { choice: .candidate(Candidate) | .noneOfThese, conta
 `PreCheckRefusal = .noEditableTarget | .secureField | .suspectedSecret | .noActiveItem` ·
 `PasteAttemptFailure = .timedOut | .decisionUnavailable | .invalidResult | .targetChanged` ·
 `PasteAttemptOutcome = .inserted | .insertedWithoutRestore | .noSuitableMatch | .refused(PreCheckRefusal)
-| .cancelled | .failed(PasteAttemptFailure)` · `SmartPastePath = .jev(freeTextProbability:) | .freeTextTarget(probability:)
-| .directPaste` (diagnostics only; stored on the running attempt, refined when Jev's decision arrives).
+| .cancelled | .failed(PasteAttemptFailure)` · `SmartPastePath = .jev(freeTextProbability:, offer:) |
+.freeTextTarget(probability:) | .directPaste` (diagnostics only; stored on the running attempt, refined when Jev's
+decision arrives and when the No Suitable Match offer ends) · `NoSuitableMatchOfferEnd = .accepted | .dismissed |
+.timedOut`.
 
 ## Ports
 ```swift
@@ -55,6 +57,9 @@ protocol HistoryRepository: Sendable { func record(_ item: ClipboardItem) }
     func showRetrying()                                              // 429 back-off in progress
     func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?,   // ✓/reason + note; hides processing
                      path: SmartPastePath?)                                    // .jev / .directPaste, log only
+    func showNoSuitableMatchOffer(for target: BoundTarget,                      // Enter pastes everything; at most one
+                                  onAccept: @escaping @MainActor () -> Void,   // callback, after focus returned;
+                                  onDismiss: @escaping @MainActor () -> Void)  // a later showOutcome withdraws it
 }
 @MainActor protocol CandidateChooser {   // adapter returns focus to the Bound Target's app before replying
     func presentChoice(among candidates: [Candidate], for target: BoundTarget,
@@ -78,7 +83,7 @@ protocol PreCheck: Sendable {   // adapter: LocalPreChecks (Core), see pre-check
 | idle | ⌘⇧V, checks pass, single-line item (`DirectPasteRule`) | Direct Paste: pin item+target, no Jev, no clocks, no indicator → delivering ([direct-paste.md](direct-paste.md)) |
 | idle | ⌘⇧V, checks pass, candidates empty | `showOutcome(.noSuitableMatch)` → idle |
 | idle | ⌘⇧V, checks pass | pin item+target; start 5 s deadline + 150 ms indicator timer; `requestDecision` → deciding |
-| deciding, retrying, choosing, delivering | ⌘⇧V | ignored |
+| deciding, retrying, choosing, delivering | ⌘⇧V | ignored (offeringDirectPaste: ends the offer, row below) |
 | deciding | 150 ms timer | `showProcessing(onCancel:)` |
 | deciding | `.rateLimited(d)`, now+d < deadline | `showRetrying`; schedule retry after d → retrying |
 | deciding | `.rateLimited(d)`, now+d ≥ deadline | `.failed(.timedOut)` |
@@ -87,7 +92,9 @@ protocol PreCheck: Sendable {   // adapter: LocalPreChecks (Core), see pre-check
 | deciding, retrying | Esc (`onCancel`) | `.cancelled` |
 | deciding | `.failed` | `.failed(.decisionUnavailable)` |
 | deciding | `freeTextProbability` ≥ 0.8 (first check, wins over everything below) | whole item, outer line breaks stripped → delivering ([free-text-target.md](free-text-target.md)) |
-| deciding | `.noneOfThese` or probability < 0.5 | `.noSuitableMatch` |
+| deciding | `.noneOfThese` or probability < 0.5 | stop clocks; `showNoSuitableMatchOffer`; 8 s offer timer → offeringDirectPaste ([no-suitable-match-offer.md](no-suitable-match-offer.md)) |
+| offeringDirectPaste | `onAccept` (Enter) | `deliver(withoutOuterLineBreaks(item))` → delivering, path `.jev(…, offer: .accepted)` |
+| offeringDirectPaste | `onDismiss` (Esc / click-away), ⌘⇧V, 8 s timer | `.noSuitableMatch`, path `.jev(…, offer: .dismissed / .timedOut)` → idle |
 | deciding | candidate not a verbatim UTF-8 substring of pinned item | `.failed(.invalidResult)` |
 | deciding | ≥ 2 same-type alternatives | stop clocks; `presentChoice` → choosing |
 | deciding | otherwise | stop clocks → delivering |
@@ -103,9 +110,10 @@ Active Item is never changed by the coordinator; a copy during the attempt reach
 
 ## Clocks
 - **5 s deadline**: starts when ⌘⇧V passes the pre-checks; covers Jev calls and 429 back-off; a retry is
-  scheduled only if it starts before the deadline. Stops at: chooser opens (chooser is off the clock),
+  scheduled only if it starts before the deadline. Stops at: chooser or No Suitable Match offer opens (both off it),
   delivery starts (delivery is uninterruptible), or any outcome. Not restarted after the chooser.
 - **150 ms indicator**: same start; cancelled by any earlier outcome/chooser/delivery.
+- **8 s No Suitable Match offer**: starts when the offer shows; Enter (delivery) or any outcome cancels it.
 - **120 ms restore delay**: fixed, starts right after `postPasteKeystroke`.
 
 ## Changes to existing code

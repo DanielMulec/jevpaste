@@ -19,6 +19,14 @@ Suitable Match — [Enter pastes everything after No Suitable Match](https://git
   the same hazard at a prompt). Cut after the last break of the leading whitespace run and at the first break of
   the trailing one: `"\r\n  \r\n\tx \r\n\n"` → `"\tx "`. Spaces and tabs on the line stay byte for byte.
 
+## Second doorway — Enter after No Suitable Match
+Slice: [Offer Enter to paste everything after No Suitable Match](https://github.com/DanielMulec/jevpaste/issues/42),
+design in [no-suitable-match-offer.md](no-suitable-match-offer.md). When Jev answers *none of these* (or p < 0.5)
+the indicator offers "No suitable match — press Enter to paste everything"; Enter delivers
+`DirectPasteRule.withoutOuterLineBreaks(item.text)` (the same stripping as above, whatever the line count) through
+the same delivery step. Never automatic; Pre-checks are not re-run (they passed at ⌘⇧V for the same pinned item
+and Target). Log: `outcome inserted via=directPaste reason=enterAfterNoMatch`.
+
 ## Where the branch sits (`hotkeyPressed`)
 ```
 … PreCheck.refusal → refuse                         (unchanged, stays in front)

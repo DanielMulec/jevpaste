@@ -7,6 +7,8 @@ enum PasteAttemptPhase: Equatable {
     case waitingToRetry
     /// The Candidate Chooser is open; off the clock.
     case choosing
+    /// No Suitable Match, with Enter offered to paste the whole Active Item; off the 5 s clock, on the offer's own.
+    case offeringDirectPaste
     /// The uninterruptible delivery step: clipboard swap, ⌘V and the Restore Window.
     case delivering
 }

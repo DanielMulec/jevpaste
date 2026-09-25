@@ -6,14 +6,19 @@ enum ChooserEvent: Equatable {
     case chooseSelected
     /// A click on a row.
     case choose(row: Int)
-    case cancel(ChooserCancellation)
+    case cancel(KeyPanelDismissal)
 }
 
-/// How the user dismissed the chooser without choosing.
-enum ChooserCancellation: String, Equatable {
-    case escape = "esc"
-    /// The chooser stopped being key: the user clicked another window or app.
-    case clickAway = "click-away"
+extension ChooserEvent {
+    /// ↑/↓ move, Return or Enter choose the selected row, Esc cancels.
+    init(_ key: PanelKey) {
+        switch key {
+        case .moveUp: self = .moveUp
+        case .moveDown: self = .moveDown
+        case .confirm: self = .chooseSelected
+        case .escape: self = .cancel(.escape)
+        }
+    }
 }
 
 /// Where the Candidate Chooser is drawn: in the app, a key-capable, non-activating panel below the status item.

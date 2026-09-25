@@ -27,7 +27,9 @@ final class SmartPasteApplication {
         }
         let panel = IndicatorPanel(anchorFrame: statusItemFrame)
         let notices = IndicatorNoticeSurface(wrapping: panel, clock: clock)
-        let presenter = IndicatorPresenter(surface: notices, clock: clock)
+        let activator = WorkspaceApplicationActivator()
+        let focusReturn = TargetAppFocusReturn(activator: activator, clock: clock)
+        let presenter = IndicatorPresenter(surface: notices, clock: clock, focusReturn: focusReturn)
         let clipboard = SystemClipboard()
         let history = ClipboardHistoryOpening.open(notices: notices)
         let capture = CopyCapture(
@@ -35,8 +37,6 @@ final class SmartPasteApplication {
             history: history,
             contentsAtLaunch: { clipboard.currentItem() }
         )
-        let activator = WorkspaceApplicationActivator()
-        let focusReturn = TargetAppFocusReturn(activator: activator, clock: clock)
         historyPanel = HistoryPanelController(
             surface: HistoryPanel(anchorFrame: statusItemFrame), history: history, capture: capture,
             focusReturn: focusReturn, activator: activator, notices: notices

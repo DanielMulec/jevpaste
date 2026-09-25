@@ -27,6 +27,7 @@ public final class PasteAttemptCoordinator {
     }
 
     private func hotkeyPressed() {
+        if phase == .offeringDirectPaste { return endOffer(.dismissed) }
         guard phase == .idle else { return }
         guard let item = capture.activeItem else { return refuse(.noActiveItem) }
         let target: BoundTarget

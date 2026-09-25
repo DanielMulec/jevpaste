@@ -8,6 +8,7 @@ struct PasteAttemptDecisionTests {
 
         harness.hotkey.press()
         harness.jev.reply(.decided(Decision(choice: .noneOfThese, containsValueProbability: 0.9)))
+        harness.presenter.dismissOffer()
 
         #expect(harness.presenter.outcomes == [.noSuitableMatch])
         #expect(harness.log.steps.isEmpty)
@@ -18,6 +19,7 @@ struct PasteAttemptDecisionTests {
 
         harness.hotkey.press()
         harness.jev.choose("ada@example.com", probability: 0.49)
+        harness.presenter.dismissOffer()
 
         #expect(harness.presenter.outcomes == [.noSuitableMatch])
         #expect(harness.log.steps.isEmpty)

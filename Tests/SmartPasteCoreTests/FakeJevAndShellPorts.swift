@@ -131,11 +131,62 @@ final class FakePresenter: PasteOutcomePresenter {
         outcomes.append(outcome)
         notes.append(note)
         paths.append(path)
+        shownOffer = nil  // withdrawn without a callback, as the seam promises
     }
 
     /// Esc pressed while our processing indicator is visible.
     func pressEscape() {
         onCancel?()
+    }
+
+    // MARK: No Suitable Match offer — the seam's contract: at most one callback, only after focus is back in the
+    // Target's app, none once a later `showOutcome` withdrew the offer.
+
+    typealias OfferCallbacks = (accept: @MainActor () -> Void, dismiss: @MainActor () -> Void)
+
+    /// The Bound Target of each offer shown, oldest first.
+    private(set) var offeredTargets: [BoundTarget] = []
+    /// The offer on screen, waiting for a key; `nil` once answered or withdrawn.
+    private var shownOffer: OfferCallbacks?
+    /// The answer given by a key, sent once focus is back in the Target's app.
+    private var answerAwaitingFocusReturn: (@MainActor () -> Void)?
+    /// The newest offer's callbacks, kept even after it was answered or withdrawn — only for adversarial tests that
+    /// call a stale callback on purpose, as a misbehaving adapter would.
+    private(set) var newestOfferCallbacks: OfferCallbacks?
+
+    func showNoSuitableMatchOffer(
+        for target: BoundTarget, onAccept: @escaping @MainActor () -> Void,
+        onDismiss: @escaping @MainActor () -> Void
+    ) {
+        offeredTargets.append(target)
+        shownOffer = (onAccept, onDismiss)
+        newestOfferCallbacks = (onAccept, onDismiss)
+    }
+
+    /// Enter (`accepting`) or Esc / click-away on the shown offer; the answer waits for `finishFocusReturn()`.
+    func pressOfferKey(accepting: Bool) {
+        guard let offer = shownOffer else { return }
+        shownOffer = nil
+        answerAwaitingFocusReturn = accepting ? offer.accept : offer.dismiss
+    }
+
+    /// Focus is back in the Target's app: the pending answer goes out, once.
+    func finishFocusReturn() {
+        let answer = answerAwaitingFocusReturn
+        answerAwaitingFocusReturn = nil
+        answer?()
+    }
+
+    /// Enter on the offer, then focus back in the Target's app.
+    func acceptOffer() {
+        pressOfferKey(accepting: true)
+        finishFocusReturn()
+    }
+
+    /// Esc or click-away on the offer, then focus back in the Target's app.
+    func dismissOffer() {
+        pressOfferKey(accepting: false)
+        finishFocusReturn()
     }
 }
 

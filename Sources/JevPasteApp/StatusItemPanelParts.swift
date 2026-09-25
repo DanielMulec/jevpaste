@@ -1,11 +1,12 @@
 import AppKit
 
 /// The borderless floating panel that jevpaste shows below the status item. It never activates the app when
-/// clicked and is never main; the indicator's never becomes key either, the Candidate Chooser's may, and reports
-/// when it stops being key.
+/// clicked and is never main. The Candidate Chooser's and the history panel's may become key, the indicator's only
+/// while it offers to paste everything after No Suitable Match; each reports when it stops being key.
 final class StatusItemPanel: NSPanel {
     var onResignKey: (@MainActor () -> Void)?
-    private let becomesKey: Bool
+    /// Whether the panel may become key; the indicator switches it on only for its offer.
+    var becomesKey: Bool
 
     init(becomesKey: Bool) {
         self.becomesKey = becomesKey

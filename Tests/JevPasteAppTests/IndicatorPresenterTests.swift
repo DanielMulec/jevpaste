@@ -10,7 +10,9 @@ struct IndicatorPresenterTests {
     private let presenter: IndicatorPresenter
 
     init() {
-        presenter = IndicatorPresenter(surface: surface, clock: clock)
+        presenter = IndicatorPresenter(
+            surface: surface, clock: clock,
+            focusReturn: TargetAppFocusReturn(activator: FakeApplicationActivator(), clock: clock))
     }
 
     @Test func processingIsDisplayedAtOnce() {
