@@ -112,6 +112,8 @@ struct OutcomeMessage: Equatable {
     private static func text(for note: PasteAttemptNote) -> String {
         switch note {
         case .surroundingTextWithheld: "nearby text withheld (suspected secret)"
+        case .windowTitleWithheld: "window title withheld (suspected secret)"
+        case .surroundingTextAndWindowTitleWithheld: "nearby text and window title withheld (suspected secret)"
         }
     }
 
