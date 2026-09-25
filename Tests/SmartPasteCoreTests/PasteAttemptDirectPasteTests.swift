@@ -93,7 +93,7 @@ struct PasteAttemptDirectPasteTests {
         harness.clock.advance(by: .milliseconds(120))
 
         #expect(harness.log.steps == [.write("ada@example.com"), .pasteKeystroke, .restore])
-        #expect(harness.presenter.paths == [.jev])
+        #expect(harness.presenter.paths == [.jev(freeTextProbability: 0)])
     }
 
     /// Stand-in for a Rejev-paste until the history UI can select an older item: the Active Item, not whatever the

@@ -18,19 +18,27 @@ public struct TargetContext: Equatable, Sendable {
     public let siblingFieldLabels: [String]
     /// A bounded window of visible text around the Target, for unlabelled Targets such as chats and terminals.
     public let surroundingText: String
+    /// The name of the app the Target belongs to, as the user sees it (never its bundle id).
+    public let appName: String?
+    /// The title of the Target's window.
+    public let windowTitle: String?
 
     public init(
         fieldLabel: String? = nil,
         placeholder: String? = nil,
         sectionHeading: String? = nil,
         siblingFieldLabels: [String] = [],
-        surroundingText: String = ""
+        surroundingText: String = "",
+        appName: String? = nil,
+        windowTitle: String? = nil
     ) {
         self.fieldLabel = fieldLabel
         self.placeholder = placeholder
         self.sectionHeading = sectionHeading
         self.siblingFieldLabels = siblingFieldLabels
         self.surroundingText = surroundingText
+        self.appName = appName
+        self.windowTitle = windowTitle
     }
 }
 

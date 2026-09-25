@@ -1,7 +1,7 @@
 import Foundation
 import SmartPasteCore
 
-/// The two answers the adapter reads from a `200` evaluation; everything else in the body is ignored.
+/// The three answers the adapter reads from a `200` evaluation; everything else in the body is ignored.
 struct EvaluateResponse: Decodable {
     let answers: EvaluateAnswers
 
@@ -10,12 +10,15 @@ struct EvaluateResponse: Decodable {
         guard let answers = try? JSONDecoder().decode(EvaluateResponse.self, from: body).answers else {
             return .failure(.malformedResponse)
         }
-        let probability = answers.containsValue.probability
-        guard (0...1).contains(probability) else { return .failure(.malformedResponse) }
+        let containsValue = answers.containsValue.probability
+        let freeText = answers.freeText.probability
+        guard (0...1).contains(containsValue), (0...1).contains(freeText) else { return .failure(.malformedResponse) }
         guard let choice = choice(forOptionID: answers.paste.choice, among: candidates) else {
             return .failure(.unknownChoice)
         }
-        return .success(Decision(choice: choice, containsValueProbability: probability))
+        return .success(
+            Decision(choice: choice, containsValueProbability: containsValue, freeTextProbability: freeText)
+        )
     }
 
     private static func choice(forOptionID optionID: String, among candidates: [Candidate]) -> Decision.Choice? {
@@ -28,10 +31,12 @@ struct EvaluateResponse: Decodable {
 struct EvaluateAnswers: Decodable {
     let paste: ChoiceAnswer
     let containsValue: BooleanAnswer
+    let freeText: BooleanAnswer
 
     enum CodingKeys: String, CodingKey {
         case paste
         case containsValue = "contains_value"
+        case freeText = "free_text"
     }
 }
 

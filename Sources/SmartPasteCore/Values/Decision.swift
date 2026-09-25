@@ -12,7 +12,7 @@ public struct DecisionRequest: Equatable, Sendable {
     }
 }
 
-/// Jev's typed answer to a `DecisionRequest`. Never text: a choice plus the no-match gate.
+/// Jev's typed answer to a `DecisionRequest`. Never text: a choice, the no-match gate and the free-text judgement.
 public struct Decision: Equatable, Sendable {
     public enum Choice: Equatable, Sendable {
         case candidate(Candidate)
@@ -22,10 +22,13 @@ public struct Decision: Equatable, Sendable {
     public let choice: Choice
     /// Probability that the source document contains a value for the Target; below 0.5 means No Suitable Match.
     public let containsValueProbability: Double
+    /// Probability that the Target is a Free-text Target; at or above 0.8 the whole Active Item is pasted.
+    public let freeTextProbability: Double
 
-    public init(choice: Choice, containsValueProbability: Double) {
+    public init(choice: Choice, containsValueProbability: Double, freeTextProbability: Double = 0) {
         self.choice = choice
         self.containsValueProbability = containsValueProbability
+        self.freeTextProbability = freeTextProbability
     }
 }
 

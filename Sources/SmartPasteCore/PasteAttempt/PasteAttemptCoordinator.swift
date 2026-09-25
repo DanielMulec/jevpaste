@@ -44,7 +44,9 @@ public final class PasteAttemptCoordinator {
 
     /// Inserts the single-line Active Item whole: no Jev, no Candidates, no chooser, no indicator, no 5 s clock.
     private func directPaste(_ text: String, of item: ClipboardItem, into target: BoundTarget) {
-        attempt = RunningAttempt(number: nextAttemptNumber(), item: item, target: target, jevConsultation: nil)
+        attempt = RunningAttempt(
+            number: nextAttemptNumber(), item: item, target: target, jevConsultation: nil, path: .directPaste
+        )
         deliver(text)
     }
 
@@ -56,7 +58,7 @@ public final class PasteAttemptCoordinator {
             deadline: ports.clock.now + Self.attemptTimeLimit
         )
         attempt = RunningAttempt(
-            number: nextAttemptNumber(), item: item, target: target, jevConsultation: consultation
+            number: nextAttemptNumber(), item: item, target: target, jevConsultation: consultation, path: .jev()
         )
         schedule(after: Self.attemptTimeLimit) { coordinator in
             coordinator.finish(.failed(.timedOut))

@@ -2,6 +2,8 @@
 extension PasteAttemptCoordinator {
     /// Below this probability that the source contains a value for the Target, the outcome is No Suitable Match.
     static let containsValueThreshold = 0.5
+    /// At or above this probability that the Target is a Free-text Target, the whole Active Item is pasted.
+    static let freeTextThreshold = 0.8
 
     func requestDecision() {
         guard let attempt, let consultation = attempt.jevConsultation else { return }
@@ -13,6 +15,7 @@ extension PasteAttemptCoordinator {
         )
         ports.decisionService.requestDecision(request) { [weak self] reply in
             guard let self, self.attempt?.number == number, phase == .deciding else { return }
+            record(reply)
             receive(reply)
         }
     }
@@ -29,6 +32,9 @@ extension PasteAttemptCoordinator {
     }
 
     private func decided(_ decision: Decision) {
+        guard decision.freeTextProbability < Self.freeTextThreshold else {
+            return pasteWholeItem(intoFreeTextTargetWith: decision.freeTextProbability)
+        }
         guard let attempt, let candidates = attempt.jevConsultation?.candidates else { return }
         guard case .candidate(let chosen) = decision.choice,
             decision.containsValueProbability >= Self.containsValueThreshold
@@ -40,6 +46,20 @@ extension PasteAttemptCoordinator {
         } else {
             deliver(chosen.text)
         }
+    }
+
+    /// Records Jev's free-text judgement below the threshold on the path, whatever the decision leads to.
+    private func record(_ reply: DecisionReply) {
+        guard case .decided(let decision) = reply else { return }
+        attempt?.path = .jev(freeTextProbability: decision.freeTextProbability)
+    }
+
+    /// A Free-text Target takes the whole pinned Active Item as a Direct Paste: no Candidates, no chooser, no
+    /// Paste Result validation — the text is derived locally from the pinned item, Jev supplied only a probability.
+    private func pasteWholeItem(intoFreeTextTargetWith probability: Double) {
+        guard let item = attempt?.item else { return }
+        attempt?.path = .freeTextTarget(probability: probability)
+        deliver(DirectPasteRule.withoutOuterLineBreaks(item.text))
     }
 
     /// Opens the Candidate Chooser; the attempt waits for the user, off the clock.
