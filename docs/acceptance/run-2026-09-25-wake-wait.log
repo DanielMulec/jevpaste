@@ -57,3 +57,14 @@ run=4 clipboard sha after=6de6674b019c restored=yes
 2026-09-25 22:25:43.517 [70972] JevPaste: [jevpaste:PasteAttempt] outcome refused.noEditableTarget wakeWait=1163
 2026-09-25 22:25:54.018 [70972] JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
 2026-09-25 22:25:54.025 [70972] JevPaste: [jevpaste:PasteAttempt] outcome refused.noEditableTarget
+# (d) Daniel: quit + relaunched the ChatGPT desktop app (com.openai.codex), clicked the composer, pressed ⌘⇧V once
+#     (keyboard, so no trigger line). Daniel via supervisor: "Done, all worked" — three lines in the composer, not sent.
+#     One attempt, one outcome in the log: waking indicator at 150 ms, focus readable after 2129 ms, processing shown at
+#     once, Jev judged Free-text (p=0.81), whole item delivered. No second press, no "press again".
+2026-09-25 22:31:39.767 [70972] JevPaste: [jevpaste:TargetResolver] focus unreadable app=com.openai.codex enhancedUI=false
+2026-09-25 22:31:39.768 [70972] JevPaste: [jevpaste:TargetResolver] wake requested app=com.openai.codex set=-25208 readBack=true
+2026-09-25 22:31:39.923 [70972] JevPaste: [jevpaste:PasteAttempt] waking indicator shown
+2026-09-25 22:31:41.888 [70972] JevPaste: [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 22:31:43.003 [70972] JevPaste: [jevpaste:JevGateway] Jev decided over 4 options in 1.115708375 seconds
+2026-09-25 22:31:43.012 [70972] JevPaste: [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-25 22:31:43.137 [70972] JevPaste: [jevpaste:PasteAttempt] outcome inserted via=freeTextTarget p=0.81 wakeWait=2129

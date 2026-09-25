@@ -2,14 +2,14 @@
 
 Slice: [Implement the Wake Wait](https://github.com/DanielMulec/jevpaste/issues/43). Contract: the ten settled points of
 [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36#issuecomment-5838246196).
-Replaces the refusal half of [chatgpt-resolver.md](chatgpt-resolver.md); the one-shot wake request stays.
+Replaces the refusal half of [chatgpt-resolver.md](chatgpt-resolver.md). Live: `run-2026-09-25-wake-wait.log`.
 
 ## Gate A numbers (`docs/acceptance/run-2026-09-25-wake-wait-gate-a.log`, installed throwaway probe, 20 ms re-reads)
 - Fresh Chrome `data:` tab, trigger the moment Chrome is frontmost, 8/8: first system-wide read `-25212` (no value),
   readable on the 3rd read at **41–48 ms** (median 44.5), role `AXTextArea`. Plain re-reading — no walk, no switch.
 - `AXEnhancedUserInterface` was already `true` in Chrome before every run (set by another client; Chrome was not
   relaunched), so "without the switch" is unmeasurable; setting it again changed nothing (41/45/44 ms). Settled tab: 0 ms.
-- ChatGPT app (#33 live rounds): the switch is required, then the focus resolves 1–3 s later without a walk.
+  ChatGPT app (#33 live rounds): the switch is required, then the focus resolves 1–3 s later without a walk.
 - ⇒ Minimum: **re-read on a timer, keep the one-shot switch, drop the 300-node wake walk** (killed in #33; costly per read).
 
 ## Core — phase `wakeWaiting`, before the Bound Target
@@ -33,19 +33,19 @@ Replaces the refusal half of [chatgpt-resolver.md](chatgpt-resolver.md); the one
 ## MacInterop — `TargetResolution.focusUnreadable(applicationName:)` (was `.waking`)
 - Focus unreadable + a frontmost app → `.focusUnreadable(name)` always; no frontmost app → `.noEditableTarget`.
   `.noEditableTarget` otherwise only for a readable, non-editable focus.
-- One-shot switch: the first unreadable read of a process checks its `AXEnhancedUserInterface` and sets it if `false`
-  — once per process (a remembered pid set; an app that ignores it is not asked every 50 ms). **The 5 s per-pid window
-  is removed**: its only job was to keep saying "waking" across presses; the wait now spans the readiness itself.
-  Log: `focus unreadable app=<bundle> enhancedUI=` once per process (not per read); `wake requested` as before.
+- One-shot switch: the first unreadable read of a process checks its `AXEnhancedUserInterface` and sets it if `false`,
+  once per process — an app that ignores it is not asked every 50 ms. The pid set is never pruned: one Int32 per app
+  process that was ever unreadable; a recycled pid would skip the check (a reused pid of a sleeping Electron app is the
+  only cost: it refuses until JevPaste restarts). Log `focus unreadable app=<bundle> enhancedUI=` once per process.
+- **The 5 s per-pid window is removed**: it only kept saying "waking" across presses; the wait now spans the readiness.
 
 ## Presenter seam — one new method, one extra argument
 - `showWaking(applicationName:onCancel:)`: the processing mechanism (same panel, symbol, click cancels), text
   `Waking <App>… click to cancel`. `showDelivering` turns it into "Pasting…" like processing.
 - `showOutcome(_:note:path:wakeWait:)` (app tests' old calls: a test-target overload with `nil`). Log, whole ms:
   `outcome inserted via=directPaste wakeWait=312`; no key when the attempt did not wait.
-- **Esc**: not honoured (click only), exactly as on the processing indicator (Gate A). The indicator must not take
-  key focus: that would move focus off the very element whose readability the attempt waits for. `CONTEXT.md`
-  corrected to "a click on the indicator cancels".
+- **Esc**: click only, as on the processing indicator (Gate A): a key indicator would move focus off the very element
+  whose readability the attempt waits for. `CONTEXT.md` now says "a click on the indicator cancels".
 - Refusal: `PreCheckRefusal.targetNotReady(applicationName:)`, text `<App> isn't ready — press ⌘⇧V again`, log
   `refused.targetNotReady`.
 
