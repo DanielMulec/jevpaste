@@ -1,4 +1,4 @@
-# Handoff — jevpaste supervisor (v1 shipped; v1.x backlog, next: grilling 36)
+# Handoff — jevpaste supervisor (v1 shipped; v1.x backlog, next: build 43 Wake Wait)
 
 Written for a fresh supervisor session that has never seen the previous one. Repo:
 `/Users/danielmulec/Projekte/experiments/jevpaste` (private, `DanielMulec/jevpaste`, `main` clean and pushed).
@@ -32,25 +32,30 @@ Direct Paste now has all three doorways (single line, Free-text Target, Enter af
 ## Open tickets (all children of the map — one per session, Daniel's order)
 | ticket | type | note |
 |---|---|---|
-| [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36) | grilling | **next**; the cold-AX "press again" showed up again 2026-09-25 in ChatGPT (`refused.targetWaking`) and in a fresh Chrome tab (`refused.noEditableTarget` on first press) |
+| [Implement the Wake Wait](https://github.com/DanielMulec/jevpaste/issues/43) | task | **next**; contract = the ten points in the [#36 resolution](https://github.com/DanielMulec/jevpaste/issues/36#issuecomment-5838246196) + glossary **Wake Wait**; Gate A measures the fresh-Chrome-tab case first |
 | [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31) | grilling | |
 | [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37) | prototype | Daniel: "get the app complete first" |
 | [Decide what the secure-field pre-check uses when the OS secure-input flag is absent](https://github.com/DanielMulec/jevpaste/issues/38) | grilling | post-timeline |
 
+Also resolved 2026-09-25 (late): [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36)
+— grilling, two rounds; Daniel took every recommendation. Key: blind paste rejected (secure-field Pre-check and
+Bound Target re-verify need the tree); the fix is an auto-retry **Wake Wait** (3 s, off the 5 s clock, Esc cancels,
+"Waking <App>…" after 150 ms, "<App> isn't ready — press ⌘⇧V again" after the limit), on every path and for any
+frontmost app — the fresh-Chrome-tab `noEditableTarget` case enters it too.
+
 ## Next session
-**Ticket:** [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36) —
-grilling, unblocked, unclaimed. Read its body, the resolution of
-[Restore Smart Paste in the ChatGPT desktop app](https://github.com/DanielMulec/jevpaste/issues/33#issuecomment-5807967937)
-(the wake mechanism: `AXEnhancedUserInterface` set once per pid, 5 s window, "Waking…" refusal) and
-`Sources/MacInterop/AXFocusSource.swift` / `FocusedTargetResolver.swift`. Then grill Daniel (short numbered
-questions, recommended answers). Points to settle: the Direct Paste path needs no field read — but the
-**pre-checks** (secure field, `isSecureField`) and the **Bound Target identity** for re-verification do; what
-does a single press do when the tree is unreadable (paste blind? refuse? wake-and-retry automatically within
-the 5 s?); does the Free-text Target path (needs context) change the answer; and the *fresh Chrome tab*
-case (`noEditableTarget`, not `targetWaking`) — same cause or a different one? Resolution → task ticket(s).
-Note the evidence from today's logs: `docs/acceptance/run-2026-09-25-free-text.log` (ChatGPT) and
-`docs/acceptance/run-2026-09-25-enter-after-no-match.log` (Chrome fresh tab).
-Claim first: `gh issue edit 36 --add-assignee @me`. `intercom status` → your id.
+**Ticket:** [Implement the Wake Wait](https://github.com/DanielMulec/jevpaste/issues/43) — task, unblocked,
+unclaimed. Read the map body, this file, the #36 resolution, `CONTEXT.md` (Wake Wait), then the ticket body.
+`intercom status` → your id. **Claim** (`gh issue edit 43 --add-assignee @me`). Brief template:
+`docs/briefs/free-text-target-brief.md` (single worker — drop the Shared-files section). Worktree
+`git worktree add -b wake-wait ~/.pi/worktrees/jevpaste/wake-wait main`. Code the worker touches:
+`Sources/MacInterop/AXFocusSource.swift` (wake walk, `AXEnhancedUserInterface`), `FocusedTargetResolver.swift`
+(5 s wake window, `TargetResolution.waking`), `Sources/SmartPasteCore/PasteAttempt/PasteAttemptCoordinator.swift`
+(`hotkeyPressed` switch on `resolveFocusedTarget()` — the wait goes there, before Pre-checks), `PasteAttemptPhase.swift`,
+`PasteAttemptOutcome.swift` (`PreCheckRefusal.targetWaking` → rename/reword), `OutcomeMessage.swift`,
+`IndicatorPresenter.swift` (processing indicator reuse). Gate A must include the fresh-Chrome-tab measurement.
+Live: ChatGPT cold composer is Daniel's one press; Chrome + Herdr automated (DevTools MCP + SIGUSR1).
+After 43: 31 (grilling), 37 (prototype), 38 (grilling).
 
 ## Supervisor role (Daniel's standing instructions, this session)
 - **You orchestrate only.** Workers do ALL hands-on work, including prototypes — Daniel rejected the supervisor
