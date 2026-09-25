@@ -3,39 +3,45 @@ import Testing
 
 @testable import MacInterop
 
-/// An app whose focus is unreadable until its Accessibility is fully on (Electron: `AXEnhancedUserInterface`)
-/// is asked to wake once, and ⌘⇧V says so instead of "no text field" until the wake window ends.
+/// An unreadable focus in any frontmost app is reported as not readable yet, never as "no text field": Core re-reads
+/// it during the Wake Wait. An app whose Accessibility is off (Electron: `AXEnhancedUserInterface`) is asked once
+/// per process to turn it on.
 @MainActor
 struct AccessibilityWakeTests {
     private static let chatGPT = FrontmostApplication(processIdentifier: 7, name: "ChatGPT")
     private let source = FakeFocusSource()
-    private let clock = FakeNow()
     private let resolver: FocusedTargetResolver<FakeFocusSource>
 
     init() {
         source.frontmost = Self.chatGPT
-        resolver = FocusedTargetResolver(source: source, now: clock.read)
+        resolver = FocusedTargetResolver(source: source)
     }
 
-    @Test func unreadableFocusInAnAppWhoseAccessibilityIsOffWakesItOnceAndSaysSo() {
+    @Test func unreadableFocusInAnAppWhoseAccessibilityIsOnIsNotReadableYet() {
+        source.awakeProcesses = [7]
+
+        #expect(resolver.resolveFocusedTarget() == .focusUnreadable(applicationName: "ChatGPT"))
+        #expect(source.wakeRequests.isEmpty)
+    }
+
+    /// An app that ignores the attribute (it keeps reading `false`) is not asked again on every read either.
+    @Test(arguments: [true, false])
+    func anAppWhoseAccessibilityIsOffIsAskedToWakeOnceAcrossReads(requestTakes: Bool) {
+        source.wakeRequestsTake = requestTakes
+
+        #expect(resolver.resolveFocusedTarget() == .focusUnreadable(applicationName: "ChatGPT"))
         #expect(resolver.resolveFocusedTarget() == .focusUnreadable(applicationName: "ChatGPT"))
         #expect(source.wakeRequests == [7])
     }
 
-    @Test func pressingAgainWithinFiveSecondsStillSaysWakingWithoutAskingAgain() {
+    @Test func eachProcessIsAskedOnce() {
         _ = resolver.resolveFocusedTarget()
-        clock.advance(by: .milliseconds(4_900))
-
-        #expect(resolver.resolveFocusedTarget() == .focusUnreadable(applicationName: "ChatGPT"))
-        #expect(source.wakeRequests == [7])
-    }
-
-    @Test func focusStillUnreadableFiveSecondsAfterTheWakeIsNoEditableTarget() {
+        source.frontmost = FrontmostApplication(processIdentifier: 8, name: "Other")
         _ = resolver.resolveFocusedTarget()
-        clock.advance(by: .seconds(5))
+        source.frontmost = Self.chatGPT
+        _ = resolver.resolveFocusedTarget()
 
-        #expect(resolver.resolveFocusedTarget() == .noEditableTarget)
-        #expect(source.wakeRequests == [7])
+        #expect(source.wakeRequests == [7, 8])
     }
 
     @Test func onceAwakeTheFocusedFieldResolves() {
@@ -45,39 +51,6 @@ struct AccessibilityWakeTests {
         #expect(resolver.resolveFocusedTarget().boundTarget?.identity.processIdentifier == 7)
     }
 
-    @Test func appWhoseAccessibilityIsAlreadyOnIsNotWoken() {
-        source.awakeProcesses = [7]
-
-        #expect(resolver.resolveFocusedTarget() == .noEditableTarget)
-        #expect(source.wakeRequests.isEmpty)
-    }
-
-    @Test func appThatIgnoresTheWakeRequestIsNoEditableTarget() {
-        source.wakeRequestsTake = false
-
-        #expect(resolver.resolveFocusedTarget() == .noEditableTarget)
-    }
-
-    @Test func theWakeWindowBelongsToTheProcessThatWasWoken() {
-        _ = resolver.resolveFocusedTarget()
-        source.frontmost = FrontmostApplication(processIdentifier: 8, name: "Other")
-        source.wakeRequestsTake = false
-
-        #expect(resolver.resolveFocusedTarget() == .noEditableTarget)
-        #expect(source.wakeRequests == [7, 8])
-    }
-
-    @Test func eachWokenProcessKeepsItsOwnWakeWindow() {
-        _ = resolver.resolveFocusedTarget()
-        source.frontmost = FrontmostApplication(processIdentifier: 8, name: "Other")
-        _ = resolver.resolveFocusedTarget()
-        clock.advance(by: .seconds(1))
-        source.frontmost = Self.chatGPT
-
-        #expect(resolver.resolveFocusedTarget() == .focusUnreadable(applicationName: "ChatGPT"))
-        #expect(source.wakeRequests == [7, 8])
-    }
-
     @Test func noFrontmostAppIsNoEditableTarget() {
         source.frontmost = nil
 
@@ -85,24 +58,10 @@ struct AccessibilityWakeTests {
         #expect(source.wakeRequests.isEmpty)
     }
 
-    @Test func focusedNonEditableElementNeverWakes() {
+    @Test func aReadableFocusWithNothingEditableIsNoEditableTargetAndNeverWakes() {
         source.focus(FakeNode("AXGroup"), processIdentifier: 7)
 
         #expect(resolver.resolveFocusedTarget() == .noEditableTarget)
         #expect(source.wakeRequests.isEmpty)
-    }
-}
-
-/// A settable monotonic time for the wake window.
-@MainActor
-final class FakeNow {
-    private var instant = ContinuousClock.now
-
-    func read() -> ContinuousClock.Instant {
-        instant
-    }
-
-    func advance(by duration: Duration) {
-        instant += duration
     }
 }

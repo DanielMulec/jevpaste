@@ -9,8 +9,6 @@ import os
 final class AXFocusSource: FocusSource {
     /// Longest wait for an unresponsive app on any one Accessibility read (applies to all elements).
     private static let messagingTimeoutSeconds: Float = 1
-    /// Chromium's tree sleeps until walked; one ordinary walk of this many elements wakes it (probe).
-    private static let wakeWalkNodeLimit = 300
     /// Chromium's "an assistive technology is present" switch; Electron apps keep their web tree off without it.
     private static let enhancedUserInterfaceAttribute = "AXEnhancedUserInterface" as CFString
 
@@ -27,7 +25,7 @@ final class AXFocusSource: FocusSource {
     }
 
     func focusedElement() -> FocusedElement<AXElementNode>? {
-        guard let node = focusedNode() ?? wakeFrontmostAppAndRetry() else { return nil }
+        guard let node = focusedNode() else { return nil }
         var processIdentifier: pid_t = 0
         guard AXUIElementGetPid(node.element, &processIdentifier) == .success else { return nil }
         let application = NSRunningApplication(processIdentifier: processIdentifier)
@@ -41,22 +39,6 @@ final class AXFocusSource: FocusSource {
         var value: CFTypeRef?
         let status = AXUIElementCopyAttributeValue(systemWide, kAXFocusedUIElementAttribute as CFString, &value)
         return status == .success ? AXElementNode.node(from: value) : nil
-    }
-
-    /// Chromium answers `noValue` for the focused element until its tree has been walked once.
-    private func wakeFrontmostAppAndRetry() -> AXElementNode? {
-        guard let application = NSWorkspace.shared.frontmostApplication else { return nil }
-        var window: CFTypeRef?
-        AXUIElementCopyAttributeValue(
-            applicationElement(application.processIdentifier), kAXFocusedWindowAttribute as CFString, &window)
-        guard let root = AXElementNode.node(from: window) else { return nil }
-        var queue = [root]
-        var next = 0
-        while next < queue.count, next < Self.wakeWalkNodeLimit {
-            queue.append(contentsOf: queue[next].children(upTo: AccessibilityWalkLimits.childrenPerElement))
-            next += 1
-        }
-        return focusedNode()
     }
 
     func frontmostApplication() -> FrontmostApplication? {
@@ -75,14 +57,13 @@ final class AXFocusSource: FocusSource {
         return isAwake
     }
 
-    func wakeAccessibility(in processIdentifier: Int32) -> Bool {
+    func wakeAccessibility(in processIdentifier: Int32) {
         let status = AXUIElementSetAttributeValue(
             applicationElement(processIdentifier), Self.enhancedUserInterfaceAttribute, kCFBooleanTrue)
         let isAwake = enhancedUserInterfaceIsOn(in: processIdentifier)
         let app = Self.bundleIdentifier(of: processIdentifier)
         let code = status.rawValue
         Self.log.notice("wake requested app=\(app, privacy: .public) set=\(code) readBack=\(isAwake, privacy: .public)")
-        return isAwake
     }
 
     private func enhancedUserInterfaceIsOn(in processIdentifier: Int32) -> Bool {

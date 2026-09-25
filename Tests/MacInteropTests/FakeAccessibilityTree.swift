@@ -71,10 +71,9 @@ final class FakeFocusSource: FocusSource {
         awakeProcesses.contains(processIdentifier)
     }
 
-    func wakeAccessibility(in processIdentifier: Int32) -> Bool {
+    func wakeAccessibility(in processIdentifier: Int32) {
         wakeRequests.append(processIdentifier)
         if wakeRequestsTake { awakeProcesses.insert(processIdentifier) }
-        return wakeRequestsTake
     }
 }
 
