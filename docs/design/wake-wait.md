@@ -33,10 +33,9 @@ Replaces the refusal half of [chatgpt-resolver.md](chatgpt-resolver.md); the one
 ## MacInterop — `TargetResolution.focusUnreadable(applicationName:)` (was `.waking`)
 - Focus unreadable + a frontmost app → `.focusUnreadable(name)` always; no frontmost app → `.noEditableTarget`.
   `.noEditableTarget` otherwise only for a readable, non-editable focus.
-- One-shot switch: if the app's `AXEnhancedUserInterface` reads `false`, set it (the read-back makes it one-shot per
-  process — the next poll sees `true`). **The 5 s per-pid window is removed**: its only job was to keep saying
-  "waking" across presses; the wait now spans the readiness itself and the read-back prevents a second set.
-- The switch is checked once per process (a remembered pid set), so an app that ignores it is not asked every 50 ms.
+- One-shot switch: the first unreadable read of a process checks its `AXEnhancedUserInterface` and sets it if `false`
+  — once per process (a remembered pid set; an app that ignores it is not asked every 50 ms). **The 5 s per-pid window
+  is removed**: its only job was to keep saying "waking" across presses; the wait now spans the readiness itself.
   Log: `focus unreadable app=<bundle> enhancedUI=` once per process (not per read); `wake requested` as before.
 
 ## Presenter seam — one new method, one extra argument
@@ -65,7 +64,7 @@ cancel (`IndicatorPresenterTests`), `wakeWait=` fragment present/absent (log-lin
 a. Fresh Chrome `data:` tab, textarea focused, SIGUSR1 at once, 3× → one press pastes; log `wakeWait=<ms>` (or no key
    when Chrome was readable at once). Why: the case that refused on 2026-09-25 now pastes on one press.
 b. Herdr shell prompt → value at the prompt, not executed, no `wakeWait=` key, then `C-c`. Why: readable targets never wait.
-c. After-limit refusal: an app with nothing focused (read `-25212` for good) if one exists → "<App> isn't ready" after
-   3 s; else reasoned from the Core test.
+c. After-limit refusal: Finder desktop (nothing focused, `-25212` for good) → "Finder isn't ready" after 3 s,
+   `wakeWait=3000`; record which common no-focus surfaces now wait 3 s (settled point 3's daily cost).
 d. Daniel: quit + relaunch ChatGPT, click the composer, ⌘⇧V once → value lands, no "press again". Why: the cold
    Electron case, one press. The log is the proof (his menu bar auto-hides).
