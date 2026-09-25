@@ -42,6 +42,7 @@ struct PasteAttemptStaleEventTests {
         harness.hotkey.press()
         harness.clock.advance(by: .seconds(1))
         harness.jev.reply(.decided(Decision(choice: .noneOfThese, containsValueProbability: 0.9)))
+        harness.presenter.dismissOffer()
         harness.hotkey.press()
         harness.clock.advance(by: .seconds(4))
 

@@ -60,6 +60,13 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         show(OutcomeMessage(outcome, note: note))
     }
 
+    func showNoSuitableMatchOffer(
+        for target: BoundTarget, onAccept: @escaping @MainActor () -> Void,
+        onDismiss: @escaping @MainActor () -> Void
+    ) {
+        onDismiss()
+    }
+
     /// The diagnostic line for an outcome: its kind, the path taken with Jev's free-text probability, and the note —
     /// fixed names and numbers only, no payload. `outcome inserted via=directPaste`,
     /// `outcome inserted via=freeTextTarget p=0.93`, `outcome noSuitableMatch via=jev p=0.12 note=…`.

@@ -111,10 +111,11 @@ struct FreeTextTargetTests {
 
         harness.hotkey.press()
         harness.jev.reply(Self.decision(.noneOfThese, freeText: 0.12))
+        harness.presenter.dismissOffer()
 
         #expect(harness.log.steps.isEmpty)
         #expect(harness.presenter.outcomes == [.noSuitableMatch])
-        #expect(harness.presenter.paths == [.jev(freeTextProbability: 0.12)])
+        #expect(harness.presenter.paths == [.jev(freeTextProbability: 0.12, offer: .dismissed)])
     }
 
     @Test func anAttemptThatEndsBeforeJevAnswersReportsNoProbability() {

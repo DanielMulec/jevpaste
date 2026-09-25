@@ -38,7 +38,7 @@ extension PasteAttemptCoordinator {
         guard let attempt, let candidates = attempt.jevConsultation?.candidates else { return }
         guard case .candidate(let chosen) = decision.choice,
             decision.containsValueProbability >= Self.containsValueThreshold
-        else { return finish(.noSuitableMatch) }
+        else { return offerDirectPaste() }
         guard attempt.accepts(chosen, offeredAmong: candidates) else { return finish(.failed(.invalidResult)) }
         let alternatives = rules.candidateExtraction.sameTypeAlternatives(to: chosen, among: candidates)
         if alternatives.count >= 2 {

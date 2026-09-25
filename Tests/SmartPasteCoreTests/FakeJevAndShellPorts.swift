@@ -137,6 +137,30 @@ final class FakePresenter: PasteOutcomePresenter {
     func pressEscape() {
         onCancel?()
     }
+
+    // MARK: No Suitable Match offer
+
+    /// The Bound Target of each offer shown, oldest first.
+    private(set) var offeredTargets: [BoundTarget] = []
+    private var offerReplies: (accept: @MainActor () -> Void, dismiss: @MainActor () -> Void)?
+
+    func showNoSuitableMatchOffer(
+        for target: BoundTarget, onAccept: @escaping @MainActor () -> Void,
+        onDismiss: @escaping @MainActor () -> Void
+    ) {
+        offeredTargets.append(target)
+        offerReplies = (onAccept, onDismiss)
+    }
+
+    /// Enter on the offer, focus already back in the Target's app.
+    func acceptOffer() {
+        offerReplies?.accept()
+    }
+
+    /// Esc or click-away on the offer.
+    func dismissOffer() {
+        offerReplies?.dismiss()
+    }
 }
 
 @MainActor

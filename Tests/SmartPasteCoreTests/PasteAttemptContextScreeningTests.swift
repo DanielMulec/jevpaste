@@ -39,6 +39,7 @@ struct PasteAttemptContextScreeningTests {
 
         harness.hotkey.press()
         harness.jev.reply(.decided(Decision(choice: .noneOfThese, containsValueProbability: 0.1)))
+        harness.presenter.dismissOffer()
 
         #expect(harness.presenter.outcomes == [.noSuitableMatch])
         #expect(harness.presenter.notes == [.surroundingTextWithheld])

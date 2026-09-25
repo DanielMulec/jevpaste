@@ -14,4 +14,11 @@ public protocol PasteOutcomePresenter {
     /// indicator. `path` is the Smart Paste path the attempt took, `nil` when it ended before taking one; it is for
     /// diagnostics and never changes what is shown.
     func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?)
+    /// Shows No Suitable Match with the offer to paste the whole Active Item into `target` on Enter. Calls at most
+    /// one of `onAccept` (Enter) or `onDismiss` (Esc, click-away), once focus is back in the Bound Target's app.
+    /// A later `showOutcome` withdraws the offer without calling either.
+    func showNoSuitableMatchOffer(
+        for target: BoundTarget, onAccept: @escaping @MainActor () -> Void,
+        onDismiss: @escaping @MainActor () -> Void
+    )
 }
