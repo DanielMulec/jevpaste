@@ -131,7 +131,7 @@ final class FakeClipboard: Clipboard {
 
 @MainActor
 final class FakeTargetResolver: TargetResolver {
-    nonisolated static let unreadableApplication = "ChatGPT"
+    static let unreadableApplication = "ChatGPT"
     var focusedTarget: BoundTarget?
     /// Focus moves away right after the next resolution, so the re-verification at delivery fails.
     var focusMovesAwayOnceResolved = false
