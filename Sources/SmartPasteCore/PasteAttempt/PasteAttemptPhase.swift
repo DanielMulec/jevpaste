@@ -20,8 +20,8 @@ struct RunningAttempt {
     /// What asking Jev needs; `nil` for a Direct Paste, which never asks.
     let jevConsultation: JevConsultation?
     var timers: [any ScheduledAction] = []
-
-    var path: SmartPastePath { jevConsultation == nil ? .directPaste : .jev }
+    /// The Smart Paste path so far: set when the attempt starts, refined when Jev's decision arrives.
+    var path: SmartPastePath
 }
 
 /// The part of a Paste Attempt that only the Jev path has.

@@ -30,10 +30,10 @@ final class AXFocusSource: FocusSource {
         guard let node = focusedNode() ?? wakeFrontmostAppAndRetry() else { return nil }
         var processIdentifier: pid_t = 0
         guard AXUIElementGetPid(node.element, &processIdentifier) == .success else { return nil }
+        let application = NSRunningApplication(processIdentifier: processIdentifier)
         return FocusedElement(
-            processIdentifier: processIdentifier,
-            bundleIdentifier: NSRunningApplication(processIdentifier: processIdentifier)?.bundleIdentifier,
-            node: node
+            processIdentifier: processIdentifier, bundleIdentifier: application?.bundleIdentifier, node: node,
+            applicationName: application?.localizedName
         )
     }
 

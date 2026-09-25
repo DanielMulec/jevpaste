@@ -1,14 +1,16 @@
 import SmartPasteCore
 
-/// The JSON body of one `POST /v1/evaluate`: the source document and Target Context as `state`, and the two
-/// batched questions — which Candidate (or none of these) and whether the document holds a value at all.
+/// The JSON body of one `POST /v1/evaluate`: the source document and Target Context as `state`, and the three
+/// batched questions — which Candidate (or none of these), whether the document holds a value at all, and whether
+/// the Target is a Free-text Target.
 ///
 /// Wording follows `spikes/abstention/run.py` on `spike/jev-contract`, with `target_field` renamed
-/// `target_context`.
+/// `target_context`; the free-text wording follows `spikes/free-text/` there.
 struct EvaluateRequestBody: Encodable {
     static let model = "typesafe-ai/jev"
     static let choiceQuestionID = "paste"
     static let gateQuestionID = "contains_value"
+    static let freeTextQuestionID = "free_text"
     static let noneOfTheseOptionID = "none_of_these"
     /// Jev rejects a choice question with more than 255 options; `none_of_these` takes one of them.
     static let maximumCandidateCount = 254
@@ -26,6 +28,7 @@ struct EvaluateRequestBody: Encodable {
         questions = [
             Self.choiceQuestionID: .choice(among: request.candidates),
             Self.gateQuestionID: .containsValueGate,
+            Self.freeTextQuestionID: .freeTextTarget,
         ]
     }
 
@@ -53,6 +56,8 @@ struct EncodedTargetContext: Encodable {
     let sectionHeading: String?
     let siblingFieldLabels: [String]?
     let surroundingText: String?
+    let appName: String?
+    let windowTitle: String?
 
     enum CodingKeys: String, CodingKey {
         case fieldLabel = "field_label"
@@ -60,6 +65,8 @@ struct EncodedTargetContext: Encodable {
         case sectionHeading = "section_heading"
         case siblingFieldLabels = "sibling_field_labels"
         case surroundingText = "surrounding_text"
+        case appName = "app_name"
+        case windowTitle = "window_title"
     }
 
     init(_ context: TargetContext) {
@@ -68,6 +75,8 @@ struct EncodedTargetContext: Encodable {
         sectionHeading = Self.nonEmpty(context.sectionHeading)
         siblingFieldLabels = context.siblingFieldLabels.isEmpty ? nil : context.siblingFieldLabels
         surroundingText = Self.nonEmpty(context.surroundingText)
+        appName = Self.nonEmpty(context.appName)
+        windowTitle = Self.nonEmpty(context.windowTitle)
     }
 
     private static func nonEmpty(_ text: String?) -> String? {
@@ -99,6 +108,21 @@ struct EvaluateQuestion: Encodable {
         criteria: [
             "true": "An exact excerpt of the document is the value for this field.",
             "false": "No excerpt of the document is the value for this field.",
+        ]
+    )
+
+    /// Judged from the Target Context alone; at or above Core's threshold the whole Active Item is pasted.
+    static let freeTextTarget = EvaluateQuestion(
+        type: "boolean",
+        instructions: """
+            Judge only the place described by `target_context`, not `source_document`. Is `target_context` a \
+            free-text place — a chat or message composer, a document or text editor, a code editor, a terminal — \
+            where the user would paste whatever they copied, as it is? Or is it a field that expects one specific \
+            value, such as a name, an email address, a phone number, an address line or a single short entry?
+            """,
+        criteria: [
+            "true": "A free-text place: the user would paste whatever they copied, whole.",
+            "false": "A field for one specific value.",
         ]
     )
 

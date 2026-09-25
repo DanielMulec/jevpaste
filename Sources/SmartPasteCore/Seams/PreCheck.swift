@@ -4,7 +4,7 @@
 /// The Core adapter is `LocalPreChecks`; tests supply stubs.
 public protocol PreCheck: Sendable {
     func refusal(for item: ClipboardItem, in target: BoundTarget) -> PreCheckRefusal?
-    /// The Target Context to send for `target`: a surrounding-text window holding a suspected secret is dropped
-    /// and noted. Never a refusal.
+    /// The Target Context to send for `target`: a surrounding-text window or window title holding a suspected
+    /// secret is dropped and noted. Never a refusal.
     func screenedContext(of target: BoundTarget) -> ScreenedTargetContext
 }

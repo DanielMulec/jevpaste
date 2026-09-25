@@ -55,11 +55,12 @@ enum Fixture {
     static let keyFileText = "AI_GATEWAY_API_KEY=test-key-value\n"
 
     /// A Jev answer in the shape the spikes recorded, reduced to the fields the adapter reads plus some noise.
-    static func evaluateResponse(choice: String, containsValue: Double) -> String {
+    static func evaluateResponse(choice: String, containsValue: Double, freeText: Double = 0) -> String {
         """
         {"model":"typesafe-ai/jev","answers":{
           "paste":{"type":"choice","choice":"\(choice)","probabilities":{"\(choice)":1},"confidence":1},
-          "contains_value":{"type":"boolean","probability":\(containsValue)}},
+          "contains_value":{"type":"boolean","probability":\(containsValue)},
+          "free_text":{"type":"boolean","probability":\(freeText)}},
          "usage":{"inputTokens":800,"outputTokens":200}}
         """
     }

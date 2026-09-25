@@ -10,6 +10,7 @@ final class FakeNode: AccessibilityNode {
     /// Strong on purpose: tests build a tree and keep only the leaf. The cycle is released with the test process.
     private(set) var parent: FakeNode?
     var titleElement: FakeNode?
+    var window: FakeNode?
     var isSelectedTextRangeSettable = false
 
     init(_ role: String, _ texts: [AccessibilityTextAttribute: String] = [:], children: [FakeNode] = []) {
@@ -48,8 +49,14 @@ final class FakeFocusSource: FocusSource {
     var wakeRequestsTake = true
     private(set) var wakeRequests: [Int32] = []
 
-    func focus(_ node: FakeNode, processIdentifier: Int32 = 42, bundleIdentifier: String = "com.google.Chrome") {
-        focused = FocusedElement(processIdentifier: processIdentifier, bundleIdentifier: bundleIdentifier, node: node)
+    func focus(
+        _ node: FakeNode, processIdentifier: Int32 = 42, applicationName: String? = "Google Chrome",
+        bundleIdentifier: String = "com.google.Chrome"
+    ) {
+        focused = FocusedElement(
+            processIdentifier: processIdentifier, bundleIdentifier: bundleIdentifier, node: node,
+            applicationName: applicationName
+        )
     }
 
     func focusedElement() -> FocusedElement<FakeNode>? {

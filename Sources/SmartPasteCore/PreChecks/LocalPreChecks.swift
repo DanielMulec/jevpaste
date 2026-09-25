@@ -1,7 +1,7 @@
 /// The Pre-checks from "Choose paste lifecycle, cancellation and clipboard preservation": refuses a Paste Attempt
 /// before anything leaves the machine when the Target is a secure field, or the Active Item is concealed or
 /// holds a suspected secret (no editable Target is refused earlier, by the coordinator). The same secret rules
-/// screen the surrounding text of the Target Context before it is sent.
+/// screen the surrounding text and the window title of the Target Context before it is sent.
 public struct LocalPreChecks: PreCheck {
     private let secretRules: SuspectedSecretRules
 
@@ -17,13 +17,28 @@ public struct LocalPreChecks: PreCheck {
 
     public func screenedContext(of target: BoundTarget) -> ScreenedTargetContext {
         let context = target.context
-        guard secretRules.firstMatch(in: context.surroundingText) != nil else {
-            return ScreenedTargetContext(context: context, note: nil)
-        }
-        let withoutSurroundingText = TargetContext(
+        let withholdsSurroundingText = secretRules.firstMatch(in: context.surroundingText) != nil
+        let withholdsWindowTitle = context.windowTitle.map { secretRules.firstMatch(in: $0) != nil } ?? false
+        let screened = TargetContext(
             fieldLabel: context.fieldLabel, placeholder: context.placeholder, sectionHeading: context.sectionHeading,
-            siblingFieldLabels: context.siblingFieldLabels
+            siblingFieldLabels: context.siblingFieldLabels,
+            surroundingText: withholdsSurroundingText ? "" : context.surroundingText, appName: context.appName,
+            windowTitle: withholdsWindowTitle ? nil : context.windowTitle
         )
-        return ScreenedTargetContext(context: withoutSurroundingText, note: .surroundingTextWithheld)
+        return ScreenedTargetContext(
+            context: screened,
+            note: Self.note(
+                surroundingTextWithheld: withholdsSurroundingText,
+                windowTitleWithheld: withholdsWindowTitle)
+        )
+    }
+
+    private static func note(surroundingTextWithheld: Bool, windowTitleWithheld: Bool) -> PasteAttemptNote? {
+        switch (surroundingTextWithheld, windowTitleWithheld) {
+        case (true, true): .surroundingTextAndWindowTitleWithheld
+        case (true, false): .surroundingTextWithheld
+        case (false, true): .windowTitleWithheld
+        case (false, false): nil
+        }
     }
 }

@@ -60,12 +60,13 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         show(OutcomeMessage(outcome, note: note))
     }
 
-    /// The diagnostic line for an outcome: its kind, the path taken and the note — fixed names only, no payload.
-    /// `outcome inserted via=directPaste`, `outcome inserted via=jev note=surroundingTextWithheld`.
+    /// The diagnostic line for an outcome: its kind, the path taken with Jev's free-text probability, and the note —
+    /// fixed names and numbers only, no payload. `outcome inserted via=directPaste`,
+    /// `outcome inserted via=freeTextTarget p=0.93`, `outcome noSuitableMatch via=jev p=0.12 note=…`.
     static func outcomeLogLine(
         _ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?
     ) -> String {
-        let pathName = path.map { " via=\($0)" } ?? ""
+        let pathName = path.map { " " + $0.logFragment } ?? ""
         let noteName = note.map { " note=\($0)" } ?? ""
         return "outcome \(OutcomeMessage.logName(for: outcome))\(pathName)\(noteName)"
     }
