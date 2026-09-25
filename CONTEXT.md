@@ -58,6 +58,10 @@ One Smart Paste from ⌘⇧V to its visible outcome (inserted, no suitable match
 **Bound Target**:
 The Target pinned at the start of a Paste Attempt and re-verified immediately before insertion. If it no longer matches, nothing is inserted.
 
+**Wake Wait**:
+The interval at the start of a Paste Attempt during which the focused element cannot be read — the Target app's accessibility tree is asleep or not yet populated — and the attempt waits for it, re-reading until it resolves or a fixed limit (3 s) passes. One press, no second ⌘⇧V; the indicator says which app is waking after 150 ms; Esc or a click cancels. Precedes the Bound Target, the Pre-checks and the 5 s Jev clock, on every Smart Paste path. Only after the limit is the refusal "<App> isn't ready — press ⌘⇧V again"; "No text field focused" is reserved for a readable focus with nothing editable.
+_Avoid_: Wake retry, warm-up, "press again"
+
 **Pre-check**:
 A local refusal evaluated before any Paste Attempt leaves the machine: no editable Target, secure field, or a concealed or suspected-secret Active Item. Refusals are visible and never contact Jev. A suspected secret in the Target Context's surrounding text is not a refusal: that text is withheld from Jev and the outcome shows a note.
 
