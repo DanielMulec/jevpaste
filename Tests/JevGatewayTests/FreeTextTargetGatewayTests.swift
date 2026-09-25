@@ -90,6 +90,26 @@ private func reply(toBody body: String) async throws -> DecisionReply {
         #expect(context["window_title"] == .text("New chat"))
     }
 
+    /// Decoded as the full key set of the raw JSON, so an extra key (such as a bundle id) cannot hide.
+    @Test func theTargetContextCarriesExactlyTheContractedKeysAndNoBundleIdentifier() async throws {
+        let fullContext = TargetContext(
+            fieldLabel: "Message", placeholder: "Ask anything", sectionHeading: "Chat", siblingFieldLabels: ["Search"],
+            surroundingText: "you: hello", appName: "ChatGPT", windowTitle: "New chat"
+        )
+        let request = DecisionRequest(
+            sourceDocument: Fixture.request.sourceDocument, targetContext: fullContext, candidates: Fixture.candidates
+        )
+        let keys = Set(try await sentBody(for: request).state.targetContext.keys)
+
+        #expect(
+            keys == [
+                "field_label", "placeholder", "section_heading", "sibling_field_labels", "surrounding_text", "app_name",
+                "window_title",
+            ]
+        )
+        #expect(!keys.contains { $0.contains("bundle") })
+    }
+
     @Test(arguments: [nil, ""])
     func anAbsentOrEmptyAppNameAndWindowTitleAreLeftOut(value: String?) async throws {
         let context = try await sentBody(for: request(appName: value, windowTitle: value)).state.targetContext

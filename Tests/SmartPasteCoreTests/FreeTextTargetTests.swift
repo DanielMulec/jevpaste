@@ -51,6 +51,23 @@ struct FreeTextTargetTests {
         #expect(harness.log.steps == [.write(PasteAttemptHarness.sourceText), .pasteKeystroke, .restore])
     }
 
+    /// Inner line endings of every kind and an inner leading tab stay byte for byte; only the outer breaks go.
+    @Test func mixedInnerLineEndingsAreDeliveredByteForByte() {
+        let inner = "Name: Ada Lovelace\r\n\tEmail: ada@example.com\rBackup: ada@work.example\nEnd"
+        let harness = PasteAttemptHarness(focusedTarget: Self.chatComposer, sourceText: "\n\r\n" + inner + "\r\n\n")
+
+        harness.hotkey.press()
+        harness.jev.reply(Self.decision(.noneOfThese, freeText: 0.9))
+        harness.clock.advance(by: .milliseconds(120))
+
+        guard case .write(let delivered) = harness.log.steps.first else {
+            Issue.record("nothing was written to the clipboard")
+            return
+        }
+        #expect(Array(delivered.utf8) == Array(inner.utf8))
+        #expect(harness.presenter.outcomes == [.inserted])
+    }
+
     @Test(arguments: [
         (Decision.Choice.noneOfThese, 0.9), (Decision.Choice.candidate(Candidate(text: "ada@example.com")), 0.1),
     ])
