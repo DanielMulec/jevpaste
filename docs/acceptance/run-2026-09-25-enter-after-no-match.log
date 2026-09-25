@@ -1,0 +1,42 @@
+# Enter after No Suitable Match (42) live run — 2026-09-25, installed build of 0d9cb49, --accept-signal-trigger, pid 26560
+# Payload (pbcopy): JEVPASTE-ENTER-ONE / JEVPASTE-ENTER-TWO (2 lines). Chrome data: page, input labelled 'Phone' inside a
+# form whose submit sets the title to SUBMITTED. frontmost=Google Chrome, activeElement=#p before every trigger.
+# (b) timeout, automated twice (USR1): field empty after, clipboard sha = payload, title unchanged
+# (a) Daniel: ⌘⇧V, Esc — "worked"; field empty
+# (c) Daniel: ⌘⇧V, Enter — DOM check (value === "JEVPASTE-ENTER-ONE JEVPASTE-ENTER-TWO"): {"matches":true,"length":37,"title":"JEVPASTE enter phone"}
+#     (not submitted); clipboard sha after = payload (restored)
+# (d) regression, automated: payload Name: JEVPASTE Tester / Email: jevpaste-enter@example.org, input labelled 'Email address';
+#     first USR1 on the fresh tab refused noEditableTarget (cold AX, see the cold-AX ticket #36), retry 10 s later:
+#     field === the email excerpt, title unchanged, clipboard sha = payload
+2026-09-25 20:45:29.291 Df JevPaste[26560:274d0b1] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 20:45:29.480 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 20:45:30.250 I  JevPaste[26560:274d194] [jevpaste:JevGateway] Jev decided over 3 options in 0.938211292 seconds
+2026-09-25 20:45:30.267 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] offer shown
+2026-09-25 20:45:38.252 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] outcome noSuitableMatch via=jev p=0.05 offer=timedOut
+2026-09-25 20:45:38.273 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] target app reactivated in 0 ms
+2026-09-25 20:45:52.505 Df JevPaste[26560:274d0b1] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 20:45:52.668 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 20:45:52.873 I  JevPaste[26560:274d74d] [jevpaste:JevGateway] Jev decided over 3 options in 0.36059225 seconds
+2026-09-25 20:45:52.878 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] offer shown
+2026-09-25 20:46:00.874 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] outcome noSuitableMatch via=jev p=0.05 offer=timedOut
+2026-09-25 20:46:00.884 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] target app reactivated in 0 ms
+2026-09-25 20:48:18.275 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 20:48:18.602 I  JevPaste[26560:274e672] [jevpaste:JevGateway] Jev decided over 3 options in 0.485202792 seconds
+2026-09-25 20:48:18.612 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] offer shown
+2026-09-25 20:48:20.079 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] offer dismissed (esc)
+2026-09-25 20:48:20.085 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] target app reactivated in 0 ms
+2026-09-25 20:48:20.085 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] outcome noSuitableMatch via=jev p=0.05 offer=dismissed
+2026-09-25 20:48:50.175 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 20:48:50.356 I  JevPaste[26560:274e936] [jevpaste:JevGateway] Jev decided over 3 options in 0.339307917 seconds
+2026-09-25 20:48:50.362 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] offer shown
+2026-09-25 20:48:51.451 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] offer accepted
+2026-09-25 20:48:51.458 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] target app reactivated in 0 ms
+2026-09-25 20:48:51.592 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] outcome inserted via=directPaste reason=enterAfterNoMatch p=0.05
+2026-09-25 20:49:55.205 Df JevPaste[26560:274d0b1] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 20:49:55.220 Df JevPaste[26560:274d0b1] [jevpaste:TargetResolver] focus unreadable app=com.google.Chrome enhancedUI=true
+2026-09-25 20:49:55.220 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] outcome refused.noEditableTarget
+2026-09-25 20:50:05.852 Df JevPaste[26560:274d0b1] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 20:50:06.014 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 20:50:06.533 I  JevPaste[26560:274f01f] [jevpaste:JevGateway] Jev decided over 5 options in 0.672532833 seconds
+2026-09-25 20:50:06.553 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-25 20:50:06.676 Df JevPaste[26560:274d0b1] [jevpaste:PasteAttempt] outcome inserted via=jev p=0.06
