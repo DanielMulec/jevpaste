@@ -48,9 +48,9 @@ struct NoSuitableMatchOfferTests {
         harness.presenter.acceptOffer()
         harness.clock.advance(by: .milliseconds(120))
 
-        #expect(harness.log.steps == [.write(PasteAttemptHarness.sourceText), .pasteKeystroke, .restore])
-        #expect(harness.presenter.outcomes == [.inserted])
         #expect(harness.presenter.paths.map { $0?.noSuitableMatchOfferEnd } == [.accepted])
+        #expect(harness.presenter.outcomes == [.inserted])
+        #expect(harness.log.steps == [.write(PasteAttemptHarness.sourceText), .pasteKeystroke, .restore])
     }
 
     @Test func escapeInsertsNothingAndEndsAsNoSuitableMatch() {
