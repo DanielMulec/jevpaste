@@ -17,6 +17,15 @@ is behavioural evidence of the experience, not proof of how Jev works internally
 Domain vocabulary (Active Item, Candidate, Paste Attempt, Bound Target, …): [`CONTEXT.md`](CONTEXT.md).
 Status: scaffold only — the app shows a menu-bar icon with a Quit item and no behaviour yet.
 
+## Privacy
+
+Nothing leaves the Mac until you press ⌘⇧V on text with more than one line. Then one request goes to Jev through
+the Vercel AI Gateway: the whole Active Item, the excerpts it may choose from, and the Target Context — the
+field's label, placeholder, section heading and neighbouring labels, a bounded window of nearby text, **the name
+of the app** and **the title of its window**. Not sent: the app's bundle identifier, the contents of other
+windows, and nearby text or a window title that looks like a secret (withheld, and the outcome says so).
+Single-line items, secure fields and suspected secrets never reach Jev.
+
 ## Prerequisites
 
 - macOS 14 or later, Apple silicon.

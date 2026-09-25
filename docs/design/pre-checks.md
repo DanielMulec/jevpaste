@@ -49,7 +49,9 @@ token-start guard removed the suite ran > 120 s — a quadratic scan fails by or
 1. **Where:** the `PreCheck` seam gains `screenedContext(of: BoundTarget) -> ScreenedTargetContext`; the
    coordinator calls it once at attempt start, pins the result in `RunningAttempt`, and builds every
    `DecisionRequest` (retries too) from it. A match empties `surroundingText`; labels, placeholder, heading and
-   sibling labels are still sent (per the decision; they are not scanned).
+   sibling labels are still sent (per the decision; they are not scanned). Since the Free-text Target slice the
+   window title is scanned the same way (hit → omitted, note `.windowTitleWithheld` or
+   `.surroundingTextAndWindowTitleWithheld`); the app name is not scanned.
 2. **Port/outcome change (explicit):** `PasteOutcomePresenter.showOutcome(_:)` becomes
    `showOutcome(_:note:)` with `note: PasteAttemptNote?` (`.surroundingTextWithheld`); `PasteAttemptOutcome` is
    unchanged. Every outcome after screening carries the note (inserted, no match, failed, cancelled); refusals never.

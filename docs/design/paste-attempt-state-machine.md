@@ -23,7 +23,8 @@ candidates }` · `Decision { choice: .candidate(Candidate) | .noneOfThese, conta
 `PreCheckRefusal = .noEditableTarget | .secureField | .suspectedSecret | .noActiveItem` ·
 `PasteAttemptFailure = .timedOut | .decisionUnavailable | .invalidResult | .targetChanged` ·
 `PasteAttemptOutcome = .inserted | .insertedWithoutRestore | .noSuitableMatch | .refused(PreCheckRefusal)
-| .cancelled | .failed(PasteAttemptFailure)` · `SmartPastePath = .jev | .directPaste` (diagnostics only).
+| .cancelled | .failed(PasteAttemptFailure)` · `SmartPastePath = .jev(freeTextProbability:) | .freeTextTarget(probability:)
+| .directPaste` (diagnostics only; stored on the running attempt, refined when Jev's decision arrives).
 
 ## Ports
 ```swift
@@ -85,6 +86,7 @@ protocol PreCheck: Sendable {   // adapter: LocalPreChecks (Core), see pre-check
 | deciding, retrying | deadline timer | `.failed(.timedOut)` |
 | deciding, retrying | Esc (`onCancel`) | `.cancelled` |
 | deciding | `.failed` | `.failed(.decisionUnavailable)` |
+| deciding | `freeTextProbability` ≥ 0.8 (first check, wins over everything below) | whole item, outer line breaks stripped → delivering ([free-text-target.md](free-text-target.md)) |
 | deciding | `.noneOfThese` or probability < 0.5 | `.noSuitableMatch` |
 | deciding | candidate not a verbatim UTF-8 substring of pinned item | `.failed(.invalidResult)` |
 | deciding | ≥ 2 same-type alternatives | stop clocks; `presentChoice` → choosing |

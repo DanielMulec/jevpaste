@@ -10,12 +10,15 @@ Headers: `Authorization: Bearer <key>`, `Content-Type: application/json`. Body (
 { "model": "typesafe-ai/jev",
   "state": { "source_document": "<DecisionRequest.sourceDocument>",
              "target_context": { "field_label": "…", "placeholder": "…", "section_heading": "…",
-                                 "sibling_field_labels": ["…"], "surrounding_text": "…" } },
+                                 "sibling_field_labels": ["…"], "surrounding_text": "…",
+                                 "app_name": "…", "window_title": "…" } },
   "questions": {
     "paste": { "type": "choice", "instructions": "<choice wording>",
                "criteria": { "c000": "<candidate 0>", "c001": "…", "none_of_these": "<abstain wording>" } },
     "contains_value": { "type": "boolean", "instructions": "<gate wording>",
-                        "criteria": { "true": "…", "false": "…" } } } }
+                        "criteria": { "true": "…", "false": "…" } },
+    "free_text": { "type": "boolean", "instructions": "<free-text wording>",
+                   "criteria": { "true": "…", "false": "…" } } } }
 ```
 - `target_context` omits `nil` strings and empty values; the field names are the `TargetContext` properties.
   `surrounding_text` is sent as the resolver bounded it (the adapter does not trim it).
@@ -24,26 +27,38 @@ Headers: `Authorization: Bearer <key>`, `Content-Type: application/json`. Body (
   cut description never changes the Paste Result.
 - Wording of the choice, `none_of_these` and gate questions is taken from `spikes/abstention/run.py`
   (`CHOICE_INSTRUCTIONS`, `GATE_POSITIVE`, `as_criteria`), with `target_field` renamed `target_context`.
+- **Third question `free_text`** ([Implement Free-text Target via Jev's third question](https://github.com/DanielMulec/jevpaste/issues/41)),
+  verbatim from `spikes/free-text/` on `spike/jev-contract` (pinned in `FreeTextTargetGatewayTests`):
+  instructions "Judge only the place described by `target_context`, not `source_document`. Is `target_context` a
+  free-text place — a chat or message composer, a document or text editor, a code editor, a terminal — where the
+  user would paste whatever they copied, as it is? Or is it a field that expects one specific value, such as a
+  name, an email address, a phone number, an address line or a single short entry?"; criteria `true` "A
+  free-text place: the user would paste whatever they copied, whole.", `false` "A field for one specific value."
+  Cost measured in the spike: +~135 input tokens per call, median 436 ms vs 360 ms for two questions (n small).
+- `app_name` is the focused app's localized name, `window_title` its window's `AXTitle` (screened for secrets in
+  Core like `surrounding_text`). The bundle id is never sent.
 - Jev accepts at most 255 options, `none_of_these` included, so at most **254 Candidates**. More → `.failed`
   without a call (a 256-option request is an HTTP 400 anyway).
 
 ## Response parsing
-Only `answers.paste.choice` (string) and `answers.contains_value.probability` (number in 0…1) are read.
+Only `answers.paste.choice` (string), `answers.contains_value.probability` and `answers.free_text.probability`
+(numbers in 0…1) are read.
 Everything else (`probabilities`, `confidence`, `usage`, `providerMetadata`) is ignored.
 
 ## Mapping to `DecisionReply`
 | HTTP / body | reply |
 |---|---|
-| 200, `choice` = `cNNN` with NNN < candidate count | `.decided(Decision(choice: .candidate(candidates[NNN]), containsValueProbability: p))` |
-| 200, `choice` = `none_of_these` | `.decided(Decision(choice: .noneOfThese, containsValueProbability: p))` |
-| 200, `choice` id unknown or out of range, `p` missing or outside 0…1, JSON malformed | `.failed` |
+| 200, `choice` = `cNNN` with NNN < candidate count | `.decided(Decision(choice: .candidate(candidates[NNN]), containsValueProbability: p, freeTextProbability: f))` |
+| 200, `choice` = `none_of_these` | `.decided(Decision(choice: .noneOfThese, containsValueProbability: p, freeTextProbability: f))` |
+| 200, `choice` id unknown or out of range, `p` or `f` missing or outside 0…1, JSON malformed | `.failed` |
 | 429 with `retry-after: <seconds>` (integer or decimal ≥ 0) | `.rateLimited(retryAfter: .seconds(min(n, 60)))` |
 | 429 without a finite, non-negative `retry-after` | `.rateLimited(retryAfter: .seconds(1))` (free tier ≈ 1 call/s) |
 | any other status, transport error | `.failed` |
 | key file missing/unreadable, or no non-empty `AI_GATEWAY_API_KEY=` line | `.failed`, no call |
 | more than 254 Candidates | `.failed`, no call |
 
-The gate threshold (< 0.5) and the verbatim/offered checks stay in Core; the adapter only reports.
+The gate threshold (< 0.5), the free-text threshold (≥ 0.8) and the verbatim/offered checks stay in Core; the
+adapter only reports.
 No retry and no timeout here: `URLRequest.timeoutInterval` is left at the system default because the Paste
 Attempt drops late replies itself.
 

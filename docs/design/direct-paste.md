@@ -4,6 +4,11 @@ Slice: [Implement Direct Paste for single-line items](https://github.com/DanielM
 [Skip Jev for a single line, and skip Jev when there is nothing to reason about](https://github.com/DanielMulec/jevpaste/issues/32)
 (Rule 2 deferred, not built). Glossary: **Direct Paste**, **Smart Paste** in `CONTEXT.md`.
 
+**Doorways** (`CONTEXT.md`): (1) a single-line Active Item — this document; (2) a **Free-text Target** — Jev's
+third question answers ≥ 0.8, the whole Active Item is delivered with the same outer-line-break stripping
+(`DirectPasteRule.withoutOuterLineBreaks(_:)`), see [free-text-target.md](free-text-target.md); (3) Enter after No
+Suitable Match — [Enter pastes everything after No Suitable Match](https://github.com/DanielMulec/jevpaste/issues/42).
+
 ## Rule and text (`DirectPasteRule`, Core, pure)
 `DirectPasteRule.text(for: ClipboardItem) -> String?` — `nil` means "not a Direct Paste, ask Jev".
 - **Single line**: between the first and the last non-whitespace scalar there is no `\n` or `\r` (so `\r\n`, lone

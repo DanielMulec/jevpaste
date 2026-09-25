@@ -27,8 +27,8 @@ Active Item through `DirectPasteRule`'s outer-line-break stripping (refactored i
 `DirectPasteRule.withoutOuterLineBreaks(_:)`; the single-line test stays on top of it) → `deliver(_:)`. Wins over
 any choice, `none_of_these` and the gate. Below → unchanged. Pre-checks already ran at ⌘⇧V.
 
-## Proposals for GATE A
-1. **Path reporting.** `SmartPastePath` gains payloads: `.jev(freeTextProbability: Double?)` (nil = no decision
+## Decisions (GATE A, approved)
+1. **Path reporting.** `SmartPastePath` gains payloads: `.jev(freeTextProbability: Double? = nil)` (nil = no decision
    arrived: timeout, failure, cancel), `.freeTextTarget(probability: Double)`, `.directPaste` unchanged.
    `RunningAttempt.path` turns from computed into a stored `var` (set to `.directPaste` / `.jev(nil)` at start;
    `decided(_:)` sets the probability or `.freeTextTarget`). No port signature change; the log formats the
@@ -36,8 +36,8 @@ any choice, `none_of_these` and the gate. Below → unchanged. Pre-checks alread
 2. **Note shape.** `PasteAttemptNote` stays the one enum: `.surroundingTextWithheld`, `.windowTitleWithheld`,
    `.surroundingTextAndWindowTitleWithheld` (log `note=<case>`). The title is scanned with the same
    `SuspectedSecretRules`; a hit sends the context without `window_title`. App name is not scanned (like labels).
-   Needs two lines in `OutcomeMessage.text(for:)` (owned by #42): "window title withheld (suspected secret)",
-   "nearby text and window title withheld (suspected secret)" — ask to touch only that switch.
+   Two arms added to `OutcomeMessage.text(for:)` (only that switch): "window title withheld (suspected secret)",
+   "nearby text and window title withheld (suspected secret)".
 3. **Validation.** The whole-item text is not passed through `RunningAttempt.accepts`: it is derived locally from
    the pinned item (Jev supplied a probability, not text) — the same trust as a single-line Direct Paste. A test
    proves the delivered bytes are the pinned item minus outer line breaks, never a Candidate.
@@ -46,7 +46,7 @@ any choice, `none_of_these` and the gate. Below → unchanged. Pre-checks alread
 `via=freeTextTarget p=0.93` / `via=jev p=0.12` / `via=jev` (no decision) / `via=directPaste`; `p` = `%.2f`.
 
 ## Tests (Swift Testing, new files)
-- `JevGatewayTests/FreeTextTargetRequestTests`: third question wording/criteria verbatim; `app_name`/`window_title`
+- `JevGatewayTests/FreeTextTargetGatewayTests`: third question wording/criteria verbatim; `app_name`/`window_title`
   sent, omitted when nil/empty; probability parsed; missing/out-of-range → `.failed`; two questions unchanged.
 - `SmartPasteCoreTests/FreeTextTargetScreeningTests` (`LocalPreChecks`): title with secret withheld + note; both
   withheld → combined note; clean title sent; app name never withheld.
@@ -55,7 +55,7 @@ any choice, `none_of_these` and the gate. Below → unchanged. Pre-checks alread
   and a low gate; labelled Email field p=0.05 → excerpt only; Pre-check refusal first; single-line item never
   asks Jev; paths `.freeTextTarget(0.8)` / `.jev(0.79)` / `.jev(nil)` on timeout.
 - `MacInteropTests/FreeTextTargetContextTests`: title via `AXWindow`, no window → nil; app name. Existing
-  `DirectPasteRuleTests` keep the shared stripping byte-exact. `JevPasteAppTests/FreeTextTargetLogLineTests`: log.
+  `DirectPasteRuleTests` keep the stripping byte-exact. `JevPasteAppTests/FreeTextTarget{LogLine,Note}Tests`.
 
 ## Live run (after `make install`, gated)
 Payload (3 lines): `JEVPASTE-FT-NAME Marlene Example` / `ft41@example.org` / `+41 79 555 01 23`. Evidence per
