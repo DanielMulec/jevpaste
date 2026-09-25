@@ -22,9 +22,11 @@ Replaces the refusal half of [chatgpt-resolver.md](chatgpt-resolver.md). Live: `
 | wakeWaiting | click on the indicator | `.cancelled` → idle, nothing written, no Jev |
 | wakeWaiting | ⌘⇧V | ignored, as in every running phase |
 - **Poll interval 50 ms**: Chrome's ~45 ms settles on the 1st–2nd re-read, well before the 150 ms indicator (no
-  flash); ≤ 60 reads over 3 s; worst-case added latency 50 ms. The last read happens at the limit, not after it.
-- **Clock rule**: the 5 s Jev deadline is `now + 5 s` at resolution (`askJev` runs then). A wait that already showed
-  the indicator switches it to "Jev is choosing…" at once; otherwise the 150 ms indicator timer starts at resolution.
+  flash); ≤ 60 reads over 3 s. The limit is nominal: reads are synchronous on the main actor, each bounded by the 1 s
+  messaging timeout, so a read that starts before 3 s and ends after it still decides the outcome (≤ ~4 s worst case).
+- **Clock rule**: the Jev deadline is resolution instant + 5 s (captured in `proceed`, before the Pre-checks and the
+  Candidate extraction; timers get the remaining time). A shown "Waking…" becomes "Jev is choosing…" at once;
+  otherwise the indicator shows 150 ms after resolution.
   Direct Paste after a shown wait turns "Waking…" into "Pasting…" (`showDelivering`).
 - State: `WakeWait { start: AttemptStart { number, item, pressedAt, wakeWait, isIndicatorShown }, applicationName }`
   beside `RunningAttempt` (no target yet); timers moved to the coordinator; the number carries over, so stale reads
@@ -35,8 +37,8 @@ Replaces the refusal half of [chatgpt-resolver.md](chatgpt-resolver.md). Live: `
   `.noEditableTarget` otherwise only for a readable, non-editable focus.
 - One-shot switch: the first unreadable read of a process checks its `AXEnhancedUserInterface` and sets it if `false`,
   once per process — an app that ignores it is not asked every 50 ms. The pid set is never pruned: one Int32 per app
-  process that was ever unreadable; a recycled pid would skip the check (a reused pid of a sleeping Electron app is the
-  only cost: it refuses until JevPaste restarts). Log `focus unreadable app=<bundle> enhancedUI=` once per process.
+  process that was ever unreadable. Accepted at review: a recycled pid would skip the check, so a sleeping Electron app
+  that reuses a pid refuses until JevPaste restarts (lifecycle-aware pruning left for later). Log `focus unreadable app=<bundle> enhancedUI=` once per process.
 - **The 5 s per-pid window is removed**: it only kept saying "waking" across presses; the wait now spans the readiness.
 
 ## Presenter seam — one new method, one extra argument
@@ -50,15 +52,13 @@ Replaces the refusal half of [chatgpt-resolver.md](chatgpt-resolver.md). Live: `
   `refused.targetNotReady`.
 
 ## Tests
-Core (`WakeWaitTests`, `FakeTargetResolver` answers unreadable N times then resolved): resolves on the 2nd poll →
-Jev asked, deadline = resolution + 5 s (times out at 5 s after it, not before); never resolves → refusal at 3 s
-(not at 2.95 s), no Jev call; click mid-wait → `.cancelled`, no Jev, nothing written; later polls dropped; readable
-at once → no wait, no indicator, `wakeWait` nil (regression); pre-check refusal after a wait; single-line Direct Paste
-after a wait; the outcome carries the waited duration; indicator "Waking" at 150 ms, not before, not when resolved
-sooner; ⌘⇧V during the wait ignored. MacInterop (`AccessibilityWakeTests` rewritten through `FakeFocusSource`):
-unreadable in any app → focusUnreadable; switch set once when off, never when on; no frontmost → noEditableTarget;
-readable non-editable → noEditableTarget. App: wording + log name (`OutcomeMessageTests`), waking indicator and click
-cancel (`IndicatorPresenterTests`), `wakeWait=` fragment present/absent (log-line tests).
+Core (`WakeWaitTests`, `WakeWaitStaleEventTests`; the fake resolver answers unreadable N times, the fake presenter
+models the indicator so `clickIndicator()` cancels only while a cancellable one shows): resolves on the 2nd read → Jev
+asked, deadline = resolution + 5 s even after a 1 s Candidate extraction; never readable → refusal at 3 s, no Jev;
+click mid-wait → `.cancelled`, nothing written; click before the indicator, stale cancel callback, stale read timers →
+nothing; readable at once → no wait (regression); Pre-check refusal / Direct Paste / waited duration after a wait;
+⌘⇧V ignored. MacInterop (`AccessibilityWakeTests`): unreadable anywhere → focusUnreadable, switch once per process,
+readable non-editable or no frontmost app → noEditableTarget. App: wording, waking indicator + click, `wakeWait=` log.
 
 ## Live run (after the install gate)
 a. Fresh Chrome `data:` tab, textarea focused, SIGUSR1 at once, 3× → one press pastes; log `wakeWait=<ms>` (or no key

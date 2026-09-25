@@ -55,7 +55,7 @@ protocol HistoryRepository: Sendable { func record(_ item: ClipboardItem) }
 }
 @MainActor protocol ScheduledAction { func cancel() }
 @MainActor protocol PasteOutcomePresenter {
-    func showProcessing(onCancel: @escaping @MainActor () -> Void)   // Esc on our indicator
+    func showProcessing(onCancel: @escaping @MainActor () -> Void)   // click on our indicator
     func showWaking(applicationName: String, onCancel: @escaping @MainActor () -> Void)  // Wake Wait, click cancels
     func showRetrying()                                              // 429 back-off in progress
     func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?,   // ✓/reason + note; hides processing
