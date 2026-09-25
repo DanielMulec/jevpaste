@@ -1,0 +1,36 @@
+# Free-text Target (41) live run — 2026-09-25, installed build of 6d38c38, --accept-signal-trigger
+# Payload (pbcopy): JEVPASTE-FT-NAME Marlene Example / ft41@example.org / +41 79 555 01 23 (3 lines + trailing \n)
+# (a) Chrome data: page, bare <textarea>; frontmost=com.google.Chrome, activeElement=textarea
+#     DOM check: {"equalsWholeItemWithoutOuterBreaks":true,"length":66,"lines":3}; clipboard after: restored to payload
+# (b) Chrome data: page, labelled 'Email address' input (+ Full name, Phone); frontmost=com.google.Chrome, activeElement=#e
+#     DOM check: {"emailIsExcerptOnly":true,"nameEmpty":true,"phoneEmpty":true}
+# (c) Herdr tab (zsh at /tmp) in Ghostty; frontmost=com.mitchellh.ghostty, pane focused=true
+#     pane read: prompt followed by the three payload lines, no output; after C-c: fresh prompt, 0 'command not found'
+2026-09-25 20:12:32.848 Df JevPaste[10855:273b10b] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 20:12:33.044 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 20:12:34.307 I  JevPaste[10855:273b4ab] [jevpaste:JevGateway] Jev decided over 4 options in 1.44364875 seconds
+2026-09-25 20:12:34.319 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-25 20:12:34.451 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] outcome inserted via=freeTextTarget p=0.93
+2026-09-25 20:12:56.251 Df JevPaste[10855:273b10b] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 20:12:56.416 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 20:12:56.587 I  JevPaste[10855:273b893] [jevpaste:JevGateway] Jev decided over 4 options in 0.325836125 seconds
+2026-09-25 20:12:56.596 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-25 20:12:56.720 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] outcome inserted via=jev p=0.04
+2026-09-25 20:13:31.384 Df JevPaste[10855:273b10b] [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 20:13:31.547 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 20:13:31.737 I  JevPaste[10855:273bc4a] [jevpaste:JevGateway] Jev decided over 4 options in 0.344808542 seconds
+2026-09-25 20:13:31.741 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-25 20:13:31.865 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] outcome inserted via=freeTextTarget p=0.95
+# (d) Daniel: ChatGPT desktop composer (com.openai.codex) — first press woke Accessibility (refused.targetWaking), second press pasted; Daniel: all lines landed, nothing sent
+# (e) Daniel: WhatsApp composer — Daniel: landed, nothing sent (order per Daniel's block: d then e)
+2026-09-25 20:32:45.314 Df JevPaste[10855:273b10b] [jevpaste:TargetResolver] focus unreadable app=com.openai.codex enhancedUI=false
+2026-09-25 20:32:45.315 Df JevPaste[10855:273b10b] [jevpaste:TargetResolver] wake requested app=com.openai.codex set=-25208 readBack=true
+2026-09-25 20:32:45.315 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] outcome refused.targetWaking
+2026-09-25 20:32:48.756 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 20:32:49.911 I  JevPaste[10855:27423eb] [jevpaste:JevGateway] Jev decided over 4 options in 1.31148975 seconds
+2026-09-25 20:32:49.916 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-25 20:32:50.039 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] outcome inserted via=freeTextTarget p=0.87
+2026-09-25 20:33:21.932 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 20:33:22.083 I  JevPaste[10855:27428f4] [jevpaste:JevGateway] Jev decided over 4 options in 0.304484541 seconds
+2026-09-25 20:33:22.089 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-25 20:33:22.212 Df JevPaste[10855:273b10b] [jevpaste:PasteAttempt] outcome inserted via=freeTextTarget p=0.90
