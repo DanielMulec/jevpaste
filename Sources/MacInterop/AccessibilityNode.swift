@@ -21,6 +21,8 @@ protocol AccessibilityNode {
     func children(upTo limit: Int) -> [Self]
     /// The element that labels this one (`AXTitleUIElement`), such as an HTML `<label>`.
     var titleElement: Self? { get }
+    /// The window the element belongs to (`AXWindow`).
+    var window: Self? { get }
     /// Whether `AXSelectedTextRange` is settable: the mark of an editable element with a non-text role.
     var isSelectedTextRangeSettable: Bool { get }
     /// Whether both refer to the same element of the same app.
@@ -54,11 +56,13 @@ enum AccessibilityWalkLimits {
     static let ancestorDepth = 32
 }
 
-/// The focused element and the process it belongs to.
+/// The focused element and the process (app) it belongs to.
 struct FocusedElement<Node: AccessibilityNode> {
     let processIdentifier: Int32
     let bundleIdentifier: String?
     let node: Node
+    /// The app's name as the user sees it; sent to Jev, unlike the bundle identifier.
+    var applicationName: String?
 }
 
 /// The app in front, named for the user.

@@ -24,6 +24,10 @@ struct AXElementNode: AccessibilityNode {
         element(for: kAXTitleUIElementAttribute)
     }
 
+    var window: AXElementNode? {
+        element(for: kAXWindowAttribute)
+    }
+
     var isSelectedTextRangeSettable: Bool {
         var isSettable: DarwinBoolean = false
         let status = AXUIElementIsAttributeSettable(element, kAXSelectedTextRangeAttribute as CFString, &isSettable)
