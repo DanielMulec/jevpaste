@@ -36,6 +36,7 @@ final class PasteAttemptHarness {
         sameTypeGroup: [Candidate] = [],
         focusedTarget: BoundTarget? = PasteAttemptHarness.emailField,
         unreadableReads: Int = 0,
+        candidateExtractionTakes: Duration = .zero,
         copySource: Bool = true,
         sourceText: String = PasteAttemptHarness.sourceText
     ) {
@@ -44,13 +45,17 @@ final class PasteAttemptHarness {
         targetResolver = FakeTargetResolver(focusedTarget: focusedTarget, unreadableReads: unreadableReads)
         inserter = FakeInserter(log: log)
         presenter = FakePresenter(clock: clock)
+        chooser.onPresent = { [presenter] in presenter.hideWhileChoosing() }
         capture = CopyCapture(clipboard: clipboard, history: history)
         let ports = PasteAttemptPorts(
             hotkey: hotkey, clipboard: clipboard, targetResolver: targetResolver, inserter: inserter,
             decisionService: jev, clock: clock, presenter: presenter, chooser: chooser
         )
         let rules = PasteAttemptRules(
-            candidateExtraction: StubCandidateExtraction(fixedCandidates: candidates, sameTypeGroup: sameTypeGroup),
+            candidateExtraction: StubCandidateExtraction(
+                fixedCandidates: candidates, sameTypeGroup: sameTypeGroup,
+                slowness: candidateExtractionTakes == .zero ? nil : (clock, candidateExtractionTakes)
+            ),
             preCheck: StubPreCheck()
         )
         coordinator = PasteAttemptCoordinator(ports: ports, rules: rules, capture: capture)

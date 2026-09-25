@@ -40,15 +40,17 @@ public final class PasteAttemptCoordinator {
     }
 
     /// Continues an attempt once its Bound Target resolved, at ⌘⇧V or at the end of a Wake Wait: the Pre-checks,
-    /// then a Direct Paste or asking Jev.
+    /// then a Direct Paste or asking Jev. The 5 s clock counts from this instant, however long the synchronous
+    /// Pre-checks and Candidate extraction take.
     func proceed(_ start: AttemptStart, into target: BoundTarget) {
+        let resolvedAt = ports.clock.now
         if let refusal = rules.preCheck.refusal(for: start.item, in: target) {
             return refuse(refusal, afterWaiting: start.wakeWait)
         }
         if let directPasteText = DirectPasteRule.text(for: start.item) {
             return directPaste(directPasteText, of: start, into: target)
         }
-        askJev(for: start, about: target)
+        askJev(for: start, about: target, resolvedAt: resolvedAt)
     }
 
     /// Inserts the single-line Active Item whole: no Jev, no Candidates, no chooser, no indicator, no 5 s clock.
@@ -60,27 +62,27 @@ public final class PasteAttemptCoordinator {
         deliver(text)
     }
 
-    /// Starts the 5 s clock now, when the Bound Target has resolved; a Wake Wait before it is off the clock.
-    private func askJev(for start: AttemptStart, about target: BoundTarget) {
+    /// Runs the 5 s clock from `resolvedAt`, when the Bound Target resolved; a Wake Wait before it is off the clock.
+    private func askJev(for start: AttemptStart, about target: BoundTarget, resolvedAt: ContinuousClock.Instant) {
         let candidates = rules.candidateExtraction.candidates(in: start.item)
         guard !candidates.isEmpty else {
             return ports.presenter.showOutcome(.noSuitableMatch, note: nil, path: nil, wakeWait: start.wakeWait)
         }
         let consultation = JevConsultation(
             contextToSend: rules.preCheck.screenedContext(of: target), candidates: candidates,
-            deadline: ports.clock.now + Self.attemptTimeLimit
+            deadline: resolvedAt + Self.attemptTimeLimit
         )
         attempt = RunningAttempt(
             number: start.number, item: start.item, target: target, jevConsultation: consultation,
             wakeWait: start.wakeWait, path: .jev()
         )
-        schedule(after: Self.attemptTimeLimit) { coordinator in
+        schedule(after: consultation.deadline - ports.clock.now) { coordinator in
             coordinator.finish(.failed(.timedOut))
         }
         if start.isIndicatorShown {
             showProcessingIndicator()
         } else {
-            schedule(after: Self.indicatorDelay) { coordinator in
+            schedule(after: resolvedAt + Self.indicatorDelay - ports.clock.now) { coordinator in
                 coordinator.showProcessingIndicator()
             }
         }
@@ -105,12 +107,12 @@ public final class PasteAttemptCoordinator {
         guard let number = attempt?.number else { return }
         ports.presenter.showProcessing { [weak self] in
             guard let self, attempt?.number == number else { return }
-            escapePressed()
+            cancelClicked()
         }
     }
 
-    /// Esc on our indicator cancels while waiting for Jev; once delivery started it has no effect.
-    private func escapePressed() {
+    /// A click on our indicator cancels while waiting for Jev; once delivery started it has no effect.
+    private func cancelClicked() {
         guard phase == .deciding || phase == .waitingToRetry else { return }
         finish(.cancelled)
     }

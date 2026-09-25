@@ -52,7 +52,7 @@ final class ManualClock: PasteAttemptClock {
             now = next.fireAt
             next.action()
         }
-        now = target
+        now = max(now, target)  // an action may have advanced the clock itself (a slow synchronous step)
     }
 
     private func nextDueTimer(notAfter target: ContinuousClock.Instant) -> Timer? {

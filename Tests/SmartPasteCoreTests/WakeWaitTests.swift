@@ -29,12 +29,15 @@ struct WakeWaitTests {
         #expect(harness.jev.requests.first?.sourceDocument == PasteAttemptHarness.sourceText)
     }
 
-    @Test func theJevClockStartsWhenTheTargetResolves() {
-        let harness = PasteAttemptHarness(unreadableReads: 1)
+    /// A slow synchronous Candidate extraction after the resolution does not extend the clock either.
+    @Test(arguments: [Duration.zero, .seconds(1)])
+    func theJevClockStartsWhenTheTargetResolves(candidateExtractionTakes: Duration) {
+        let harness = PasteAttemptHarness(unreadableReads: 1, candidateExtractionTakes: candidateExtractionTakes)
 
         harness.hotkey.press()
         harness.clock.advance(by: .milliseconds(50))
-        harness.clock.advance(by: .milliseconds(4_999))
+        #expect(harness.clock.elapsed == .milliseconds(50) + candidateExtractionTakes)
+        harness.clock.advance(by: .milliseconds(4_999) - candidateExtractionTakes)
         #expect(harness.presenter.outcomes.isEmpty)
         harness.clock.advance(by: .milliseconds(1))
 
@@ -62,7 +65,7 @@ struct WakeWaitTests {
 
         harness.hotkey.press()
         harness.clock.advance(by: .milliseconds(150))
-        harness.presenter.pressEscape()
+        harness.presenter.clickIndicator()
         harness.clock.advance(by: .seconds(6))
 
         #expect(harness.presenter.outcomes == [.cancelled])

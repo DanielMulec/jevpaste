@@ -96,8 +96,18 @@ final class FakeHistoryRepository: HistoryRepository {
 
 @MainActor
 final class FakePresenter: PasteOutcomePresenter {
+    /// What the indicator shows, as far as a click is concerned — mirrors `IndicatorPresenter`: a click cancels only
+    /// while the waking, processing or retrying indicator shows with a cancel callback.
+    enum IndicatorState {
+        case hidden, waking, processing, retrying, delivering, outcome, offering, hiddenWhileChoosing
+    }
+
     private let clock: ManualClock
     private var onCancel: (@MainActor () -> Void)?
+    private(set) var indicator = IndicatorState.hidden
+    /// The newest cancel callback, kept after it was cleared — only for adversarial tests that call a stale one on
+    /// purpose, as a misbehaving adapter would.
+    private(set) var newestCancelCallback: (@MainActor () -> Void)?
     private(set) var processingShownAt: Duration?
     private(set) var wakingShownAt: Duration?
     /// The app named by each waking indicator shown, oldest first.
@@ -121,21 +131,36 @@ final class FakePresenter: PasteOutcomePresenter {
     func showProcessing(onCancel: @escaping @MainActor () -> Void) {
         processingShownAt = clock.elapsed
         self.onCancel = onCancel
+        newestCancelCallback = onCancel
+        if indicator != .retrying { indicator = .processing }
     }
 
     func showWaking(applicationName: String, onCancel: @escaping @MainActor () -> Void) {
         wakingShownAt = clock.elapsed
         wakingApplicationNames.append(applicationName)
         self.onCancel = onCancel
+        newestCancelCallback = onCancel
+        indicator = .waking
     }
 
     func showRetrying() {
         retryingShownCount += 1
+        indicator = .retrying
     }
 
     func showDelivering() {
         deliveringShownCount += 1
+        if isCancellable {
+            onCancel = nil
+            indicator = .delivering
+        }
         onShowDelivering?()
+    }
+
+    /// The Candidate Chooser opened in the indicator's place (the app's `hideWhileChoosing`): a click cannot cancel.
+    func hideWhileChoosing() {
+        onCancel = nil
+        indicator = .hiddenWhileChoosing
     }
 
     func showOutcome(
@@ -146,11 +171,18 @@ final class FakePresenter: PasteOutcomePresenter {
         notes.append(note)
         paths.append(path)
         shownOffer = nil  // withdrawn without a callback, as the seam promises
+        onCancel = nil
+        indicator = .outcome
     }
 
-    /// Cancel on our processing or waking indicator (a click in the app; the seam's `onCancel`).
-    func pressEscape() {
-        onCancel?()
+    /// A click on the indicator: cancels once, only while a cancellable indicator shows (Esc never reaches it).
+    func clickIndicator() {
+        guard isCancellable, let onCancel else { return }
+        onCancel()
+    }
+
+    private var isCancellable: Bool {
+        indicator == .waking || indicator == .processing || indicator == .retrying
     }
 
     // MARK: No Suitable Match offer — the seam's contract: at most one callback, only after focus is back in the
@@ -173,6 +205,8 @@ final class FakePresenter: PasteOutcomePresenter {
         onDismiss: @escaping @MainActor () -> Void
     ) {
         offeredTargets.append(target)
+        onCancel = nil
+        indicator = .offering
         shownOffer = (onAccept, onDismiss)
         newestOfferCallbacks = (onAccept, onDismiss)
     }
@@ -206,6 +240,8 @@ final class FakePresenter: PasteOutcomePresenter {
 
 @MainActor
 final class FakeChooser: CandidateChooser {
+    /// Called when the chooser opens; the harness hides the indicator, as the app's chooser does.
+    var onPresent: (@MainActor () -> Void)?
     private var reply: (@MainActor (Candidate?) -> Void)?
     private(set) var offeredCandidates: [Candidate]?
     private(set) var offeredTarget: BoundTarget?
@@ -218,6 +254,7 @@ final class FakeChooser: CandidateChooser {
         offeredCandidates = candidates
         offeredTarget = target
         self.reply = reply
+        onPresent?()
     }
 
     func choose(_ text: String) {
@@ -230,13 +267,18 @@ final class FakeChooser: CandidateChooser {
 }
 
 /// Candidate derivation stub: the fixed Candidates found in the item; every Candidate listed in `sameTypeGroup`
-/// shares one type.
+/// shares one type. With a `slowness`, deriving them moves the manual clock on by its duration, like a slow
+/// synchronous derivation on the main actor.
 struct StubCandidateExtraction: CandidateExtraction {
     var fixedCandidates: [Candidate]
     var sameTypeGroup: [Candidate] = []
+    var slowness: (clock: ManualClock, duration: Duration)?
 
     func candidates(in item: ClipboardItem) -> [Candidate] {
-        fixedCandidates.filter { item.text.contains($0.text) }
+        if let slowness {
+            MainActor.assumeIsolated { slowness.clock.advance(by: slowness.duration) }
+        }
+        return fixedCandidates.filter { item.text.contains($0.text) }
     }
 
     func sameTypeAlternatives(to chosen: Candidate, among candidates: [Candidate]) -> [Candidate] {

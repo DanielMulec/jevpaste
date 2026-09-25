@@ -3,25 +3,25 @@ import Testing
 
 @MainActor
 struct PasteAttemptCancellationTests {
-    @Test func escapeDuringProcessingCancelsWithoutDelivery() {
+    @Test func clickDuringProcessingCancelsWithoutDelivery() {
         let harness = PasteAttemptHarness()
 
         harness.hotkey.press()
         harness.clock.advance(by: .milliseconds(150))
-        harness.presenter.pressEscape()
+        harness.presenter.clickIndicator()
         harness.jev.choose("ada@example.com")
 
         #expect(harness.presenter.outcomes == [.cancelled])
         #expect(harness.log.steps.isEmpty)
     }
 
-    @Test func escapeAfterDeliveryStartedHasNoEffect() {
+    @Test func clickAfterDeliveryStartedHasNoEffect() {
         let harness = PasteAttemptHarness()
 
         harness.hotkey.press()
         harness.clock.advance(by: .milliseconds(150))
         harness.jev.choose("ada@example.com")
-        harness.presenter.pressEscape()
+        harness.presenter.clickIndicator()
         harness.clock.advance(by: .milliseconds(120))
 
         #expect(harness.presenter.outcomes == [.inserted])
