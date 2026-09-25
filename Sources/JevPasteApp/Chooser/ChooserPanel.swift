@@ -9,7 +9,7 @@ final class ChooserPanel: ChooserSurface {
     private static let minimumWidth = 240.0
 
     private let panel = StatusItemPanel(becomesKey: true)
-    private let keyView = ChooserKeyView()
+    private let keyView = PanelKeyView()
     private let titleField = NSTextField(labelWithString: "")
     private let rowStack = NSStackView()
     private let hintField = NSTextField(labelWithString: "↑↓ choose · Enter pastes · Esc cancels")
@@ -31,7 +31,7 @@ final class ChooserPanel: ChooserSurface {
         rowStack.alignment = .leading
         rowStack.spacing = 2
         layOut()
-        keyView.onKey = { [weak self] event in self?.onEvent?(event) }
+        keyView.onKey = { [weak self] key in self?.onEvent?(ChooserEvent(key)) }
         panel.onResignKey = { [weak self] in self?.onEvent?(.cancel(.clickAway)) }
     }
 
@@ -82,30 +82,5 @@ final class ChooserPanel: ChooserSurface {
             hintField.widthAnchor.constraint(lessThanOrEqualTo: rowStack.widthAnchor),
         ])
         panel.contentView = HUDBackgroundView(filledBy: keyView)
-    }
-}
-
-/// The chooser's first responder: turns ↑, ↓, Return, Enter and Esc into chooser events.
-private final class ChooserKeyView: NSView {
-    private enum KeyCode {
-        static let returnKey: UInt16 = 36
-        static let keypadEnter: UInt16 = 76
-        static let escape: UInt16 = 53
-        static let downArrow: UInt16 = 125
-        static let upArrow: UInt16 = 126
-    }
-
-    var onKey: (@MainActor (ChooserEvent) -> Void)?
-
-    override var acceptsFirstResponder: Bool { true }
-
-    override func keyDown(with event: NSEvent) {
-        switch event.keyCode {
-        case KeyCode.upArrow: onKey?(.moveUp)
-        case KeyCode.downArrow: onKey?(.moveDown)
-        case KeyCode.returnKey, KeyCode.keypadEnter: onKey?(.chooseSelected)
-        case KeyCode.escape: onKey?(.cancel(.escape))
-        default: break  // ignored, without the system beep
-        }
     }
 }

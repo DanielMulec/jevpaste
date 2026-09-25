@@ -34,10 +34,20 @@ final class IndicatorNoticeSurface: IndicatorSurface {
         surface.forwardClicks(to: handler)
     }
 
+    func forwardOfferEvents(to handler: @escaping @MainActor (IndicatorOfferEvent) -> Void) {
+        surface.forwardOfferEvents(to: handler)
+    }
+
     func display(_ content: IndicatorContent) {
         cancelNoticeHide()
         presenterIsShowing = true
         surface.display(content)
+    }
+
+    func displayTakingKeyFocus(_ content: IndicatorContent) {
+        cancelNoticeHide()
+        presenterIsShowing = true
+        surface.displayTakingKeyFocus(content)
     }
 
     /// Ends the presenter's display. A hide while the presenter shows nothing is stale (its display was already

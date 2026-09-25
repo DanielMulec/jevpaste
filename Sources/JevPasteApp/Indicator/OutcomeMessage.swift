@@ -15,6 +15,11 @@ struct IndicatorContent: Equatable {
     /// While delivering: uninterruptible and over within the Restore Window, so it never offers a cancel.
     static let delivering = IndicatorContent(symbolName: "arrow.down.doc", text: "Pasting…")
 
+    /// No Suitable Match, offering Enter to paste the whole Active Item.
+    static let noSuitableMatchOffer = IndicatorContent(
+        symbolName: "questionmark.circle", text: "No suitable match — press Enter to paste everything"
+    )
+
     /// While waiting to retry after Jev asked us to; the click hint appears only when a click actually cancels.
     static func retrying(cancellable: Bool) -> IndicatorContent {
         IndicatorContent(symbolName: "hourglass", text: "Jev asked us to wait…" + (cancellable ? cancelHint : ""))

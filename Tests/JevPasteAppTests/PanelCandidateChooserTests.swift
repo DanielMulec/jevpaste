@@ -24,7 +24,9 @@ struct PanelCandidateChooserTests {
 
     init() {
         activator.frontmostProcessIdentifier = Self.chrome
-        let presenter = IndicatorPresenter(surface: indicator, clock: clock)
+        let presenter = IndicatorPresenter(
+            surface: indicator, clock: clock,
+            focusReturn: TargetAppFocusReturn(activator: FakeApplicationActivator(), clock: clock))
         chooser = PanelCandidateChooser(
             surface: surface,
             focusReturn: TargetAppFocusReturn(activator: activator, clock: clock),
@@ -79,8 +81,8 @@ struct PanelCandidateChooserTests {
         #expect(log.replies == [Self.emails[2]])
     }
 
-    @Test(arguments: [ChooserCancellation.escape, .clickAway])
-    func cancellingClosesAndRepliesNothing(_ cancellation: ChooserCancellation) {
+    @Test(arguments: [KeyPanelDismissal.escape, .clickAway])
+    func cancellingClosesAndRepliesNothing(_ cancellation: KeyPanelDismissal) {
         let log = present()
 
         surface.send(.cancel(cancellation))

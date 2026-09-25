@@ -68,6 +68,9 @@ Outcomes that end before 150 ms (refusals) show only the outcome, never the proc
 Rendering is prompt: each call sets the content and orders the panel front synchronously; nothing waits for the
 main loop to turn during delivery (delivery itself no longer blocks).
 
+The No Suitable Match offer is the one exception to "never key": the panel takes key focus (non-activating) only
+while offering, for Enter/Esc — see [no-suitable-match-offer.md](no-suitable-match-offer.md).
+
 ## Cancel affordance
 A **click on the indicator panel** while it shows processing or retrying calls `onCancel`. Clicks in any other
 state are ignored. No global key monitor, no Esc (the panel is never key, so Esc cannot reach it), no menu item.

@@ -57,6 +57,11 @@ and any pending hide dropped, surface hidden); Core's later `showOutcome` displa
 `StatusItemPlacement` (origin below the status item, clamped to its screen; pure part unit-tested) and
 `StatusItemPanelParts` (`StatusItemPanel(becomesKey:)`, `HUDBackgroundView`, `FirstClickView`) are used by both
 `IndicatorPanel` and `ChooserPanel`, extracted from `IndicatorPanel` without behaviour change.
+The key-capable part is shared with the indicator's No Suitable Match offer
+([no-suitable-match-offer.md](no-suitable-match-offer.md)), extracted into `Sources/JevPasteApp/KeyPanel/`:
+`PanelKeyView`/`PanelKey` (the first responder; was `ChooserKeyView`), `KeyPanelSession<Answer>` (answered before
+the panel closes, focus return + its log lines, one reply; was inside `PanelCandidateChooser`) and
+`KeyPanelDismissal` (was `ChooserCancellation`). Behaviour and log lines unchanged; chooser tests unchanged.
 
 ## Diagnostic logging (`os.Logger`, subsystem `jevpaste`, category `CandidateChooser`, enum/ints public)
 `chooser opened with N alternatives`, `chose index i`, `cancelled (esc|click-away)`,

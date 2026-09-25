@@ -7,18 +7,38 @@ import SmartPasteCore
 final class RecordingIndicatorSurface: IndicatorSurface {
     /// The content on screen, or `nil` while the indicator is hidden.
     private(set) var displayed: IndicatorContent?
+    /// Whether the indicator holds key focus, so Enter and Esc reach it.
+    private(set) var holdsKeyFocus = false
     private var onClick: (@MainActor () -> Void)?
+    private var onOfferEvent: (@MainActor (IndicatorOfferEvent) -> Void)?
 
     func forwardClicks(to handler: @escaping @MainActor () -> Void) {
         onClick = handler
     }
 
+    func forwardOfferEvents(to handler: @escaping @MainActor (IndicatorOfferEvent) -> Void) {
+        onOfferEvent = handler
+    }
+
     func display(_ content: IndicatorContent) {
         displayed = content
+        holdsKeyFocus = false
+    }
+
+    func displayTakingKeyFocus(_ content: IndicatorContent) {
+        displayed = content
+        holdsKeyFocus = true
     }
 
     func hide() {
         displayed = nil
+        holdsKeyFocus = false
+    }
+
+    /// Enter, Esc or click-away while the indicator holds key focus.
+    func send(_ event: IndicatorOfferEvent) {
+        guard holdsKeyFocus else { return }
+        onOfferEvent?(event)
     }
 
     func click() {

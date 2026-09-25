@@ -8,22 +8,20 @@ import os
 final class PanelCandidateChooser: CandidateChooser {
     private struct OpenChoice {
         let candidates: [Candidate]
-        let processIdentifier: Int32
-        let reply: @MainActor (Candidate?) -> Void
         var selectedRow = 0
     }
 
     private static let log = Logger(subsystem: "jevpaste", category: "CandidateChooser")
 
     private let surface: any ChooserSurface
-    private let focusReturn: TargetAppFocusReturn
+    private let session: KeyPanelSession<Candidate?>
     private let indicator: IndicatorPresenter
     /// The choice while the chooser is open; `nil` once it was answered, so later events are ignored.
     private var openChoice: OpenChoice?
 
     init(surface: any ChooserSurface, focusReturn: TargetAppFocusReturn, indicator: IndicatorPresenter) {
         self.surface = surface
-        self.focusReturn = focusReturn
+        session = KeyPanelSession(focusReturn: focusReturn, log: Self.log)
         self.indicator = indicator
         surface.forwardEvents { [weak self] event in
             self?.handle(event)
@@ -38,13 +36,11 @@ final class PanelCandidateChooser: CandidateChooser {
         for target: BoundTarget,
         reply: @escaping @MainActor (Candidate?) -> Void
     ) {
-        guard openChoice == nil else {
+        guard session.begin(returningFocusTo: target.identity.processIdentifier, reply: reply) else {
             Self.log.error("chooser already open; declined a second choice")
             return reply(nil)
         }
-        openChoice = OpenChoice(
-            candidates: candidates, processIdentifier: target.identity.processIdentifier, reply: reply
-        )
+        openChoice = OpenChoice(candidates: candidates)
         indicator.hideWhileChoosing()
         surface.open(ChooserContent(candidates: candidates, context: target.context), selecting: 0)
         Self.log.notice("chooser opened with \(candidates.count, privacy: .public) alternatives")
@@ -61,8 +57,8 @@ final class PanelCandidateChooser: CandidateChooser {
             choose(row: choice.selectedRow)
         case .choose(let row):
             choose(row: row)
-        case .cancel(let cancellation):
-            Self.log.notice("cancelled (\(cancellation.rawValue, privacy: .public))")
+        case .cancel(let dismissal):
+            Self.log.notice("cancelled (\(dismissal.rawValue, privacy: .public))")
             answer(with: nil)
         }
     }
@@ -80,26 +76,9 @@ final class PanelCandidateChooser: CandidateChooser {
         answer(with: choice.candidates[row])
     }
 
-    /// Ends the open choice before closing, so the click-away our own close causes is ignored; replies once focus
-    /// is back in the Bound Target's app.
+    /// The session replies once focus is back in the Bound Target's app.
     private func answer(with candidate: Candidate?) {
-        guard let choice = openChoice else { return }
         openChoice = nil
-        surface.close()
-        focusReturn.returnFocus(to: choice.processIdentifier) { result in
-            Self.logFocusReturn(result)
-            choice.reply(candidate)
-        }
-    }
-
-    private static func logFocusReturn(_ result: FocusReturnResult) {
-        switch result {
-        case .frontmost(let elapsed):
-            log.notice("target app reactivated in \(Int(elapsed.timeInterval * 1000), privacy: .public) ms")
-        case .notFrontmost(let elapsed):
-            log.notice("target app not frontmost after \(Int(elapsed.timeInterval * 1000), privacy: .public) ms")
-        case .appGone:
-            log.notice("target app gone")
-        }
+        session.answer(candidate) { surface.close() }
     }
 }

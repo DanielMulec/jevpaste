@@ -17,7 +17,9 @@ struct IndicatorNoticeSurfaceTests {
 
     init() {
         notices = IndicatorNoticeSurface(wrapping: screen, clock: clock)
-        presenter = IndicatorPresenter(surface: notices, clock: clock)
+        presenter = IndicatorPresenter(
+            surface: notices, clock: clock,
+            focusReturn: TargetAppFocusReturn(activator: FakeApplicationActivator(), clock: clock))
     }
 
     @Test func noticeOnAnIdleIndicatorShowsAtOnceForItsDuration() {
