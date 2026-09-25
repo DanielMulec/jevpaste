@@ -53,6 +53,32 @@ struct NoSuitableMatchOfferTests {
         #expect(harness.log.steps == [.write(PasteAttemptHarness.sourceText), .pasteKeystroke, .restore])
     }
 
+    @Test func enterWaitsForFocusToReturnToTheTargetsAppBeforePasting() {
+        let harness = Self.harnessOffering()
+
+        harness.presenter.pressOfferKey(accepting: true)
+        #expect(harness.log.steps.isEmpty)
+        #expect(harness.presenter.outcomes.isEmpty)
+        harness.presenter.finishFocusReturn()
+        harness.clock.advance(by: .milliseconds(120))
+
+        #expect(harness.presenter.outcomes == [.inserted])
+    }
+
+    /// Adversarial: a misbehaving adapter answers twice; the second answer finds the attempt already delivering.
+    @Test func aSecondAnswerToTheSameOfferIsIgnored() {
+        let harness = Self.harnessOffering()
+        let callbacks = harness.presenter.newestOfferCallbacks
+
+        callbacks?.accept()
+        callbacks?.dismiss()
+        callbacks?.accept()
+        harness.clock.advance(by: .milliseconds(120))
+
+        #expect(harness.presenter.outcomes == [.inserted])
+        #expect(harness.log.steps.count == 3)
+    }
+
     @Test func escapeInsertsNothingAndEndsAsNoSuitableMatch() {
         let harness = Self.harnessOffering()
 
@@ -76,22 +102,26 @@ struct NoSuitableMatchOfferTests {
         #expect(harness.log.steps.isEmpty)
     }
 
-    @Test func aLateEnterAfterTheOfferTimedOutIsIgnored() {
+    /// Adversarial: a misbehaving adapter calls the withdrawn offer's accept after the attempt timed out.
+    @Test func aStaleAcceptAfterTheOfferTimedOutIsIgnored() {
         let harness = Self.harnessOffering()
+        let staleAccept = harness.presenter.newestOfferCallbacks?.accept
         harness.clock.advance(by: .seconds(8))
 
-        harness.presenter.acceptOffer()
+        staleAccept?()
         harness.clock.advance(by: .milliseconds(120))
 
         #expect(harness.presenter.outcomes == [.noSuitableMatch])
         #expect(harness.log.steps.isEmpty)
     }
 
+    /// Adversarial for the accept: the withdrawn offer's accept is called after ⌘⇧V ended it.
     @Test func aHotkeyPressDuringTheOfferEndsItWithoutStartingANewAttempt() {
         let harness = Self.harnessOffering()
+        let staleAccept = harness.presenter.newestOfferCallbacks?.accept
 
         harness.hotkey.press()
-        harness.presenter.acceptOffer()
+        staleAccept?()
 
         #expect(harness.presenter.outcomes == [.noSuitableMatch])
         #expect(harness.presenter.paths.map { $0?.noSuitableMatchOfferEnd } == [.dismissed])

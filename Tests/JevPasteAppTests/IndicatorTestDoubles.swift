@@ -9,6 +9,8 @@ final class RecordingIndicatorSurface: IndicatorSurface {
     private(set) var displayed: IndicatorContent?
     /// Whether the indicator holds key focus, so Enter and Esc reach it.
     private(set) var holdsKeyFocus = false
+    /// Like the AppKit panel: giving up key focus on `display` reports a click-away at once, synchronously.
+    var reportsClickAwayWhenGivingUpKeyFocus = false
     private var onClick: (@MainActor () -> Void)?
     private var onOfferEvent: (@MainActor (IndicatorOfferEvent) -> Void)?
 
@@ -21,8 +23,12 @@ final class RecordingIndicatorSurface: IndicatorSurface {
     }
 
     func display(_ content: IndicatorContent) {
+        let gaveUpKeyFocus = holdsKeyFocus
         displayed = content
         holdsKeyFocus = false
+        if gaveUpKeyFocus && reportsClickAwayWhenGivingUpKeyFocus {
+            onOfferEvent?(.dismiss(.clickAway))
+        }
     }
 
     func displayTakingKeyFocus(_ content: IndicatorContent) {

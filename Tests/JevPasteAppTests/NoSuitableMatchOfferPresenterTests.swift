@@ -89,6 +89,19 @@ struct NoSuitableMatchOfferPresenterTests {
         #expect(replies.log.isEmpty)
     }
 
+    /// The panel reports its own resign-key as a click-away while the outcome replaces the offer; that must not
+    /// answer the withdrawn offer.
+    @Test func theClickAwayCausedByWithdrawingTheOfferIsNotAnAnswer() {
+        surface.reportsClickAwayWhenGivingUpKeyFocus = true
+        offer()
+
+        presenter.showOutcome(.noSuitableMatch, note: nil, path: .jev(offer: .timedOut))
+
+        #expect(surface.displayed == OutcomeMessage(.noSuitableMatch).content)
+        #expect(activator.activated == [Self.chrome])
+        #expect(replies.log.isEmpty)
+    }
+
     @Test func aClickOnTheOfferDoesNothing() {
         offer()
 
