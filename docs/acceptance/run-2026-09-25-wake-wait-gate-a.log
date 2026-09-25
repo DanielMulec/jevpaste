@@ -1,0 +1,43 @@
+# Wake Wait (43) Gate A measurement — 2026-09-25, installed THROWAWAY probe build (local branch wake-wait-probe,
+# 7df1783 = 314fcc6 + SIGUSR2 focus-read probe, never merged), --accept-signal-trigger, pid 59129.
+# Launch: "grant check at launch trusted=true" (22:06:33.398).
+# Probe: on SIGUSR2, poll the system-wide AXFocusedUIElement every 20 ms (Task.sleep) for ≤ 3 s, no wake walk;
+# log ms-to-readable, polls, first AX status, role, AXEnhancedUserInterface before/after. mode=switch sets
+# AXEnhancedUserInterface=true on the frontmost app first. -25212 = kAXErrorNoValue; set=-25208 = kAXErrorNotImplemented
+# (the same set code the 2026-09-25 ChatGPT wake logged, with readBack=true).
+# Runs 1–8: `open -a "Google Chrome" "data:text/html,<title>JEVPASTE-WW-GATEA-n</title><textarea autofocus>"`, poll
+# lsappinfo every 50 ms until frontmost=com.google.Chrome (1st check each time), then kill -USR2 at once; Ghostty
+# re-activated 3.3 s later. Run 9: tab opened via DevTools new_page (Chrome frontmost from then), ~20 s later USR2.
+# Helper output:
+run=1 mode=reread frontmost=com.google.Chrome at USR2 (waited 1x50ms after open); prev=com.mitchellh.ghostty
+run=2 mode=reread frontmost=com.google.Chrome at USR2 (waited 1x50ms after open); prev=com.mitchellh.ghostty
+run=3 mode=reread frontmost=com.google.Chrome at USR2 (waited 1x50ms after open); prev=com.mitchellh.ghostty
+run=4 mode=reread frontmost=com.google.Chrome at USR2 (waited 1x50ms after open); prev=com.mitchellh.ghostty
+run=5 mode=reread frontmost=com.google.Chrome at USR2 (waited 1x50ms after open); prev=com.mitchellh.ghostty
+run=6 mode=switch frontmost=com.google.Chrome at USR2 (waited 1x50ms after open); prev=com.mitchellh.ghostty
+run=7 mode=switch frontmost=com.google.Chrome at USR2 (waited 1x50ms after open); prev=com.mitchellh.ghostty
+run=8 mode=switch frontmost=com.google.Chrome at USR2 (waited 1x50ms after open); prev=com.mitchellh.ghostty
+run=9 mode=reread frontmost=com.google.Chrome at USR2 (tab opened via DevTools before activation); prev=com.google.Chrome
+# App log (log show --predicate 'subsystem == "jevpaste" AND category == "Probe"' --info):
+2026-09-25 22:06:56.816 [59129] JevPaste: [jevpaste:Probe] probe start mode=reread app=com.google.Chrome enhancedUI=true set=0
+2026-09-25 22:06:56.866 [59129] JevPaste: [jevpaste:Probe] probe readable ms=48 polls=3 firstStatus=-25212 role=AXTextArea enhancedUIAfter=true
+2026-09-25 22:07:07.730 [59129] JevPaste: [jevpaste:Probe] probe start mode=reread app=com.google.Chrome enhancedUI=true set=0
+2026-09-25 22:07:07.775 [59129] JevPaste: [jevpaste:Probe] probe readable ms=44 polls=3 firstStatus=-25212 role=AXTextArea enhancedUIAfter=true
+2026-09-25 22:07:12.757 [59129] JevPaste: [jevpaste:Probe] probe start mode=reread app=com.google.Chrome enhancedUI=true set=0
+2026-09-25 22:07:12.803 [59129] JevPaste: [jevpaste:Probe] probe readable ms=45 polls=3 firstStatus=-25212 role=AXTextArea enhancedUIAfter=true
+2026-09-25 22:07:17.778 [59129] JevPaste: [jevpaste:Probe] probe start mode=reread app=com.google.Chrome enhancedUI=true set=0
+2026-09-25 22:07:17.820 [59129] JevPaste: [jevpaste:Probe] probe readable ms=42 polls=3 firstStatus=-25212 role=AXTextArea enhancedUIAfter=true
+2026-09-25 22:07:22.790 [59129] JevPaste: [jevpaste:Probe] probe start mode=reread app=com.google.Chrome enhancedUI=true set=0
+2026-09-25 22:07:22.836 [59129] JevPaste: [jevpaste:Probe] probe readable ms=45 polls=3 firstStatus=-25212 role=AXTextArea enhancedUIAfter=true
+2026-09-25 22:07:27.808 [59129] JevPaste: [jevpaste:Probe] probe start mode=switch app=com.google.Chrome enhancedUI=true set=-25208
+2026-09-25 22:07:27.850 [59129] JevPaste: [jevpaste:Probe] probe readable ms=41 polls=3 firstStatus=-25212 role=AXTextArea enhancedUIAfter=true
+2026-09-25 22:07:32.837 [59129] JevPaste: [jevpaste:Probe] probe start mode=switch app=com.google.Chrome enhancedUI=true set=-25208
+2026-09-25 22:07:32.883 [59129] JevPaste: [jevpaste:Probe] probe readable ms=45 polls=3 firstStatus=-25212 role=AXTextArea enhancedUIAfter=true
+2026-09-25 22:07:37.867 [59129] JevPaste: [jevpaste:Probe] probe start mode=switch app=com.google.Chrome enhancedUI=true set=-25208
+2026-09-25 22:07:37.912 [59129] JevPaste: [jevpaste:Probe] probe readable ms=44 polls=3 firstStatus=-25212 role=AXTextArea enhancedUIAfter=true
+2026-09-25 22:07:55.898 [59129] JevPaste: [jevpaste:Probe] probe start mode=reread app=com.google.Chrome enhancedUI=true set=0
+2026-09-25 22:07:55.899 [59129] JevPaste: [jevpaste:Probe] probe readable ms=0 polls=1 firstStatus=0 role=AXTextArea enhancedUIAfter=true
+# Summary: fresh tab, 8/8 readable by re-reading alone: first read -25212, readable on poll 3 at 41–48 ms
+# (median 44.5); role AXTextArea every time. AXEnhancedUserInterface was already true before every run (Chrome not
+# relaunched), so "without the switch" is not measurable here; mode=switch changed nothing (41/45/44 ms).
+# Settled tab (run 9): readable on the first read (0 ms). Tabs JEVPASTE-WW-GATEA-1…9 closed after title re-check.
