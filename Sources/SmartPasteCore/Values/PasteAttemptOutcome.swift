@@ -2,10 +2,10 @@
 public enum PreCheckRefusal: Equatable, Sendable {
     /// Nothing has been copied yet, so there is no Active Item.
     case noActiveItem
-    /// No editable element is focused.
+    /// The focus is readable and no editable element is focused.
     case noEditableTarget
-    /// The named app's Accessibility is waking; the Target can be found in a moment.
-    case targetWaking(applicationName: String)
+    /// The named app's focus was still unreadable when the Wake Wait's limit passed.
+    case targetNotReady(applicationName: String)
     /// The Target is a secure field; not supported.
     case secureField
     /// The Active Item is concealed or looks like a secret.

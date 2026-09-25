@@ -49,7 +49,7 @@ final class FocusedTargetResolver<Source: FocusSource> {
     /// per app process, only when its focus is unreadable and it is not already on; ⌘⇧V is the retry.
     private func resolutionWhileFocusIsUnreadable() -> TargetResolution {
         guard let application = source.frontmostApplication() else { return .noEditableTarget }
-        let waking = TargetResolution.waking(applicationName: application.name)
+        let waking = TargetResolution.focusUnreadable(applicationName: application.name)
         if isWithinWakeWindow(of: application.processIdentifier) { return waking }
         guard !source.isAccessibilityAwake(in: application.processIdentifier),
             source.wakeAccessibility(in: application.processIdentifier)

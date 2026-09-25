@@ -99,12 +99,17 @@ final class FakePresenter: PasteOutcomePresenter {
     private let clock: ManualClock
     private var onCancel: (@MainActor () -> Void)?
     private(set) var processingShownAt: Duration?
+    private(set) var wakingShownAt: Duration?
+    /// The app named by each waking indicator shown, oldest first.
+    private(set) var wakingApplicationNames: [String] = []
     private(set) var retryingShownCount = 0
     private(set) var outcomes: [PasteAttemptOutcome] = []
     /// The note shown with each outcome, in step with `outcomes`.
     private(set) var notes: [PasteAttemptNote?] = []
     /// The Smart Paste path of each outcome, in step with `outcomes`; `nil` when none was taken.
     private(set) var paths: [SmartPastePath?] = []
+    /// How long each outcome's attempt waited for a readable focus, in step with `outcomes`; `nil` when it did not.
+    private(set) var wakeWaits: [Duration?] = []
     private(set) var deliveringShownCount = 0
     /// Called when Core announces delivery, so a test can see what had happened by then.
     var onShowDelivering: (@MainActor () -> Void)?
@@ -118,6 +123,12 @@ final class FakePresenter: PasteOutcomePresenter {
         self.onCancel = onCancel
     }
 
+    func showWaking(applicationName: String, onCancel: @escaping @MainActor () -> Void) {
+        wakingShownAt = clock.elapsed
+        wakingApplicationNames.append(applicationName)
+        self.onCancel = onCancel
+    }
+
     func showRetrying() {
         retryingShownCount += 1
     }
@@ -127,14 +138,17 @@ final class FakePresenter: PasteOutcomePresenter {
         onShowDelivering?()
     }
 
-    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?) {
+    func showOutcome(
+        _ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?, wakeWait: Duration?
+    ) {
         outcomes.append(outcome)
+        wakeWaits.append(wakeWait)
         notes.append(note)
         paths.append(path)
         shownOffer = nil  // withdrawn without a callback, as the seam promises
     }
 
-    /// Esc pressed while our processing indicator is visible.
+    /// Cancel on our processing or waking indicator (a click in the app; the seam's `onCancel`).
     func pressEscape() {
         onCancel?()
     }

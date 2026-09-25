@@ -12,6 +12,11 @@ struct IndicatorContent: Equatable {
         IndicatorContent(symbolName: "ellipsis.circle", text: "Jev is choosing…" + (cancellable ? cancelHint : ""))
     }
 
+    /// While the Wake Wait waits for `applicationName`'s focus to become readable; cancelled like processing.
+    static func waking(applicationName: String) -> IndicatorContent {
+        IndicatorContent(symbolName: "ellipsis.circle", text: "Waking \(applicationName)…" + cancelHint)
+    }
+
     /// While delivering: uninterruptible and over within the Restore Window, so it never offers a cancel.
     static let delivering = IndicatorContent(symbolName: "arrow.down.doc", text: "Pasting…")
 
@@ -74,7 +79,7 @@ struct OutcomeMessage: Equatable {
     }
 
     /// The outcome's kind for diagnostic logs, unqualified and without associated values: `inserted`,
-    /// `refused.noEditableTarget`, `refused.targetWaking`, `failed.timedOut`.
+    /// `refused.noEditableTarget`, `refused.targetNotReady`, `failed.timedOut`.
     static func logName(for outcome: PasteAttemptOutcome) -> String {
         switch outcome {
         case .refused(let refusal): "refused.\(caseName(of: refusal))"
@@ -88,7 +93,7 @@ struct OutcomeMessage: Equatable {
         switch refusal {
         case .noActiveItem: "noActiveItem"
         case .noEditableTarget: "noEditableTarget"
-        case .targetWaking: "targetWaking"
+        case .targetNotReady: "targetNotReady"
         case .secureField: "secureField"
         case .suspectedSecret: "suspectedSecret"
         }
@@ -107,8 +112,7 @@ struct OutcomeMessage: Equatable {
         switch refusal {
         case .noActiveItem: "Nothing copied yet"
         case .noEditableTarget: "No text field focused"
-        case .targetWaking(let applicationName):
-            "Waking \(applicationName) for Smart Paste — press ⌘⇧V again in a moment"
+        case .targetNotReady(let applicationName): "\(applicationName) isn't ready — press ⌘⇧V again"
         case .secureField: "Secure field — not supported"
         case .suspectedSecret: "Suspected secret — blocked"
         }

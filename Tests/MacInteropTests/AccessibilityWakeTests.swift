@@ -18,7 +18,7 @@ struct AccessibilityWakeTests {
     }
 
     @Test func unreadableFocusInAnAppWhoseAccessibilityIsOffWakesItOnceAndSaysSo() {
-        #expect(resolver.resolveFocusedTarget() == .waking(applicationName: "ChatGPT"))
+        #expect(resolver.resolveFocusedTarget() == .focusUnreadable(applicationName: "ChatGPT"))
         #expect(source.wakeRequests == [7])
     }
 
@@ -26,7 +26,7 @@ struct AccessibilityWakeTests {
         _ = resolver.resolveFocusedTarget()
         clock.advance(by: .milliseconds(4_900))
 
-        #expect(resolver.resolveFocusedTarget() == .waking(applicationName: "ChatGPT"))
+        #expect(resolver.resolveFocusedTarget() == .focusUnreadable(applicationName: "ChatGPT"))
         #expect(source.wakeRequests == [7])
     }
 
@@ -74,7 +74,7 @@ struct AccessibilityWakeTests {
         clock.advance(by: .seconds(1))
         source.frontmost = Self.chatGPT
 
-        #expect(resolver.resolveFocusedTarget() == .waking(applicationName: "ChatGPT"))
+        #expect(resolver.resolveFocusedTarget() == .focusUnreadable(applicationName: "ChatGPT"))
         #expect(source.wakeRequests == [7, 8])
     }
 

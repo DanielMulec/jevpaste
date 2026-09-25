@@ -30,20 +30,22 @@ struct PasteAttemptStartTests {
     }
 
     @Test(arguments: [
-        PreCheckRefusal.noActiveItem, .noEditableTarget, .targetWaking(applicationName: "ChatGPT"), .secureField,
-        .suspectedSecret,
+        PreCheckRefusal.noActiveItem, .noEditableTarget,
+        .targetNotReady(applicationName: FakeTargetResolver.unreadableApplication),
+        .secureField, .suspectedSecret,
     ])
     func eachPreCheckRefusesWithoutJevCallOrPasteboardWrite(refusal: PreCheckRefusal) {
         let harness =
             switch refusal {
             case .noActiveItem: PasteAttemptHarness(copySource: false)
             case .noEditableTarget: PasteAttemptHarness(focusedTarget: nil)
-            case .targetWaking(let name): PasteAttemptHarness(focusedTarget: nil, wakingApplication: name)
+            case .targetNotReady: PasteAttemptHarness(unreadableReads: .max)
             case .secureField: PasteAttemptHarness(focusedTarget: Self.passwordField)
             case .suspectedSecret: PasteAttemptHarness(sourceText: StubPreCheck.secretPrefix + "4f9a1c")
             }
 
         harness.hotkey.press()
+        harness.clock.advance(by: .seconds(3))  // the Wake Wait's limit; every other refusal comes at once
 
         #expect(harness.presenter.outcomes == [.refused(refusal)])
         #expect(harness.jev.requests.isEmpty)

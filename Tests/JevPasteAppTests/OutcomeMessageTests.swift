@@ -19,10 +19,7 @@ struct OutcomeMessageTests {
         (.noSuitableMatch, "No suitable match"),
         (.refused(.noActiveItem), "Nothing copied yet"),
         (.refused(.noEditableTarget), "No text field focused"),
-        (
-            .refused(.targetWaking(applicationName: "ChatGPT")),
-            "Waking ChatGPT for Smart Paste — press ⌘⇧V again in a moment"
-        ),
+        (.refused(.targetNotReady(applicationName: "ChatGPT")), "ChatGPT isn't ready — press ⌘⇧V again"),
         (.refused(.secureField), "Secure field — not supported"),
         (.refused(.suspectedSecret), "Suspected secret — blocked"),
         (.cancelled, "Cancelled"),
@@ -62,9 +59,9 @@ struct OutcomeMessageTests {
         (.refused(.noEditableTarget), "refused.noEditableTarget"),
         (.refused(.secureField), "refused.secureField"),
         (.refused(.suspectedSecret), "refused.suspectedSecret"),
-        (.refused(.targetWaking(applicationName: "ChatGPT")), "refused.targetWaking"),
-        (.refused(.targetWaking(applicationName: "Notes (Beta)")), "refused.targetWaking"),
-        (.refused(.targetWaking(applicationName: ".secureField")), "refused.targetWaking"),
+        (.refused(.targetNotReady(applicationName: "ChatGPT")), "refused.targetNotReady"),
+        (.refused(.targetNotReady(applicationName: "Notes (Beta)")), "refused.targetNotReady"),
+        (.refused(.targetNotReady(applicationName: ".secureField")), "refused.targetNotReady"),
         (.cancelled, "cancelled"),
         (.failed(.timedOut), "failed.timedOut"),
     ])

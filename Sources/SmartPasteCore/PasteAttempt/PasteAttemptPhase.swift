@@ -1,6 +1,8 @@
 /// Where the current Paste Attempt is. `idle` means none is running and ⌘⇧V would start one.
 enum PasteAttemptPhase: Equatable {
     case idle
+    /// The Wake Wait: the focus is not readable yet and is re-read until it is or the limit passes; no Bound Target.
+    case wakeWaiting
     /// A `DecisionService` request is outstanding.
     case deciding
     /// Jev asked us to wait; a retry is scheduled inside the 5 s clock.
@@ -13,7 +15,7 @@ enum PasteAttemptPhase: Equatable {
     case delivering
 }
 
-/// What a running Paste Attempt pinned when it started, plus its pending timers.
+/// What a running Paste Attempt pinned once its Bound Target resolved.
 struct RunningAttempt {
     /// Distinguishes this attempt from earlier ones, so late replies and timers of an ended attempt are ignored.
     let number: Int
@@ -21,7 +23,8 @@ struct RunningAttempt {
     let target: BoundTarget
     /// What asking Jev needs; `nil` for a Direct Paste, which never asks.
     let jevConsultation: JevConsultation?
-    var timers: [any ScheduledAction] = []
+    /// How long the Wake Wait before it lasted; `nil` when the focus was readable at ⌘⇧V.
+    let wakeWait: Duration?
     /// The Smart Paste path so far: set when the attempt starts, refined when Jev's decision arrives.
     var path: SmartPastePath
 }
