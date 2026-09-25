@@ -53,7 +53,7 @@ The small in-app prompt shown when several excerpts are plausible for the Target
 A Smart Paste using an older Clipboard Item selected from Clipboard History, interpreted afresh for its Target.
 
 **Paste Attempt**:
-One Smart Paste from ⌘⇧V to its visible outcome (inserted, no suitable match, refused, cancelled, or failed). Only one exists at a time; a repeated ⌘⇧V during an attempt is ignored. The Active Item and Bound Target are pinned when it starts.
+One Smart Paste from ⌘⇧V to its visible outcome (inserted, no suitable match, refused, cancelled, or failed). Only one exists at a time; a repeated ⌘⇧V during an attempt is ignored. The Active Item is pinned when it starts; the Bound Target once the focus is readable (at ⌘⇧V, or after a Wake Wait).
 
 **Bound Target**:
 The Target pinned once the focus is readable — at ⌘⇧V, or after a Wake Wait if needed — and re-verified immediately before insertion. If it no longer matches, nothing is inserted.
