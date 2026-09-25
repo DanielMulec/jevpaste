@@ -1,0 +1,70 @@
+# Wake Wait (43) live run — 2026-09-25, installed build of 9eda219, --accept-signal-trigger, pid 70972
+# Launch: "grant check at launch trusted=true" (22:23:10.408). Payloads (pbcopy): single line wake43@example.org
+# (Direct Paste) and the three-line JEVPASTE-WW-NAME Marlene Example / ww43@example.org / +41 79 555 01 43 (Jev path).
+# (a) fresh Chrome data: tab, bare <textarea autofocus>: `open -a "Google Chrome" data:…<title>JEVPASTE-WW-LIVE-n…`,
+#     lsappinfo polled every 50 ms until frontmost=com.google.Chrome (1st check each run), then kill -USR1 at once.
+run=1 frontmost=com.google.Chrome at USR1 (checked 1x50ms after open); clipboard sha before=157a69a4d93f
+run=1 clipboard sha after=157a69a4d93f restored=yes
+run=2 frontmost=com.google.Chrome at USR1 (checked 1x50ms after open); clipboard sha before=157a69a4d93f
+run=2 clipboard sha after=157a69a4d93f restored=yes
+run=3 frontmost=com.google.Chrome at USR1 (checked 1x50ms after open); clipboard sha before=157a69a4d93f
+run=3 clipboard sha after=157a69a4d93f restored=yes
+run=4 (three-line) frontmost=com.google.Chrome at USR1 (checked 1x50ms after open); clipboard sha before=6de6674b019c
+run=4 clipboard sha after=6de6674b019c restored=yes
+#     DOM check (DevTools evaluate_script, textarea.value === single payload): LIVE-1 {"equalsSingle":true,"length":18}
+#     LIVE-2 {"equalsSingle":true,"length":18}  LIVE-3 {"equalsSingle":true,"length":18}  LIVE-4 {"empty":true,"length":0}
+#     Run 4 = Jev path after a 113 ms wait: Jev p=0.73 (< 0.8, not Free-text) → No Suitable Match offer, dismissed
+#     (click-away) when the helper re-activated Ghostty; nothing inserted — Jev's judgement, not the wait.
+#     The 150 ms processing indicator shows 273 ms after the trigger = wakeWait 113 + ~150: the clock started at resolution.
+2026-09-25 22:23:32.708 [70972] JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 22:23:32.747 [70972] JevPaste: [jevpaste:TargetResolver] focus unreadable app=com.google.Chrome enhancedUI=true
+2026-09-25 22:23:32.929 [70972] JevPaste: [jevpaste:PasteAttempt] outcome inserted via=directPaste wakeWait=92
+2026-09-25 22:23:38.582 [70972] JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 22:23:38.760 [70972] JevPaste: [jevpaste:PasteAttempt] outcome inserted via=directPaste wakeWait=55
+2026-09-25 22:23:44.438 [70972] JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 22:23:44.673 [70972] JevPaste: [jevpaste:PasteAttempt] outcome inserted via=directPaste wakeWait=111
+2026-09-25 22:23:50.300 [70972] JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 22:23:50.573 [70972] JevPaste: [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 22:23:51.564 [70972] JevPaste: [jevpaste:JevGateway] Jev decided over 4 options in 1.149545291 seconds
+2026-09-25 22:23:51.582 [70972] JevPaste: [jevpaste:PasteAttempt] offer shown
+2026-09-25 22:23:54.370 [70972] JevPaste: [jevpaste:PasteAttempt] offer dismissed (click-away)
+2026-09-25 22:23:54.382 [70972] JevPaste: [jevpaste:PasteAttempt] target app reactivated in 0 ms
+2026-09-25 22:23:54.383 [70972] JevPaste: [jevpaste:PasteAttempt] outcome noSuitableMatch via=jev p=0.73 offer=dismissed wakeWait=113
+# (b) Herdr tab ww43-shell (zsh at /tmp, pane wC:p2A) in Ghostty; gate: frontmost=com.mitchellh.ghostty, pane "focused":true
+#     clipboard sha before=157a69a4d93f after=157a69a4d93f; pane read: prompt followed by <PAYLOAD> (1 occurrence), no
+#     output; after C-c: fresh prompt, 0 'command not found'. Tab closed. No wakeWait= key: readable at once.
+2026-09-25 22:24:33.899 [70972] JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 22:24:34.031 [70972] JevPaste: [jevpaste:PasteAttempt] outcome inserted via=directPaste
+# (c) after-limit refusal: looked for a surface whose focus stays unreadable (clipboard: JEVPASTE-WW-LIMIT for c2–c5).
+#     c1 Finder activated (NSRunningApplication.activate, no reopen) → readable, instant noEditableTarget, no wait.
+#     c2 Calculator cold launch (`open -a`) → unreadable 533 ms, then readable, noEditableTarget (switch set, readBack true).
+#     c3 Calculator settled → instant noEditableTarget.  c4 Chess cold launch → first read blocked ~1.1 s (launching),
+#     wait 1163 ms, then noEditableTarget.  c5 Chess settled → instant.  Chess and Calculator quit afterwards.
+#     No tested surface stays unreadable for 3 s, so the after-limit refusal is proven by the Core tests
+#     (WakeWaitTests.focusNeverReadableRefusesAtTheLimitWithoutAskingJev, PasteAttemptStartTests targetNotReady),
+#     not live. Daily cost of settled point 3 seen here: a cold-launching app waits ≤ ~1.2 s before "No text field focused".
+2026-09-25 22:24:59.644 [70972] JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 22:24:59.665 [70972] JevPaste: [jevpaste:PasteAttempt] outcome refused.noEditableTarget
+2026-09-25 22:25:17.080 [70972] JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 22:25:17.522 [70972] JevPaste: [jevpaste:TargetResolver] focus unreadable app=com.apple.calculator enhancedUI=false
+2026-09-25 22:25:17.562 [70972] JevPaste: [jevpaste:TargetResolver] wake requested app=com.apple.calculator set=-25208 readBack=true
+2026-09-25 22:25:17.614 [70972] JevPaste: [jevpaste:PasteAttempt] outcome refused.noEditableTarget wakeWait=533
+2026-09-25 22:25:26.574 [70972] JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 22:25:26.575 [70972] JevPaste: [jevpaste:PasteAttempt] outcome refused.noEditableTarget
+2026-09-25 22:25:42.354 [70972] JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 22:25:43.459 [70972] JevPaste: [jevpaste:TargetResolver] focus unreadable app=com.apple.Chess enhancedUI=false
+2026-09-25 22:25:43.464 [70972] JevPaste: [jevpaste:TargetResolver] wake requested app=com.apple.Chess set=-25208 readBack=true
+2026-09-25 22:25:43.517 [70972] JevPaste: [jevpaste:PasteAttempt] outcome refused.noEditableTarget wakeWait=1163
+2026-09-25 22:25:54.018 [70972] JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-25 22:25:54.025 [70972] JevPaste: [jevpaste:PasteAttempt] outcome refused.noEditableTarget
+# (d) Daniel: quit + relaunched the ChatGPT desktop app (com.openai.codex), clicked the composer, pressed ⌘⇧V once
+#     (keyboard, so no trigger line). Daniel via supervisor: "Done, all worked" — three lines in the composer, not sent.
+#     One attempt, one outcome in the log: waking indicator at 150 ms, focus readable after 2129 ms, processing shown at
+#     once, Jev judged Free-text (p=0.81), whole item delivered. No second press, no "press again".
+2026-09-25 22:31:39.767 [70972] JevPaste: [jevpaste:TargetResolver] focus unreadable app=com.openai.codex enhancedUI=false
+2026-09-25 22:31:39.768 [70972] JevPaste: [jevpaste:TargetResolver] wake requested app=com.openai.codex set=-25208 readBack=true
+2026-09-25 22:31:39.923 [70972] JevPaste: [jevpaste:PasteAttempt] waking indicator shown
+2026-09-25 22:31:41.888 [70972] JevPaste: [jevpaste:PasteAttempt] processing indicator shown
+2026-09-25 22:31:43.003 [70972] JevPaste: [jevpaste:JevGateway] Jev decided over 4 options in 1.115708375 seconds
+2026-09-25 22:31:43.012 [70972] JevPaste: [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-25 22:31:43.137 [70972] JevPaste: [jevpaste:PasteAttempt] outcome inserted via=freeTextTarget p=0.81 wakeWait=2129

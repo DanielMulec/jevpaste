@@ -1,13 +1,16 @@
 import SmartPasteCore
 import os
 
-/// The `PasteOutcomePresenter`: one reused, non-focus-stealing indicator for processing, retrying and every
-/// outcome. A click while Jev is choosing cancels the Paste Attempt; Esc never reaches it then, because it is not
-/// key. Only the No Suitable Match offer takes key focus, for Enter or Esc.
+/// The `PasteOutcomePresenter`: one reused, non-focus-stealing indicator for the Wake Wait, processing, retrying and
+/// every outcome. A click while waking or while Jev is choosing cancels the Paste Attempt; Esc never reaches it then,
+/// because it is not key — and must not be: taking key focus during the Wake Wait would move focus off the element
+/// whose readability the attempt is waiting for. Only the No Suitable Match offer takes key focus, for Enter or Esc.
 @MainActor
 final class IndicatorPresenter: PasteOutcomePresenter {
     private enum State {
         case hidden
+        /// The Wake Wait; cancellable by a click, like processing.
+        case waking
         case processing
         case retrying
         case delivering
@@ -53,22 +56,30 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         Self.log.notice("processing indicator shown")
     }
 
+    func showWaking(applicationName: String, onCancel: @escaping @MainActor () -> Void) {
+        self.onCancel = onCancel
+        display(.waking(applicationName: applicationName), as: .waking)
+        Self.log.notice("waking indicator shown")
+    }
+
     func showRetrying() {
         display(.retrying(cancellable: onCancel != nil), as: .retrying)
         Self.log.notice("retrying after Jev asked us to wait")
     }
 
-    /// Delivery can no longer be cancelled: a shown processing or retrying indicator turns into "Pasting…" without
-    /// the click hint. Anything else stays as it is — delivery ends with its outcome within the Restore Window.
+    /// Delivery can no longer be cancelled: a shown waking, processing or retrying indicator turns into "Pasting…"
+    /// without the click hint. Anything else stays as it is — delivery ends with its outcome within the Restore Window.
     func showDelivering() {
-        guard state == .processing || state == .retrying else { return }
+        guard isCancellable else { return }
         onCancel = nil
         display(.delivering, as: .delivering)
         Self.log.notice("delivering indicator shown")
     }
 
-    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?) {
-        let line = Self.outcomeLogLine(outcome, note: note, path: path)
+    func showOutcome(
+        _ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?, wakeWait: Duration?
+    ) {
+        let line = Self.outcomeLogLine(outcome, note: note, path: path, wakeWait: wakeWait)
         Self.log.notice("\(line, privacy: .public)")
         show(OutcomeMessage(outcome, note: note))
     }
@@ -90,15 +101,17 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         Self.log.notice("offer shown")
     }
 
-    /// The diagnostic line for an outcome: its kind, the path taken with Jev's free-text probability, and the note —
-    /// fixed names and numbers only, no payload. `outcome inserted via=directPaste`,
-    /// `outcome inserted via=freeTextTarget p=0.93`, `outcome noSuitableMatch via=jev p=0.12 note=…`.
+    /// The diagnostic line for an outcome: its kind, the path taken with Jev's free-text probability, the Wake Wait
+    /// in whole milliseconds when the attempt waited, and the note — fixed names and numbers only, no payload.
+    /// `outcome inserted via=directPaste wakeWait=312`, `outcome inserted via=freeTextTarget p=0.93`,
+    /// `outcome refused.targetNotReady wakeWait=3000`, `outcome noSuitableMatch via=jev p=0.12 note=…`.
     static func outcomeLogLine(
-        _ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?
+        _ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?, wakeWait: Duration? = nil
     ) -> String {
         let pathName = path.map { " " + $0.logFragment } ?? ""
+        let wakeWaitValue = wakeWait.map { " wakeWait=\(Int($0 / .milliseconds(1)))" } ?? ""
         let noteName = note.map { " note=\($0)" } ?? ""
-        return "outcome \(OutcomeMessage.logName(for: outcome))\(pathName)\(noteName)"
+        return "outcome \(OutcomeMessage.logName(for: outcome))\(pathName)\(wakeWaitValue)\(noteName)"
     }
 
     /// The Candidate Chooser opened in the indicator's place: hides it, and a click can no longer cancel. The
@@ -148,8 +161,12 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         surface.hide()
     }
 
+    private var isCancellable: Bool {
+        state == .waking || state == .processing || state == .retrying
+    }
+
     private func indicatorClicked() {
-        guard state == .processing || state == .retrying, let onCancel else { return }
+        guard isCancellable, let onCancel else { return }
         Self.log.notice("cancel clicked")
         onCancel()
     }

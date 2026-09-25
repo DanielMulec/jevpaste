@@ -20,7 +20,8 @@ byte-for-byte) · `ClipboardChange { changeCount: Int, item: ClipboardItem? }` �
 `BoundTarget { identity, context, isSecureField }` · `DecisionRequest { sourceDocument, targetContext,
 candidates }` · `Decision { choice: .candidate(Candidate) | .noneOfThese, containsValueProbability: Double }`
 · `DecisionReply = .decided(Decision) | .rateLimited(retryAfter: Duration) | .failed` ·
-`PreCheckRefusal = .noEditableTarget | .secureField | .suspectedSecret | .noActiveItem` ·
+`PreCheckRefusal = .noEditableTarget | .targetNotReady(applicationName:) | .secureField | .suspectedSecret |
+.noActiveItem` ·
 `PasteAttemptFailure = .timedOut | .decisionUnavailable | .invalidResult | .targetChanged` ·
 `PasteAttemptOutcome = .inserted | .insertedWithoutRestore | .noSuitableMatch | .refused(PreCheckRefusal)
 | .cancelled | .failed(PasteAttemptFailure)` · `SmartPastePath = .jev(freeTextProbability:, offer:) |
@@ -39,7 +40,8 @@ decision arrives and when the No Suitable Match offer ends) · `NoSuitableMatchO
     func startObservingChanges(_ onChange: @escaping @MainActor (ClipboardChange) -> Void)
 }
 @MainActor protocol TargetResolver {
-    func resolveFocusedTarget() -> BoundTarget?          // nil = no editable element focused
+    func resolveFocusedTarget() -> TargetResolution      // .resolved(BoundTarget) | .noEditableTarget
+                                                         // | .focusUnreadable(applicationName:) → Wake Wait
     func isStillFocused(_ target: TargetIdentity) -> Bool // same pid + same focused element
 }
 @MainActor protocol Inserter { func postPasteKeystroke() }   // synthetic ⌘V only; never Return
@@ -53,10 +55,11 @@ protocol HistoryRepository: Sendable { func record(_ item: ClipboardItem) }
 }
 @MainActor protocol ScheduledAction { func cancel() }
 @MainActor protocol PasteOutcomePresenter {
-    func showProcessing(onCancel: @escaping @MainActor () -> Void)   // Esc on our indicator
+    func showProcessing(onCancel: @escaping @MainActor () -> Void)   // click on our indicator
+    func showWaking(applicationName: String, onCancel: @escaping @MainActor () -> Void)  // Wake Wait, click cancels
     func showRetrying()                                              // 429 back-off in progress
     func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?,   // ✓/reason + note; hides processing
-                     path: SmartPastePath?)                                    // .jev / .directPaste, log only
+                     path: SmartPastePath?, wakeWait: Duration?)               // path, Wake Wait: log only
     func showNoSuitableMatchOffer(for target: BoundTarget,                      // Enter pastes everything; at most one
                                   onAccept: @escaping @MainActor () -> Void,   // callback, after focus returned;
                                   onDismiss: @escaping @MainActor () -> Void)  // a later showOutcome withdraws it
@@ -79,11 +82,14 @@ protocol PreCheck: Sendable {   // adapter: LocalPreChecks (Core), see pre-check
 ## Phases and transitions (`idle` → … → outcome shown → `idle`)
 | phase | event | action → next phase |
 |---|---|---|
+| idle | ⌘⇧V, focus unreadable | Wake Wait: re-read every 50 ms, "Waking <App>…" at 150 ms → wakeWaiting ([wake-wait.md](wake-wait.md)) |
+| wakeWaiting | focus resolves | continue as from idle with the Bound Target (rows below); outcome carries `wakeWait` |
+| wakeWaiting | still unreadable at 3 s / readable, nothing editable / click | `.refused(.targetNotReady(app))` / `.refused(.noEditableTarget)` / `.cancelled` |
 | idle | ⌘⇧V, no Active Item / no target / `PreCheck` refusal | `showOutcome(.refused(r))` → idle (no Jev, no write) |
 | idle | ⌘⇧V, checks pass, single-line item (`DirectPasteRule`) | Direct Paste: pin item+target, no Jev, no clocks, no indicator → delivering ([direct-paste.md](direct-paste.md)) |
 | idle | ⌘⇧V, checks pass, candidates empty | `showOutcome(.noSuitableMatch)` → idle |
 | idle | ⌘⇧V, checks pass | pin item+target; start 5 s deadline + 150 ms indicator timer; `requestDecision` → deciding |
-| deciding, retrying, choosing, delivering | ⌘⇧V | ignored (offeringDirectPaste: ends the offer, row below) |
+| wakeWaiting, deciding, retrying, choosing, delivering | ⌘⇧V | ignored (offeringDirectPaste: ends the offer, row below) |
 | deciding | 150 ms timer | `showProcessing(onCancel:)` |
 | deciding | `.rateLimited(d)`, now+d < deadline | `showRetrying`; schedule retry after d → retrying |
 | deciding | `.rateLimited(d)`, now+d ≥ deadline | `.failed(.timedOut)` |
@@ -109,10 +115,12 @@ Every outcome cancels all timers of the attempt, then `showOutcome` (with the at
 Active Item is never changed by the coordinator; a copy during the attempt reaches `CopyCapture` and becomes Active there.
 
 ## Clocks
-- **5 s deadline**: starts when ⌘⇧V passes the pre-checks; covers Jev calls and 429 back-off; a retry is
+- **3 s Wake Wait limit**: starts at ⌘⇧V when the focus is unreadable; ends when it resolves (then the 5 s
+  deadline starts) or at the limit. Re-reads every 50 ms; the 150 ms indicator shows "Waking <App>…" meanwhile.
+- **5 s deadline**: starts when the Bound Target is resolved and the pre-checks pass (after any Wake Wait); covers Jev calls and 429 back-off; a retry is
   scheduled only if it starts before the deadline. Stops at: chooser or No Suitable Match offer opens (both off it),
   delivery starts (delivery is uninterruptible), or any outcome. Not restarted after the chooser.
-- **150 ms indicator**: same start; cancelled by any earlier outcome/chooser/delivery.
+- **150 ms indicator**: same start (at ⌘⇧V during a Wake Wait; if "Waking…" was shown, processing replaces it at once); cancelled by any earlier outcome/chooser/delivery.
 - **8 s No Suitable Match offer**: starts when the offer shows; Enter (delivery) or any outcome cancels it.
 - **120 ms restore delay**: fixed, starts right after `postPasteKeystroke`.
 

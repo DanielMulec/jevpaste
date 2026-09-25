@@ -19,12 +19,12 @@ struct PasteAttemptStaleEventTests {
         #expect(harness.presenter.outcomes == [.failed(.timedOut), .inserted])
     }
 
-    @Test func lateJevReplyAfterEscapeIsIgnoredByTheNextAttempt() {
+    @Test func lateJevReplyAfterAnIndicatorClickIsIgnoredByTheNextAttempt() {
         let harness = PasteAttemptHarness()
 
         harness.hotkey.press()
         harness.clock.advance(by: .milliseconds(150))
-        harness.presenter.pressEscape()
+        harness.presenter.clickIndicator()
         harness.hotkey.press()
         harness.jev.reply(.rateLimited(retryAfter: .seconds(1)))
 

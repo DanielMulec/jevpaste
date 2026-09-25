@@ -131,23 +131,25 @@ final class FakeClipboard: Clipboard {
 
 @MainActor
 final class FakeTargetResolver: TargetResolver {
+    static let unreadableApplication = "ChatGPT"
     var focusedTarget: BoundTarget?
     /// Focus moves away right after the next resolution, so the re-verification at delivery fails.
     var focusMovesAwayOnceResolved = false
-    /// The app reported as waking its Accessibility when nothing is focused.
-    private let wakingApplication: String?
+    /// How many reads, from the first, find the focus unreadable (in `unreadableApplication`) before it resolves.
+    private let unreadableReads: Int
+    private(set) var readCount = 0
 
-    init(focusedTarget: BoundTarget?, wakingApplication: String? = nil) {
+    init(focusedTarget: BoundTarget?, unreadableReads: Int = 0) {
         self.focusedTarget = focusedTarget
-        self.wakingApplication = wakingApplication
+        self.unreadableReads = unreadableReads
     }
 
     func resolveFocusedTarget() -> TargetResolution {
-        if let focusedTarget {
-            if focusMovesAwayOnceResolved { self.focusedTarget = nil }
-            return .resolved(focusedTarget)
-        }
-        return wakingApplication.map { .waking(applicationName: $0) } ?? .noEditableTarget
+        readCount += 1
+        if readCount <= unreadableReads { return .focusUnreadable(applicationName: Self.unreadableApplication) }
+        guard let focusedTarget else { return .noEditableTarget }
+        if focusMovesAwayOnceResolved { self.focusedTarget = nil }
+        return .resolved(focusedTarget)
     }
 
     func isStillFocused(_ target: TargetIdentity) -> Bool {

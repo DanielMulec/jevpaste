@@ -30,15 +30,14 @@ struct PasteAttemptStartTests {
     }
 
     @Test(arguments: [
-        PreCheckRefusal.noActiveItem, .noEditableTarget, .targetWaking(applicationName: "ChatGPT"), .secureField,
-        .suspectedSecret,
+        PreCheckRefusal.noActiveItem, .noEditableTarget, .secureField, .suspectedSecret,
     ])
     func eachPreCheckRefusesWithoutJevCallOrPasteboardWrite(refusal: PreCheckRefusal) {
         let harness =
             switch refusal {
             case .noActiveItem: PasteAttemptHarness(copySource: false)
             case .noEditableTarget: PasteAttemptHarness(focusedTarget: nil)
-            case .targetWaking(let name): PasteAttemptHarness(focusedTarget: nil, wakingApplication: name)
+            case .targetNotReady: preconditionFailure("not a Pre-check: the Wake Wait's limit, see WakeWaitTests")
             case .secureField: PasteAttemptHarness(focusedTarget: Self.passwordField)
             case .suspectedSecret: PasteAttemptHarness(sourceText: StubPreCheck.secretPrefix + "4f9a1c")
             }

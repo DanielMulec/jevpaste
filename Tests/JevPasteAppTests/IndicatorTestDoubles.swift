@@ -88,3 +88,10 @@ final class SteppedClock: PasteAttemptClock {
         }
     }
 }
+
+extension IndicatorPresenter {
+    /// An outcome of an attempt that did not wait for a readable focus — what most presenter tests show.
+    func showOutcome(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?) {
+        showOutcome(outcome, note: note, path: path, wakeWait: nil)
+    }
+}

@@ -1,5 +1,9 @@
 # ChatGPT-app resolver gap — diagnosis plan
 
+> **Partly superseded by [wake-wait.md](wake-wait.md)** ([Implement the Wake Wait](https://github.com/DanielMulec/jevpaste/issues/43)):
+> the diagnosis and the one-shot `AXEnhancedUserInterface` request stand; the refusal "Waking … — press ⌘⇧V again",
+> `.waking`, the 5 s per-pid window and the 300-node wake walk are gone — the attempt now waits for the focus.
+
 Ticket: [Restore Smart Paste in the ChatGPT desktop app](https://github.com/DanielMulec/jevpaste/issues/33).
 
 ## Observed failure

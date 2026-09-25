@@ -14,9 +14,9 @@ public protocol TargetResolver {
 public enum TargetResolution: Equatable, Sendable {
     /// An editable element is focused; it becomes the Bound Target.
     case resolved(BoundTarget)
-    /// Nothing editable is focused.
+    /// The focus is readable and nothing editable is focused.
     case noEditableTarget
-    /// The frontmost app's focus is unreadable until its Accessibility wakes, which was just requested; ⌘⇧V again
-    /// in a moment finds the Target.
-    case waking(applicationName: String)
+    /// The frontmost app's focus cannot be read yet: its accessibility tree is asleep or not yet populated. The Paste
+    /// Attempt re-reads it during the Wake Wait.
+    case focusUnreadable(applicationName: String)
 }

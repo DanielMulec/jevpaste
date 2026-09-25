@@ -189,4 +189,45 @@ struct IndicatorPresenterTests {
             IndicatorPresenter.outcomeLogLine(.refused(.secureField), note: nil, path: nil)
                 == "outcome refused.secureField")
     }
+
+    // MARK: Wake Wait — the processing mechanism with the app's name; a click cancels, Esc never reaches it.
+
+    @Test func wakingNamesTheAppWithTheClickHint() {
+        presenter.showWaking(applicationName: "ChatGPT") {}
+
+        #expect(surface.displayed?.text == "Waking ChatGPT… click to cancel")
+        #expect(surface.displayed?.symbolName == IndicatorContent.processing(cancellable: true).symbolName)
+    }
+
+    @Test func aClickOnTheWakingIndicatorCancels() {
+        var cancels = 0
+        presenter.showWaking(applicationName: "ChatGPT") { cancels += 1 }
+        surface.click()
+
+        #expect(cancels == 1)
+    }
+
+    @Test func processingReplacesWakingOnceTheTargetResolved() {
+        presenter.showWaking(applicationName: "ChatGPT") {}
+        presenter.showProcessing {}
+
+        #expect(surface.displayed == .processing(cancellable: true))
+    }
+
+    @Test func deliveringAfterAWakeWaitShowsPastingAndAClickNoLongerCancels() {
+        var cancels = 0
+        presenter.showWaking(applicationName: "ChatGPT") { cancels += 1 }
+        presenter.showDelivering()
+        surface.click()
+
+        #expect(surface.displayed == .delivering)
+        #expect(cancels == 0)
+    }
+
+    @Test func anOutcomeReplacesWaking() {
+        presenter.showWaking(applicationName: "ChatGPT") {}
+        presenter.showOutcome(.refused(.targetNotReady(applicationName: "ChatGPT")), note: nil, path: nil)
+
+        #expect(surface.displayed?.text == "ChatGPT isn't ready — press ⌘⇧V again")
+    }
 }

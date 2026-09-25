@@ -56,10 +56,10 @@ A Smart Paste using an older Clipboard Item selected from Clipboard History, int
 One Smart Paste from ⌘⇧V to its visible outcome (inserted, no suitable match, refused, cancelled, or failed). Only one exists at a time; a repeated ⌘⇧V during an attempt is ignored. The Active Item and Bound Target are pinned when it starts.
 
 **Bound Target**:
-The Target pinned at the start of a Paste Attempt and re-verified immediately before insertion. If it no longer matches, nothing is inserted.
+The Target pinned once the focus is readable — at ⌘⇧V, or after a Wake Wait if needed — and re-verified immediately before insertion. If it no longer matches, nothing is inserted.
 
 **Wake Wait**:
-The interval at the start of a Paste Attempt during which the focused element cannot be read — the Target app's accessibility tree is asleep or not yet populated — and the attempt waits for it, re-reading until it resolves or a fixed limit (3 s) passes. One press, no second ⌘⇧V; the indicator says which app is waking after 150 ms; Esc or a click cancels. Precedes the Bound Target, the Pre-checks and the 5 s Jev clock, on every Smart Paste path. Only after the limit is the refusal "<App> isn't ready — press ⌘⇧V again"; "No text field focused" is reserved for a readable focus with nothing editable.
+The interval at the start of a Paste Attempt during which the focused element cannot be read — the Target app's accessibility tree is asleep or not yet populated — and the attempt waits for it, re-reading until it resolves or a fixed limit (3 s) passes. One press, no second ⌘⇧V; the indicator says which app is waking after 150 ms; a click on the indicator cancels (as on the processing indicator; Esc does not reach a non-key indicator). Precedes the Bound Target, the Pre-checks and the 5 s Jev clock, on every Smart Paste path. Only after the limit is the refusal "<App> isn't ready — press ⌘⇧V again"; "No text field focused" is reserved for a readable focus with nothing editable.
 _Avoid_: Wake retry, warm-up, "press again"
 
 **Pre-check**:

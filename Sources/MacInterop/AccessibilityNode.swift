@@ -82,7 +82,7 @@ protocol FocusSource {
     func frontmostApplication() -> FrontmostApplication?
     /// Whether the app's Accessibility is fully on (`AXEnhancedUserInterface` reads `true`).
     func isAccessibilityAwake(in processIdentifier: Int32) -> Bool
-    /// Asks the app to turn its Accessibility fully on; `true` when it then reads as on. Its return code is not
-    /// trusted: Electron answers "not implemented" and turns it on anyway.
-    func wakeAccessibility(in processIdentifier: Int32) -> Bool
+    /// Asks the app to turn its Accessibility fully on. Its return code is not trusted: Electron answers "not
+    /// implemented" and turns it on anyway.
+    func wakeAccessibility(in processIdentifier: Int32)
 }

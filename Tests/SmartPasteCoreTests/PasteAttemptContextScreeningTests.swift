@@ -68,7 +68,7 @@ struct PasteAttemptContextScreeningTests {
 
     /// Every way a screened attempt can finish, driven from ⌘⇧V.
     enum FinishPath: CaseIterable {
-        case timeout, decisionUnavailable, invalidResult, targetChanged, chooserCancel, escape
+        case timeout, decisionUnavailable, invalidResult, targetChanged, chooserCancel, indicatorClick
 
         var outcome: PasteAttemptOutcome {
             switch self {
@@ -76,7 +76,7 @@ struct PasteAttemptContextScreeningTests {
             case .decisionUnavailable: .failed(.decisionUnavailable)
             case .invalidResult: .failed(.invalidResult)
             case .targetChanged: .failed(.targetChanged)
-            case .chooserCancel, .escape: .cancelled
+            case .chooserCancel, .indicatorClick: .cancelled
             }
         }
 
@@ -96,9 +96,9 @@ struct PasteAttemptContextScreeningTests {
             case .chooserCancel:
                 harness.jev.choose("ada@example.com")
                 harness.chooser.dismiss()
-            case .escape:
+            case .indicatorClick:
                 harness.clock.advance(by: .milliseconds(150))
-                harness.presenter.pressEscape()
+                harness.presenter.clickIndicator()
             }
             return harness
         }
