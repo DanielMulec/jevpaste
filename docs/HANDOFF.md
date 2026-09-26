@@ -1,4 +1,4 @@
-# Handoff — jevpaste supervisor (v1 shipped; v1.x backlog, next: build 43 Wake Wait)
+# Handoff — jevpaste supervisor (v1 shipped; v1.x backlog, next: grill 31 typed tokens)
 
 Written for a fresh supervisor session that has never seen the previous one. Repo:
 `/Users/danielmulec/Projekte/experiments/jevpaste` (private, `DanielMulec/jevpaste`, `main` clean and pushed).
@@ -15,47 +15,44 @@ GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues
   that worked on 2026-09-25). Review brief pattern: see "Models and the review chain" below.
 - **Per-branch worker handoffs are retired**: workers fold everything into their ticket **report comment**.
 
-## Where things stand (2026-09-25 evening — 41 and 42 merged in one session, in parallel)
-`main` = 9ea1b70 (merge of `enter-after-no-match` on top of 97bb4a4, merge of `free-text-target`), pushed.
-Installed `~/Applications/JevPaste.app` = **main 9ea1b70**, running plain (pid changes; no `--accept-signal-trigger`),
-Open-at-Login on. **437 tests / 78 suites.** No worker in flight; worktrees are research spikes only.
-Resolved this session (both resolution comments carry the review chain and facts forward):
-- [Implement Free-text Target via Jev's third question](https://github.com/DanielMulec/jevpaste/issues/41#issuecomment-5837688434)
-  — third `free_text` question, threshold 0.8, whole item as Direct Paste; app name + screened window title sent,
-  bundle id never; every Jev attempt logs `p=`. Live: Chrome textarea 0.93, Email field 0.04 (excerpt only),
-  Herdr 0.95, **ChatGPT 0.87** (spike said 0.96 — real context is thinner), WhatsApp 0.90.
-- [Offer Enter to paste everything after No Suitable Match](https://github.com/DanielMulec/jevpaste/issues/42#issuecomment-5837988168)
-  — indicator takes key focus only while offering; Enter = whole item, Esc/click-away/⌘⇧V/8 s insert nothing;
-  chooser key mechanism extracted into `KeyPanelSession<Answer>` + `PanelKeyView`. **Daniel: 8 s is fine.**
-Direct Paste now has all three doorways (single line, Free-text Target, Enter after No Suitable Match).
+## Where things stand (2026-09-25 late — Wake Wait merged; Typesafe research done)
+`main` = 42b37b3 (merge of `wake-wait` + one glossary sentence), pushed. Installed `~/Applications/JevPaste.app`
+= **main 42b37b3**, running plain, Open-at-Login on, `trusted=true`. **456 tests / 81 suites.** No worker in flight;
+worktrees are research spikes only. Resolved this session:
+- [Implement the Wake Wait](https://github.com/DanielMulec/jevpaste/issues/43#issuecomment-5839365433) — phase
+  `wakeWaiting`, 50 ms re-reads up to 3 s on the Core clock, 5 s Jev clock + 150 ms indicator count from the
+  resolution instant; "Waking <App>… click to cancel" (click only — Esc never reaches a non-key indicator; glossary
+  corrected); after the limit `refused.targetNotReady` "<App> isn't ready — press ⌘⇧V again"; log `wakeWait=<ms>`.
+  Any unreadable focus waits; per-pid 5 s window + 300-node Chrome wake walk removed. Gate A: fresh Chrome tab readable
+  by re-reading alone at 41–48 ms. Live: Chrome `wakeWait=92/55/111`, Herdr no wait, **ChatGPT cold start one press
+  `wakeWait=2129 via=freeTextTarget p=0.81`**. No surface on this Mac stays unreadable 3 s. Two GPT-6-Sol passes
+  (first: loose fake presenter, duplicate test, deadline computed after sync work → all fixed).
+- [Establish Typesafe's direct Jev API versus the Vercel AI Gateway](https://github.com/DanielMulec/jevpaste/issues/44#issuecomment-5839522535)
+  — research, branch `research/typesafe-direct` (kept, never merged). Direct = `POST api.typesafe.ai/v1/systemone`;
+  yes/no questions are `noul` (type + answer field), model pinned `jev-1.13.0`, 422/529, `retry-after` optional;
+  same price, prepaid credits; us-west-2 cold TLS ~0.6 s vs ~0.08 s to fra1. **Gateway now also routes Jev via
+  DigitalOcean (ZDR-ineligible); which provider serves us is unknown** — Daniel informed, left in queue order.
 
 ## Open tickets (all children of the map — one per session, Daniel's order)
 | ticket | type | note |
 |---|---|---|
-| [Implement the Wake Wait](https://github.com/DanielMulec/jevpaste/issues/43) | task | **next**; contract = the ten points in the [#36 resolution](https://github.com/DanielMulec/jevpaste/issues/36#issuecomment-5838246196) + glossary **Wake Wait**; Gate A measures the fresh-Chrome-tab case first |
-| [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31) | grilling | |
+| [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31) | grilling | **next** |
 | [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37) | prototype | Daniel: "get the app complete first" |
 | [Decide what the secure-field pre-check uses when the OS secure-input flag is absent](https://github.com/DanielMulec/jevpaste/issues/38) | grilling | post-timeline |
-
-Also resolved 2026-09-25 (late): [Don't wake the target app for a Direct Paste](https://github.com/DanielMulec/jevpaste/issues/36)
-— grilling, two rounds; Daniel took every recommendation. Key: blind paste rejected (secure-field Pre-check and
-Bound Target re-verify need the tree); the fix is an auto-retry **Wake Wait** (3 s, off the 5 s clock, Esc cancels,
-"Waking <App>…" after 150 ms, "<App> isn't ready — press ⌘⇧V again" after the limit), on every path and for any
-frontmost app — the fresh-Chrome-tab `noEditableTarget` case enters it too.
+| [Decide how JevPaste switches Jev providers from the Vercel AI Gateway to Typesafe direct](https://github.com/DanielMulec/jevpaste/issues/45) | grilling | **blocked by 31, 37, 38** (Daniel: "after all current tickets"); research facts ready |
 
 ## Next session
-**Ticket:** [Implement the Wake Wait](https://github.com/DanielMulec/jevpaste/issues/43) — task, unblocked,
-unclaimed. Read the map body, this file, the #36 resolution, `CONTEXT.md` (Wake Wait), then the ticket body.
-`intercom status` → your id. **Claim** (`gh issue edit 43 --add-assignee @me`). Brief template:
-`docs/briefs/free-text-target-brief.md` (single worker — drop the Shared-files section). Worktree
-`git worktree add -b wake-wait ~/.pi/worktrees/jevpaste/wake-wait main`. Code the worker touches:
-`Sources/MacInterop/AXFocusSource.swift` (wake walk, `AXEnhancedUserInterface`), `FocusedTargetResolver.swift`
-(5 s wake window, `TargetResolution.waking`), `Sources/SmartPasteCore/PasteAttempt/PasteAttemptCoordinator.swift`
-(`hotkeyPressed` switch on `resolveFocusedTarget()` — the wait goes there, before Pre-checks), `PasteAttemptPhase.swift`,
-`PasteAttemptOutcome.swift` (`PreCheckRefusal.targetWaking` → rename/reword), `OutcomeMessage.swift`,
-`IndicatorPresenter.swift` (processing indicator reuse). Gate A must include the fresh-Chrome-tab measurement.
-Live: ChatGPT cold composer is Daniel's one press; Chrome + Herdr automated (DevTools MCP + SIGUSR1).
-After 43: 31 (grilling), 37 (prototype), 38 (grilling).
+**Ticket:** [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31)
+— grilling, HITL. Read the map body, this file, `CONTEXT.md` (Candidate kinds), `docs/design/candidate-derivation.md`,
+then the ticket body. `intercom status` → your id. Claim (`gh issue edit 31 --add-assignee @me`). Grill Daniel with
+`grilling` + `domain-modeling`: short numbered questions with a recommended answer; keep independent rules
+independent. Resolution → possibly a task ticket for the build.
+
+## Model rule change (2026-09-25)
+Research now runs on **`anthropic/claude-opus-5-5:medium` as a Herdr worker** (own tab + Pi instance, brief in
+`docs/briefs/`, e.g. `typesafe-direct-research-brief.md`), not a subagent and not DeepSeek Flash. Daniel did not
+recognise the Flash line; it was a cost choice from before Opus 5.5 existed. Map Notes updated. A `subagent` launch
+on Flash was stopped and redone this session — don't repeat.
 
 ## Supervisor role (Daniel's standing instructions, this session)
 - **You orchestrate only.** Workers do ALL hands-on work, including prototypes — Daniel rejected the supervisor
@@ -211,3 +208,15 @@ After 43: 31 (grilling), 37 (prototype), 38 (grilling).
 - `intercom reply` fails once the worker's ask has been superseded by a later `send`; fall back to `send`.
 - Daniel answers live blocks tersely ("done", "I think it worked") — always have the worker reconcile from
   DOM/log rather than from his words.
+
+## Wave-9 lessons (2026-09-25, Wake Wait)
+- Gate A *measurement before design* worked: 8 probe runs settled the Chrome question in 5 minutes and let the worker
+  drop legacy code (wake walk, per-pid window) with evidence.
+- Review found "deadline computed after synchronous work" — brief workers to capture the instant a clock starts *from*
+  and derive timers from it, not `clock.now` at scheduling time.
+- Review found the fake presenter firing cancel callbacks unconditionally (second time this class appears): fakes must
+  model visible state; brief it explicitly.
+- `herdr tab close`/`git worktree remove` in one chained command may abort mid-way but the earlier steps stick —
+  verify with `git worktree list` / `git ls-remote` rather than re-running blindly.
+- Daniel wants to be asked before any model that isn't in the map Notes; and if a Notes line surprises him, explain
+  where it came from before acting.
