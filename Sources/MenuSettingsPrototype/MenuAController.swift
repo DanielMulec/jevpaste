@@ -99,6 +99,7 @@ final class MenuAController: NSObject, NSMenuDelegate, NSSearchFieldDelegate {
     /// Screenshot hook: puts `query` into the field as if typed.
     func typeQuery(_ query: String) {
         field.stringValue = query
+        field.currentEditor()?.selectedRange = NSRange(location: query.count, length: 0)
         controlTextDidChange(Notification(name: NSControl.textDidChangeNotification))
     }
 

@@ -14,6 +14,8 @@ final class ProtoHooks {
     func start(app: ProtoAppDelegate) {
         self.app = app
         VariantMenuRefresher.shared.app = app
+        if environment["PROTO_PROVIDER"] == "typesafe" { ProtoState.shared.provider = .typesafe }
+        if environment["PROTO_BACKDROP"] != nil { Self.showBackdrop() }
         if environment["PROTO_SELFTEST"] != nil {
             after(1.0) { self.selfTest() }
             app.openMenuSoon()
@@ -38,6 +40,19 @@ final class ProtoHooks {
         default:
             break
         }
+    }
+
+    /// A plain grey desktop behind the prototype's windows, so screenshots show nothing of the real screen.
+    private static var backdrop: NSWindow?
+    private static func showBackdrop() {
+        let frame = NSScreen.main?.frame ?? .zero
+        let window = NSWindow(contentRect: frame, styleMask: .borderless, backing: .buffered, defer: false)
+        window.backgroundColor = NSColor(calibratedRed: 0.22, green: 0.25, blue: 0.30, alpha: 1)
+        window.level = .normal
+        window.ignoresMouseEvents = true
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.orderFrontRegardless()
+        backdrop = window
     }
 
     func after(_ seconds: Double, _ block: @escaping @MainActor () -> Void) {

@@ -34,6 +34,14 @@ final class MenuBPanel: NSObject, NSSearchFieldDelegate {
         background.wantsLayer = true
         background.layer?.cornerRadius = 10
         background.layer?.masksToBounds = true
+        // The panel's .menu material renders lighter than a real menu's; darken it towards the NSMenu look.
+        let tint = NSView()
+        tint.wantsLayer = true
+        tint.layer?.backgroundColor = NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+                ? NSColor.black.withAlphaComponent(0.45) : NSColor.white.withAlphaComponent(0.3)
+        }.cgColor
+        background.addFillingSubview(tint)
         stack.translatesAutoresizingMaskIntoConstraints = false
         background.addSubview(stack)
         NSLayoutConstraint.activate([
@@ -69,6 +77,7 @@ final class MenuBPanel: NSObject, NSSearchFieldDelegate {
         rebuild()
         panel.makeKeyAndOrderFront(nil)
         panel.makeFirstResponder(field)
+        field.currentEditor()?.selectedRange = NSRange(location: query.count, length: 0)
         state.note("B: open; key=\(panel.isKeyWindow) firstResponder=field; menu bar visible=\(NSMenu.menuBarVisible())")
     }
 

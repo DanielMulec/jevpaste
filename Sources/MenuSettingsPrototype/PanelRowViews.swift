@@ -93,6 +93,19 @@ final class PanelRow: NSView {
     override func mouseUp(with event: NSEvent) { onClick?() }
 }
 
+extension NSView {
+    func addFillingSubview(_ subview: NSView) {
+        subview.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(subview)
+        NSLayoutConstraint.activate([
+            subview.leadingAnchor.constraint(equalTo: leadingAnchor),
+            subview.trailingAnchor.constraint(equalTo: trailingAnchor),
+            subview.topAnchor.constraint(equalTo: topAnchor),
+            subview.bottomAnchor.constraint(equalTo: bottomAnchor),
+        ])
+    }
+}
+
 /// A menu separator line.
 final class MenuSeparator: NSView {
     init() {
