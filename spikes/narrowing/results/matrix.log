@@ -1,0 +1,190 @@
+A01_vorname              r0  HIT      calls=2   1297 ms  e038(113)0.85 > keep(10)0.99 -> 'Mira'
+  503, waiting 2 s
+  503, waiting 2 s
+A02_nachname             r0  HIT      calls=2   1826 ms  e039(113)0.90 > keep(28)1.00 -> 'Holzner'
+  503, waiting 2 s
+  429, waiting 27 s
+  429, waiting 60 s
+A03_strasse              r0  HIT      calls=3   1629 ms  e013(113)0.65 > e000(15)0.56 > keep(74)0.98 -> 'Prankergasse'
+A04_hausnummer           r0  HIT      calls=2   1138 ms  e041(113)0.86 > keep(2)1.00 -> '77'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 8 s
+A05_adresszusatz         r0  HIT      calls=2   2198 ms  e019(113)0.84 > keep(6)0.92 -> 'Top 11'
+  429, waiting 38 s
+A06_plz                  r0  HIT      calls=2   1223 ms  e044(113)0.91 > keep(9)1.00 -> '8020'
+  429, waiting 58 s
+A07_ort                  r0  HIT      calls=2   1298 ms  e045(113)0.95 > keep(10)1.00 -> 'Graz'
+A08_land                 r0  HIT      calls=2   1134 ms  e028(113)0.92 > keep(53)0.98 -> 'Österreich'
+A09_email                r0  HIT      calls=2   1295 ms  e031(113)0.93 > keep(32)1.00 -> 'mira.holzner@example.org'
+  503, waiting 2 s
+  503, waiting 4 s
+  429, waiting 47 s
+A10_website              r0  HIT      calls=2   1082 ms  e033(113)0.92 > keep(53)0.98 -> 'https://www.miraholzner.example'
+  429, waiting 58 s
+A11_telefon              r0  HIT      calls=2   1626 ms  e034(113)0.97 > keep(61)0.99 -> '06608405534'
+A12_strasse_hnr          r0  MISS     calls=2   1493 ms  e012(113)0.84 > keep(11)0.64 -> 'Prankergasse 77\nTop 11'
+A13_passwort_NEG         r0  HIT      calls=1    578 ms  nothing_fits(113)0.84 -> 'nothing'
+A14_fax_NEG              r0  HIT      calls=1    652 ms  nothing_fits(113)0.61 -> 'nothing'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 2 s
+  429, waiting 46 s
+S01_first_name           r0  HIT      calls=2   1191 ms  e026(203)0.54 > keep(15)0.99 -> 'Jonas'
+  429, waiting 58 s
+S02_last_name            r0  HIT      calls=2   1447 ms  e030(203)0.86 > keep(14)0.99 -> 'Prell'
+S03_job_title            r0  HIT      calls=2   1779 ms  e034(203)0.77 > keep(12)1.00 -> 'Product Lead'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 8 s
+  429, waiting 41 s
+S04_phone                r0  HIT      calls=3   1915 ms  e042(203)0.47 > e004(25)0.85 > keep(16)1.00 -> '+43 1 2345678'
+  503, waiting 2 s
+  429, waiting 55 s
+S05_mobile               r0  HIT      calls=2   1369 ms  e091(203)0.70 > keep(16)1.00 -> '+43 660 1112233'
+S06_email                r0  HIT      calls=2   1388 ms  e103(203)0.95 > keep(33)1.00 -> 'jonas.prell@example.com'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 8 s
+  429, waiting 41 s
+S07_website              r0  HIT      calls=2   1250 ms  e172(203)0.81 > keep(22)1.00 -> 'www.prell.example'
+  503, waiting 2 s
+  429, waiting 56 s
+S08_iban                 r0  HIT      calls=2   1087 ms  e187(203)0.68 > keep(21)1.00 -> 'AT61 1904 3002 3457 3201'
+S09_fax_NEG              r0  HIT      calls=1    440 ms  nothing_fits(203)0.81 -> 'nothing'
+R01_full_name            r0  HIT      calls=2   1179 ms  e007(48)0.96 > keep(14)1.00 -> 'Anna Reisinger'
+  503, waiting 2 s
+  503, waiting 4 s
+  429, waiting 48 s
+R02_birthdate            r0  HIT      calls=3   2299 ms  e015(48)0.58 > e007(27)0.94 > keep(10)1.00 -> '14 March 1991'
+  429, waiting 57 s
+R03_birthplace           r0  HIT      calls=3   2508 ms  e015(48)0.62 > e019(27)0.77 > keep(10)1.00 -> 'Linz'
+  429, waiting 56 s
+R04_nationality          r0  HIT      calls=3   2245 ms  e022(48)0.92 > e004(23)0.90 > keep(36)0.97 -> 'Austrian'
+  429, waiting 58 s
+R05_about                r0  HIT      calls=2   1578 ms  e026(48)0.70 > keep(9)0.94 -> 'Data engineer with eight years of experience building batch '
+R06_country              r0  MISS     calls=1    758 ms  nothing_fits(48)0.34 -> 'nothing'
+R07_linkedin_NEG         r0  HIT      calls=1    435 ms  nothing_fits(48)0.57 -> 'nothing'
+  503, waiting 2 s
+  429, waiting 53 s
+R08_summary              r0  HIT      calls=2   1455 ms  e026(48)0.71 > keep(9)0.97 -> 'Data engineer with eight years of experience building batch '
+  429, waiting 58 s
+R09_biography            r0  HIT      calls=2   1493 ms  e026(48)0.49 > keep(9)0.77 -> 'Data engineer with eight years of experience building batch '
+R10_description          r0  HIT      calls=2   2340 ms  e026(48)0.48 > keep(9)0.98 -> 'Data engineer with eight years of experience building batch '
+  503, waiting 2 s
+  429, waiting 53 s
+O01_email                r0  HIT      calls=2    989 ms  e039(160)0.97 > keep(32)1.00 -> 'wren.castellan@example.net'
+  429, waiting 58 s
+O02_order_number         r0  HIT      calls=2   1969 ms  e030(160)0.80 > keep(9)1.00 -> '4711'
+O03_recipient            r0  HIT      calls=2   1306 ms  e105(160)0.91 > keep(10)0.99 -> 'Lise Adler'
+O04_street               r0  HIT      calls=2   1167 ms  e125(160)0.69 > keep(13)1.00 -> 'Hauptstr. 5'
+  503, waiting 2 s
+  429, waiting 53 s
+O05_postal_code          r0  HIT      calls=2   1809 ms  e139(160)0.78 > keep(9)1.00 -> '4020'
+  503, waiting 2 s
+  503, waiting 4 s
+  429, waiting 51 s
+O06_city                 r0  HIT      calls=2   1314 ms  e140(160)0.91 > keep(10)1.00 -> 'Linz'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 8 s
+O07_amount               r0  HIT      calls=3   1725 ms  e007(160)0.63 > e008(20)0.68 > keep(9)0.98 -> '129,90'
+  429, waiting 41 s
+O08_tracking             r0  HIT      calls=2   1181 ms  e158(160)0.67 > keep(198)0.99 -> '00340434161234567890'
+  503, waiting 2 s
+  503, waiting 4 s
+  429, waiting 51 s
+O09_coupon_NEG           r0  HIT      calls=1    597 ms  nothing_fits(160)0.74 -> 'nothing'
+B01_handle               r0  HIT      calls=3   1998 ms  e005(13)0.34 > e121(170)0.40 > keep(10)0.96 -> '@mira_h'
+  503, waiting 2 s
+  503, waiting 4 s
+  429, waiting 49 s
+B02_city                 r0  MISS     calls=2   1184 ms  e002(13)0.47 > keep(189)0.26 -> "Hi, I'm Lena Vogt, a ceramicist working out of a small studi"
+B03_bio                  r0  HIT      calls=1    541 ms  keep(13)0.78 -> "Hi, I'm Lena Vogt, a ceramicist working out of a small studi"
+  503, waiting 2 s
+  503, waiting 4 s
+  429, waiting 50 s
+B04_birth_year           r0  HIT      calls=3   1801 ms  e007(13)0.54 > e055(212)0.35 > keep(9)1.00 -> '1994'
+B05_phone_NEG            r0  HIT      calls=1    778 ms  nothing_fits(13)0.50 -> 'nothing'
+  503, waiting 2 s
+  429, waiting 54 s
+B06_biography            r0  HIT      calls=1    798 ms  keep(13)0.46 -> "Hi, I'm Lena Vogt, a ceramicist working out of a small studi"
+B07_about_me             r0  HIT      calls=1    517 ms  keep(13)0.73 -> "Hi, I'm Lena Vogt, a ceramicist working out of a small studi"
+  503, waiting 2 s
+  429, waiting 55 s
+B08_short_bio            r0  HIT      calls=2   1047 ms  e001(13)0.28 > keep(6)0.73 -> "Hi, I'm Lena Vogt, a ceramicist working out of a small studi"
+T01_email_two_lines      r0  HIT      calls=1    446 ms  ask_user(82)0.25 -> 'ask'
+C01_cover_letter         r0  HIT      calls=1    832 ms  keep(49)0.82 -> 'Dear Ms Hofer,\n\nI am writing to apply for the Junior Landsca'
+  503, waiting 2 s
+C02_motivation           r0  MISS     calls=1   1228 ms  keep(49)0.33 -> 'Dear Ms Hofer,\n\nI am writing to apply for the Junior Landsca'
+  503, waiting 2 s
+  429, waiting 51 s
+C03_availability         r0  MISS     calls=1    678 ms  keep(49)0.63 -> 'Dear Ms Hofer,\n\nI am writing to apply for the Junior Landsca'
+C04_name                 r0  MISS     calls=1    510 ms  keep(49)0.67 -> 'Dear Ms Hofer,\n\nI am writing to apply for the Junior Landsca'
+  429, waiting 58 s
+C05_notes_freetext       r0  HIT      calls=1    806 ms  keep(49)0.55 -> 'Dear Ms Hofer,\n\nI am writing to apply for the Junior Landsca'
+W01_chrome_textarea      r0  MISS     calls=2   1755 ms  e019(24)0.48 > keep(1374/6)0.91 -> 'Product designer with nine years of experience in mobile ban'
+W02_terminal_prompt      r0  HIT      calls=1    421 ms  keep(24)0.51 -> 'Marlene Oberholzer\nmarlene.oberholzer@example.org\n+41 79 555'
+  503, waiting 2 s
+  503, waiting 4 s
+  429, waiting 48 s
+W03_chatgpt_composer     r0  MISS     calls=2   1774 ms  e019(24)0.68 > keep(1374/6)0.92 -> 'Product designer with nine years of experience in mobile ban'
+W04_whatsapp_composer    r0  HIT      calls=1    667 ms  keep(24)0.68 -> 'Marlene Oberholzer\nmarlene.oberholzer@example.org\n+41 79 555'
+  503, waiting 2 s
+  503, waiting 4 s
+  429, waiting 50 s
+K01_three_emails         r0  MISS     calls=2   1545 ms  e058(234)0.79 > keep(22)0.81 -> 'marcus@anything.com'
+N01_address_line_ort     r0  HIT      calls=2   1112 ms  e033(41)0.86 > keep(10)0.98 -> 'Graz'
+  429, waiting 57 s
+N02_url_chat             r0  MISS     calls=1    574 ms  nothing_fits(233)0.56 -> 'nothing'
+  503, waiting 2 s
+  503, waiting 2 s
+  429, waiting 50 s
+N03_list_300_lines       r0  HIT      calls=5   4006 ms  e006(303/2)0.77 > e018(322/2)0.54 > keep(20)0.85 -> 'WINTER-4471-KQ'
+N04_too_big              r0  HIT      calls=1   1853 ms  None(3001/12) -> 'error'
+billed so far: 142
+A01_vorname              r1  HIT      calls=2   1086 ms  e038(113)0.88 > keep(10)1.00 -> 'Mira'
+  503, waiting 2 s
+  503, waiting 4 s
+  429, waiting 14 s
+A02_nachname             r1  HIT      calls=2    961 ms  e039(113)0.90 > keep(28)0.99 -> 'Holzner'
+  503, waiting 2 s
+  429, waiting 57 s
+  429, waiting 60 s
+A03_strasse              r1  HIT      calls=3   1587 ms  e013(113)0.70 > e000(15)0.56 > keep(74)0.97 -> 'Prankergasse'
+A04_hausnummer           r1  HIT      calls=2   1010 ms  e041(113)0.84 > keep(2)1.00 -> '77'
+  503, waiting 2 s
+A05_adresszusatz         r1  HIT      calls=2   1410 ms  e019(113)0.83 > keep(6)0.93 -> 'Top 11'
+  503, waiting 2 s
+  429, waiting 48 s
+A06_plz                  r1  HIT      calls=2   1253 ms  e044(113)0.84 > keep(9)1.00 -> '8020'
+  429, waiting 60 s
+  429, waiting 60 s
+A07_ort                  r1  HIT      calls=2   1063 ms  e045(113)0.95 > keep(10)1.00 -> 'Graz'
+A08_land                 r1  HIT      calls=2   1186 ms  e028(113)0.88 > keep(53)0.98 -> 'Österreich'
+A09_email                r1  HIT      calls=2    931 ms  e031(113)0.98 > keep(32)1.00 -> 'mira.holzner@example.org'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 2 s
+  429, waiting 35 s
+A10_website              r1  HIT      calls=2   1356 ms  e033(113)0.91 > keep(53)0.96 -> 'https://www.miraholzner.example'
+  429, waiting 60 s
+  429, waiting 60 s
+A11_telefon              r1  HIT      calls=2   1496 ms  e034(113)0.97 > keep(61)0.99 -> '06608405534'
+A12_strasse_hnr          r1  MISS     calls=2   1588 ms  e012(113)0.89 > keep(11)0.71 -> 'Prankergasse 77\nTop 11'
+A13_passwort_NEG         r1  HIT      calls=1    752 ms  nothing_fits(113)0.88 -> 'nothing'
+A14_fax_NEG              r1  HIT      calls=1    754 ms  nothing_fits(113)0.62 -> 'nothing'
+  503, waiting 2 s
+  429, waiting 50 s
+  429, waiting 60 s
+  503, waiting 4 s
+S01_first_name           r1  HIT      calls=2   1209 ms  e026(203)0.51 > keep(15)1.00 -> 'Jonas'
+S02_last_name            r1  HIT      calls=2   1353 ms  e030(203)0.62 > keep(14)0.99 -> 'Prell'
+S03_job_title            r1  HIT      calls=2   1067 ms  e034(203)0.80 > keep(12)1.00 -> 'Product Lead'
+  503, waiting 2 s
+  429, waiting 47 s
+S04_phone                r1  HIT      calls=3   2237 ms  e042(203)0.45 > e004(25)0.83 > keep(16)1.00 -> '+43 1 2345678'
+  429, waiting 58 s
+S05_mobile               r1  HIT      calls=2   2192 ms  e091(203)0.80 > keep(16)1.00 -> '+43 660 1112233'
+S06_email                r1  HIT      calls=2    931 ms  e103(203)0.94 > keep(33)1.00 -> 'jonas.prell@example.com'
+S07_website              r1  HIT      calls=2   1487 ms  e172(203)0.83 > keep(22)1.00 -> 'www.prell.example'
