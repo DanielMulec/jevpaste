@@ -7,8 +7,8 @@
 # `--accept-signal-trigger`, exactly one): pbcopy the fixture, gate on `lsappinfo front`, SIGUSR1 to that pid only,
 # clipboard digest before/after (never contents). After the run: test instance quit by pid, clipboard restored from the
 # vault BEFORE the normal relaunch (`open ~/Applications/JevPaste.app`, no trigger flag).
-# Fixtures (synthetic, digests only): b1 = one line, a URL carrying the JEVPASTE-NARROW-B1 marker, trailing newline
-#   (55 bytes, sha256 a344f878301311d8…); d1 = JEVPASTE-NARROW-D1 on its own line + 3000 synthetic log lines, the
+# Fixtures (synthetic, digests only): b1 = one line, a URL carrying the run's marker, trailing newline
+#   (55 bytes, sha256 a344f878301311d8…); d1 = the run's marker on its own line + 3000 synthetic log lines, the
 #   copy of StepPlannerTests.aCopyTooBigForOneCallIsStillPlannedAndSent (169409 bytes, sha256 4e46fe23aacbd145…).
 # Helper output:
 vault saved: items=1 sha256=7ea6389913d6…
