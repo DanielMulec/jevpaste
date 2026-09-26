@@ -36,7 +36,7 @@ struct NarrowingReplayTests {
 
     @Test func theReplayCoversEveryShapeOfStep() {
         let cells = Set(RecordedPaste.all.map(\.cell))
-        #expect(cells.count == 12)
+        #expect(cells.count == 14)
         #expect(cells.isSuperset(of: ["K01_three_emails", "N03_list_300_lines", "H06_company_description"]))
     }
 }

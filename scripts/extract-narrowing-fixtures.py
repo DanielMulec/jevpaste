@@ -27,7 +27,7 @@ import sys
 REPLAY_CELLS = [
     "A04_hausnummer", "S04_phone", "A13_passwort_NEG", "T01_email_two_lines", "R05_about", "C02_motivation",
     "B06_biography", "K01_three_emails", "N01_address_line_ort", "N02_url_chat", "N03_list_300_lines",
-    "H06_company_description",
+    "H06_company_description", "H11_two_emails_catering", "W02_terminal_prompt",
 ]
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CELLS_OUT = os.path.join(ROOT, "Tests/SmartPasteCoreTests/Fixtures/narrowing-cells.jsonl")
