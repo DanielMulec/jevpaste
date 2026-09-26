@@ -61,6 +61,18 @@ struct StepPlannerTests {
         #expect(ordered.map(String.init) == ["Mira", "a", "Grüße", "Graz"])
     }
 
+    /// Keeping the whole copy pastes it without its outer line breaks; a piece of exactly that text would be the same
+    /// paste offered twice, the one with a text taking the unchanged option's weight (live run, 2026-09-26).
+    @Test(arguments: ["\nMira Holzner\n8020 Graz\n", "Mira Holzner\r\n8020 Graz\r\n", "Graz\n"])
+    func noPieceAtStepOneIsWhatKeepingTheWholeCopyPastes(copy: String) {
+        let planner = StepPlanner(copy: copy, context: TargetContext(fieldLabel: "Ort"), policy: .r2b)
+        let kept = OuterLineBreaks.stripped(from: copy)
+
+        let offered = planner.stepRequest(on: copy[...]).questions.flatMap(\.offeredPieces)
+
+        #expect(!offered.contains { $0.utf8.elementsEqual(kept.utf8) })
+    }
+
     @Test func aRequestThatFitsUsesExcerptIDs() throws {
         let (planner, copy) = try planner(for: "R05_about")
 

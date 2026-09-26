@@ -7,10 +7,12 @@ import Testing
 /// (exhaustive over its sample texts) and `r2.py reach` (every expected excerpt of every cell that fits one request),
 /// plus every line, token and run of up to three tokens of every spike copy.
 struct NarrowingReachabilityTests {
-    /// The spike's `self_check` samples, plus CRLF, a decomposed letter and an emoji.
+    /// The spike's `self_check` samples, plus CRLF, a decomposed letter and an emoji, and copies with outer line
+    /// breaks, whose text without them is reached by keeping the whole copy, never offered as a piece.
     static let samples = [
         "Mira Holzner\nPrankergasse77\n\n8020 Graz.", "a@b.c d\ne-f g\nx", "Innsbruck. Hi",
-        "ab-cd ef\n\ngh ij.k\nl m", "Zu\u{308}rich 8020\r\nTop 11 👍🏽",
+        "ab-cd ef\n\ngh ij.k\nl m", "Zu\u{308}rich 8020\r\nTop 11 👍🏽", "\nMira Holzner\n8020 Graz\n",
+        "Innsbruck. Hi\r\n",
     ]
 
     @Test(arguments: samples)
@@ -67,6 +69,7 @@ private final class Reachability {
     }
 
     func reaches(_ target: Substring) -> Bool {
+        if target.utf8.elementsEqual(OuterLineBreaks.stripped(from: copy).utf8) { return true }  // keep at step 1
         var visited: Set<Range<String.Index>> = []
         return search(from: copy[...], to: target, visited: &visited)
     }
@@ -97,9 +100,11 @@ private final class Reachability {
             questionTokens: 1150 + (isFirstStep ? 0 : sizeModel.estimatedTokens(of: piece)),
             piecesPerChoice: policy.piecesPerChoice
         )
-        let children = PieceChildren(of: piece, policy: policy, budget: budget).all.sorted {
-            $0.utf8.count < $1.utf8.count
-        }
+        let pastedWhenKept = isFirstStep ? Substring(OuterLineBreaks.stripped(from: copy)) : nil
+        let children = PieceChildren(of: piece, pastedWhenKept: pastedWhenKept, policy: policy, budget: budget).all
+            .sorted {
+                $0.utf8.count < $1.utf8.count
+            }
         childrenByRange[range] = children
         return children
     }

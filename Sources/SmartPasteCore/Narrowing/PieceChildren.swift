@@ -1,5 +1,7 @@
 /// The pieces offered next to a piece unchanged: its coarse children and its fine runs (`children2` in the spike's
-/// `r2.py`, over `cuts.py`), each deduplicated by bytes, the piece itself never among them.
+/// `r2.py`, over `cuts.py`), each deduplicated by bytes. Neither the piece itself nor what keeping it pastes is ever
+/// among them: at step 1 keeping the whole copy pastes it without its outer line breaks, and a piece of exactly that
+/// text would offer the same paste twice (the Gate A2 lesson: a near-duplicate takes the unchanged option's weight).
 ///
 /// Coarse children alone reach every substring that starts and ends on a non-whitespace character (see
 /// `NarrowingReachabilityTests`); fine runs only group short runs early, and are left out when they would not fit.
@@ -9,11 +11,15 @@ struct PieceChildren {
 
     var all: [Substring] { coarse + fine }
 
-    init(of piece: Substring, policy: NarrowingPolicy, budget: StepBudget) {
-        let coarse = Self.coarse(of: piece, budget: budget).deduplicated(excluding: piece)
+    /// `pastedWhenKept`: what keeping `piece` unchanged pastes, when that is not `piece` itself.
+    init(of piece: Substring, pastedWhenKept: Substring? = nil, policy: NarrowingPolicy, budget: StepBudget) {
+        let kept = pastedWhenKept.map { [$0] } ?? []
+        let coarse =
+            Self.coarse(of: piece, budget: budget).deduplicated(excluding: piece)
+            .newTexts(besides: kept, atMost: .max) ?? []
         let fineLimit = policy.maximumQuestionsPerStep * policy.piecesPerChoice - coarse.count
         let fine = Self.fineRuns(of: piece, tokenLimit: policy.fineRunTokenLimit)
-            .newTexts(besides: [piece] + coarse, atMost: fineLimit)
+            .newTexts(besides: [piece] + kept + coarse, atMost: fineLimit)
         self.coarse = coarse
         self.fine = fine.map { $0.isEmpty || !budget.fits(coarse + $0) ? [] : $0 } ?? []
     }

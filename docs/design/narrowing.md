@@ -13,6 +13,8 @@ Children of P, deduplicated by UTF-8 bytes (never `String` equality), P excluded
 coarse = line runs + 4 edge cuts (≥ 2 lines) · token runs + character edge cuts (1 line, ≥ 2 tokens) · every
 substring (1 token) · none (1 character); blocks of b units (smallest b that fits) when too big. Fine runs = every run
 of 1–8 tokens inside one line, dropped when > 12 questions or over the size budget. No meaning rule exists anywhere.
+Also excluded: what keeping P pastes — at step 1 the copy without outer line breaks (live run 2026-09-26, Daniel: yes;
+the spike's copies had no trailing line break, so it never offered the keep twice; no-op on every recorded cell).
 
 ## Grouping, option form, size model (`Narrowing/StepPlanner.swift`, `StepBudget.swift`, `RequestAssembly.swift`)
 Core plans every request, because every decision that needs Jev's limits is Core's (blocks, fine-run drop, choice
@@ -34,11 +36,10 @@ p ≥ 0.01, fan-out width 3, `sizeModel`. No number or text elsewhere.
 
 ## Step loop (`Narrowing/Narrowing.swift`, a pure value; coordinator `PasteAttemptCoordinator+Narrowing.swift`)
 `Narrowing.start() / receive(answers) -> NarrowingAction` = `.send(NarrowingRequest)` · `.pasteResult(String)` ·
-`.nothingFits` · `.askUser([Candidate])` · `.invalidPick` · `.nothingToPaste`. The coordinator owns phases, clocks, delivery.
+`.nothingFits` · `.askUser([Candidate])` · `.invalidPick` · `.nothingToPaste`; the coordinator owns phases, clocks.
 - Step 1 always asks (even a copy with no pieces: `everything` / `nothing_fits` / `ask_user`); a later piece with no
   children (one character) is final without a call. A copy with no visible character → plain No Suitable Match, no
-  call (as today). Both are deliberate deviations from the spike code, which skipped the call for a piece-less copy
-  at any step (Gate A: a local no-call shortcut at step 1 would be a local rule deciding).
+  call (as today). Both deviate from the spike code on purpose (Gate A: a no-call shortcut at step 1 would decide).
 - One choice → its argmax decides. Several → if every choice picks the same keep/nothing/ask, that is the answer;
   else one follow-up choice (same wording) over keep + every piece with p ≥ 0.01 in any choice (document order) +
   nothing + ask, carrying the next-step question of the top 3 carried pieces whose children fit one choice; a
@@ -85,6 +86,5 @@ piece final, no call for whitespace), `NoSuitableMatchOfferTests` (offer at step
 4 `StepPlannerTests` (layout, forms, size model, N03: fallback re-split 151 + 151, not 252 + 50), `NarrowingStepTests`
 (agreement, follow-up carry, speculation), **`NarrowingReplayTests`**: 14 recorded `r2b` pastes (raw.jsonl, place
 question stripped) through Core and the Gateway encoder — every request byte-identical, every outcome identical.
-5–6 `OutcomeMessageTests`, `NarrowingLogLineTests`. Kept: byte-exact validation, 5 s clock, 429 retry, Enter offer,
-Wake Wait, chooser, delivery, clipboard, screening (adapted to the new fake, which answers by option id).
-Live-run plan: brief step 4 (a)–(g); `JEVPASTE-…` payloads; log `docs/acceptance/run-<date>-narrowing.log`.
+5–6 `OutcomeMessageTests`, `NarrowingLogLineTests`. Kept (adapted to the fake answering by option id): byte-exact
+validation, 5 s clock, 429, Enter offer, Wake Wait, chooser, delivery, clipboard, screening. Live: brief step 4.

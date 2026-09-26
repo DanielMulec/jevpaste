@@ -19,19 +19,26 @@ struct StepPlanner {
     /// The step's children laid out into choices for `form`; `[[]]` when the piece has nothing smaller to offer.
     func choices(on piece: Substring, form: OptionForm) -> [[Substring]] {
         let budget = budget(on: piece)
-        return choices(of: PieceChildren(of: piece, policy: policy, budget: budget), on: piece, form: form, budget)
+        return choices(of: children(of: piece, budget: budget), on: piece, form: form, budget)
     }
 
     /// The request asking one step on `piece`: its choices named `narrow_0`, `narrow_1`, … in the excerpt-id form,
     /// or in the full-text form when the ids would not fit. Both forms offer the same children.
     func stepRequest(on piece: Substring) -> RequestAssembly {
         let budget = budget(on: piece)
-        let children = PieceChildren(of: piece, policy: policy, budget: budget)
+        let children = children(of: piece, budget: budget)
         let byExcerptIDs = assembly(
             on: piece, form: .excerptIDs, choices(of: children, on: piece, form: .excerptIDs, budget))
         return byExcerptIDs.fitsJev
             ? byExcerptIDs
             : assembly(on: piece, form: .fullText, choices(of: children, on: piece, form: .fullText, budget))
+    }
+
+    /// The piece's children; at step 1 without the copy's text as keeping it pastes it (outer line breaks stripped).
+    private func children(of piece: Substring, budget: StepBudget) -> PieceChildren {
+        let isFirstStep = piece.utf8.elementsEqual(copy.utf8)
+        let pastedWhenKept = isFirstStep ? Substring(OuterLineBreaks.stripped(from: copy)) : nil
+        return PieceChildren(of: piece, pastedWhenKept: pastedWhenKept, policy: policy, budget: budget)
     }
 
     private func choices(
