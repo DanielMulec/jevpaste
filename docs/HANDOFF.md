@@ -23,8 +23,8 @@ merged), its worktree removed. **Repo is PUBLIC since 2026-09-26 (Daniel), no li
   (was "Extract typed tokens…") — Daniel wants Smart Paste into **any** field (Vorname, Straße, PLZ, Ort, Land,
   Birthdate, About, IBAN…); a four-type scanner was rejected as too small. Two engines to be compared by a spike:
   **J** Jev two-stage (stage 1 choice + "contains more?" gate; stage 2 choice over byte-exact spans of that line)
-  vs **L** LLM extractor (DeepSeek V4.1 Flash, GPT-6-Luna; result verified byte-exact by Core). Preference
-  J → L → J+L fallback, by numbers. Single-line Direct Paste, chooser rule, cap unchanged. Rename deferred.
+  vs **L** LLM extractor (DeepSeek V4.1 Flash, GPT-6-Luna; result verified byte-exact by Core). Daniel strongly
+  prefers **J** (one provider, no rename); the spike runs J in full first, L only on the cells J misses. Single-line Direct Paste, chooser rule, cap unchanged. Rename deferred.
 - [Establish how official ChatGPT sign-in works for a third-party macOS app](https://github.com/DanielMulec/jevpaste/issues/48#issuecomment-5844320546)
   — official sign-in is identity-only; the real route is Codex login via `codex app-server` (subprocess from
   Swift, full agent turn per call); permission = OpenAI-staff posts (own account in OSS client fine; closed
