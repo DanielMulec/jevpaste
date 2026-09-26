@@ -7,11 +7,16 @@ public struct NarrowingTrace: Equatable, Sendable {
         public var followUpSpeculativeQuestions: Int?
         /// The step was answered by a speculative question of the previous follow-up, without a call.
         public let isSpeculative: Bool
+        /// Jev's probability of the option the step's deciding choice picked; `nil` until it was answered.
+        public var chosenProbability: Double?
 
-        public init(questions: Int, followUpSpeculativeQuestions: Int?, isSpeculative: Bool) {
+        public init(
+            questions: Int, followUpSpeculativeQuestions: Int?, isSpeculative: Bool, chosenProbability: Double? = nil
+        ) {
             self.questions = questions
             self.followUpSpeculativeQuestions = followUpSpeculativeQuestions
             self.isSpeculative = isSpeculative
+            self.chosenProbability = chosenProbability
         }
     }
 
@@ -31,6 +36,13 @@ public struct NarrowingTrace: Equatable, Sendable {
         self.fullTextRequests = fullTextRequests
         self.decidingProbability = decidingProbability
         self.chooserFill = chooserFill
+    }
+
+    /// The current step's deciding choice picked an option with probability `probability`.
+    mutating func markChosen(probability: Double?) {
+        decidingProbability = probability
+        guard !steps.isEmpty else { return }
+        steps[steps.count - 1].chosenProbability = probability
     }
 
     mutating func markFollowUp(speculativeQuestions: Int) {

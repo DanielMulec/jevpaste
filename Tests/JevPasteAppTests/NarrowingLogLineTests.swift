@@ -15,6 +15,11 @@ struct NarrowingLogLineTests {
     ]
     /// The 300-line list of the spike (N03): two choices and a follow-up with no speculation, then two choices and a
     /// follow-up with two speculative next steps, then a step decided by one of them.
+    /// Two steps, each with the probability of the option Jev chose there.
+    private nonisolated static let twoStepsWithTheirPicks = [
+        Step(questions: 1, followUpSpeculativeQuestions: nil, isSpeculative: false, chosenProbability: 0.64),
+        Step(questions: 1, followUpSpeculativeQuestions: nil, isSpeculative: false, chosenProbability: 0.77),
+    ]
     private nonisolated static let longList = [
         Step(questions: 2, followUpSpeculativeQuestions: 0, isSpeculative: false),
         Step(questions: 2, followUpSpeculativeQuestions: 2, isSpeculative: false),
@@ -52,6 +57,12 @@ struct NarrowingLogLineTests {
                 calls: 3
             ),
             "outcome cancelled via=narrowing steps=1 calls=3 p=0.60 questions=1 fill=2 fillEnd=clock"
+        ),
+        (
+            .inserted,
+            SmartPastePath(
+                narrowing: NarrowingTrace(steps: twoStepsWithTheirPicks, decidingProbability: 0.77), calls: 2),
+            "outcome inserted via=narrowing steps=2 calls=2 p=0.77 questions=1,1 stepP=0.64,0.77"
         ),
         (
             .failed(.timedOut), SmartPastePath(narrowing: NarrowingTrace(steps: oneStep), calls: 2),

@@ -160,7 +160,9 @@ struct NoSuitableMatchOfferTests {
         harness.presenter.dismissOffer()
 
         let trace = NarrowingTrace(
-            steps: [.init(questions: 1, followUpSpeculativeQuestions: nil, isSpeculative: false)],
+            steps: [
+                .init(questions: 1, followUpSpeculativeQuestions: nil, isSpeculative: false, chosenProbability: 0.88)
+            ],
             decidingProbability: 0.88
         )
         #expect(

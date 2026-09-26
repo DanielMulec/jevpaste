@@ -46,6 +46,7 @@ struct PasteAttemptNarrowingTests {
         #expect(path?.calls == 2)
         #expect(path?.narrowing.steps.map(\.questions) == [1, 1])
         #expect(path?.narrowing.decidingProbability == 0.93)
+        #expect(path?.narrowing.steps.map(\.chosenProbability) == [0.9, 0.93])
     }
 
     @Test func aPickedSingleCharacterIsPastedWithoutAnotherCall() {

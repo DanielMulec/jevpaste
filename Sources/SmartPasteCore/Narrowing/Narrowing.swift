@@ -124,7 +124,7 @@ struct Narrowing {
     /// The deciding choice's pick, checked byte for byte, turned into the next action.
     private mutating func decide(_ choice: AnsweredChoice) -> NarrowingAction {
         guard let chosen = choice.chosen else { return .invalidPick }
-        trace.decidingProbability = choice.chosenProbability
+        trace.markChosen(probability: choice.chosenProbability)
         switch chosen {
         case .unchanged:
             return .pasteResult(pasteResult(keeping: choice.planned.currentPiece))

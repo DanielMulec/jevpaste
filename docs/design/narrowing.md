@@ -69,7 +69,7 @@ with `model`, maps 200/429/400-`max_tokens_exceeded` (top-level `error.message`/
 `.tooLarge` → `PasteAttemptFailure.tooLongForSmartPaste`: "Too long for Smart Paste — ⌘V pastes it whole", log key
 `failed.tooLongForSmartPaste`. Log line: `via=narrowing steps=<n> calls=<m> p=<deciding p> questions=<per step>`,
 per step `<questions>`, `+f<spec>` after a follow-up, `s` when answered speculatively (N03: `2+f0,2+f2,s`); `calls`
-counts every POST (429 retries too); after an ask ` fill=<n> fillEnd=<keep|nothingFits|clock|failed>`; then
+counts every POST (429 retries too); ` stepP=<chosen p per step>`; after an ask ` fill=<n> fillEnd=<why>`; then
 ` full=<k>` for k full-text requests and ` offer=dismissed|timedOut`. Enter after No Suitable Match:
 `via=directPaste reason=enterAfterNoMatch p=<deciding p>`.
 
