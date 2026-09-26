@@ -30,7 +30,7 @@ import cuts  # noqa: E402  (round-1 cutting + size model, unchanged)
 import heldout  # noqa: E402
 
 RAW_PATH = os.path.join(HERE, "results", "raw.jsonl")
-ROUND2_BUDGET = 700
+ROUND2_BUDGET = 650  # brief: 700; supervisor at GATE A: stop and ask at 650
 EXPLORE_BUDGET = 150
 PACING_SECONDS = 0.7
 TIMEOUT_SECONDS = 60
@@ -610,6 +610,8 @@ def narrow(cell, run, design, tag):
         "chooser": chooser, "calls": len(requests), "latency_ms": round(latency_ms, 1),
         "place": place, "b_outcome": b_outcome, "b_final": b_final, "b_hit": score(cell, b_outcome, b_final),
         "b_calls": b_calls, "b_latency_ms": round(b_lat, 1),
+        "layout": design["layout"], "forms_used": [r.get("form") for r in requests],
+        "speculative_used": sum(1 for s in steps if s.get("speculative")),
         "requests": requests, "steps": steps, "error": error, "timestamp": time.time(),
     }
     log(result)
