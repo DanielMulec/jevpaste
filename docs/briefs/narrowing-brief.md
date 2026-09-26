@@ -110,7 +110,10 @@ text-less keep, near-duplicate children such as `7` under `77` took its mass; ke
 the 300-line list, the too-big copy): option descriptions carry the full excerpt text verbatim with real line breaks
 (`e000`…), no `excerpts` in the state, the wording's option sentence is the full-text one (below), and the later-step
 unchanged option's description is the object `{"option": "`current_piece` as it is, nothing cut away.", "text":
-<current_piece>}`. Both shapes ship; one owner of the decision which one a request uses.
+<current_piece>}`. Both shapes ship; one owner of the decision which one a request uses. **When a request falls
+back to full text, its pieces are re-split into choices by the full-text size budget, not reused from the ids
+split** (round 2 found this bug: the 300-line list reused the count-only split and Jev refused it with
+`max_tokens_exceeded`). Make it a test case.
 
 **Follow-up** — a step with several choices → one follow-up choice (same wording as the step) over *unchanged* +
 every piece with p ≥ 0.01 in any of the choices + nothing fits + ask the user. If every choice picks the **same**
