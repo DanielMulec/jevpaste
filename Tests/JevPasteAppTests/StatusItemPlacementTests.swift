@@ -28,4 +28,20 @@ struct StatusItemPlacementTests {
 
         #expect(origin == NSPoint(x: 792, y: 646))
     }
+
+    @Test func aMenuHangsFromTheStatusItemsLeftEdge() {
+        let statusItem = NSRect(x: 490, y: 700, width: 20, height: 24)
+
+        let origin = StatusItemPlacement.origin(for: Self.size, below: statusItem, within: Self.visible, aligned: .menu)
+
+        #expect(origin == NSPoint(x: 484, y: 646))
+    }
+
+    @Test func aMenuNearTheRightEdgeStaysAMarginInside() {
+        let statusItem = NSRect(x: 900, y: 700, width: 20, height: 24)
+
+        let origin = StatusItemPlacement.origin(for: Self.size, below: statusItem, within: Self.visible, aligned: .menu)
+
+        #expect(origin == NSPoint(x: 792, y: 646))
+    }
 }

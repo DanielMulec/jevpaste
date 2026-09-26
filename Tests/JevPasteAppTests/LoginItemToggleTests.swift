@@ -2,7 +2,7 @@ import Testing
 
 @testable import JevPasteApp
 
-/// "Open at Login" in the status-item menu always reflects the system's login-item status and toggles it.
+/// "Open at Login" in Settings › General always reflects the system's login-item status and toggles it.
 @MainActor
 struct LoginItemToggleTests {
     private struct RegistrationRefused: Error {}
@@ -17,18 +17,13 @@ struct LoginItemToggleTests {
     }
 
     @Test(arguments: [
-        (LoginItemStatus.enabled, LoginItemMenuState(title: "Open at Login", check: .checked)),
-        (.notRegistered, LoginItemMenuState(title: "Open at Login", check: .unchecked)),
-        (.notFound, LoginItemMenuState(title: "Open at Login", check: .unchecked)),
-        (
-            .requiresApproval,
-            LoginItemMenuState(title: "Open at Login — approve in System Settings", check: .awaitingApproval)
-        ),
+        (LoginItemStatus.enabled, LoginItemSwitchState.enabled), (.notRegistered, .disabled), (.notFound, .disabled),
+        (.requiresApproval, .awaitingApproval),
     ])
-    func theMenuItemShowsTheSystemStatus(status: LoginItemStatus, menuState: LoginItemMenuState) {
+    func theSwitchShowsTheSystemStatus(status: LoginItemStatus, switchState: LoginItemSwitchState) {
         service.status = status
 
-        #expect(toggle.menuState == menuState)
+        #expect(toggle.switchState == switchState)
     }
 
     @Test(arguments: [LoginItemStatus.notRegistered, .notFound])
@@ -37,7 +32,7 @@ struct LoginItemToggleTests {
         toggle.toggle()
 
         #expect(service.calls == [.register])
-        #expect(toggle.menuState.check == .checked)
+        #expect(toggle.switchState == .enabled)
         #expect(screen.displayed == nil)
     }
 
@@ -46,7 +41,7 @@ struct LoginItemToggleTests {
         toggle.toggle()
 
         #expect(service.calls == [.unregister])
-        #expect(toggle.menuState.check == .unchecked)
+        #expect(toggle.switchState == .disabled)
     }
 
     @Test func choosingItWhileAwaitingApprovalOpensLoginItemsSettings() {
@@ -61,7 +56,7 @@ struct LoginItemToggleTests {
         toggle.toggle()
 
         #expect(screen.displayed?.text == "Open at Login could not be changed")
-        #expect(toggle.menuState.check == .unchecked)
+        #expect(toggle.switchState == .disabled)
         clock.step(by: .seconds(5))
         #expect(screen.displayed == nil)
     }
@@ -71,7 +66,7 @@ struct LoginItemToggleTests {
         toggle.toggle()
 
         #expect(screen.displayed?.text == "Approve JevPaste in Settings › General › Login Items")
-        #expect(toggle.menuState.check == .awaitingApproval)
+        #expect(toggle.switchState == .awaitingApproval)
     }
 }
 
