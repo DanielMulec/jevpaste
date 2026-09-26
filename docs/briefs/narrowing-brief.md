@@ -74,24 +74,101 @@ Communication protocol:
 8. Run `npm ci` and one plain `swift build` before the first commit (the pre-commit hook cannot fetch deps).
    If the link fails with an undefined-symbol mangling mismatch after adding files, `swift package clean` first.
 
-## The design you port  ⟦PORT from round-2 FINDINGS: "Design (as run)" + "Size model"⟧
-- Cutting (character classes only): ⟦PORT⟧
-- Children of a piece, grouping, flattening, blocks when too big for one request: ⟦PORT⟧
-- Several choice questions in one request, the follow-up choice among their winners, when the follow-up is
-  skipped: ⟦PORT⟧
-- Outcome = argmax of the deciding choice; the chooser list; whole-copy pastes strip outer line breaks: ⟦PORT⟧
-- Size model (token estimate per character class, per option, per question; the two budgets): ⟦PORT⟧
-- Expected calls per paste and the measured latency: ⟦PORT⟧
+## The design you port (design `r2`, frozen at round 2's Gate A on 2026-09-26)
+⟦Supervisor: confirm every line against round-2 `FINDINGS.md` "Design (as run)" before launch; FINDINGS wins.⟧
 
-## Wordings (verbatim — do not edit a character)  ⟦PORT from round-2 FINDINGS: "Wordings (verbatim)"⟧
-- Step-1 instructions: ⟦PORT⟧
-- Later-step instructions and the `current_piece` field: ⟦PORT⟧
-- "everything that was copied" (step 1) / "current piece unchanged" (later steps): ⟦PORT⟧
-- "nothing fits": ⟦PORT⟧
-- "ask the user": ⟦PORT⟧
-- Parallel choices and the follow-up: ⟦PORT⟧
+**Cutting** — character classes only, no meaning rules (round 1 `cuts.py`, round 2 `r2.py: children2`):
+- Line breaks → lines. A *line piece* is a run of consecutive non-blank lines (inner blank lines kept; starts and
+  ends on a non-blank line; outer spaces trimmed).
+- A *token* is a maximal run of letters/digits (Python `str.isalnum` — port as Unicode alphanumerics), or any
+  single other non-space character. A *token piece* is a run of consecutive tokens within one line (exact slice).
+- *Characters*: every substring of a single token.
+- *Edge cuts*: a one-line piece → every cut at a character inside its first/last token; a multi-line piece → four
+  unit cuts (without its first token / first character / last token / last character).
+- **Children of a piece P** (deduplicated by text, P itself excluded) = the *coarse* children ∪ the *fine runs*:
+  - coarse: P of ≥ 2 lines → every line run + the edge cuts (grouped into *blocks* when too big: units grouped into
+    blocks of b, smallest b that fits — every run of blocks + every single unit + edge cuts if they still fit);
+    P of one line with ≥ 2 tokens → every token run + edge cuts (or blocks); one token → every character
+    substring; one character → final, no call.
+  - fine runs: every run of 1..8 consecutive tokens inside one line of P, not already among the coarse.
+  - The fine runs are **grouping only** (every substring stays reachable through the coarse children — port the
+    spike's reachability check as a property test). They are left out when the set would need more than 12 choice
+    questions or would not fit the size budget (in the spike: only the 300-line list and the too-big copy).
 
-Test every wording by exact string equality against the request body; any change is an `ask`.
+**Choices per step** — at most 252 pieces + *unchanged* + *nothing fits* + *ask the user* = 255 options per choice.
+Layout "cont": when the coarse set is ≤ 126 pieces, the coarse pieces are repeated in **every** choice and the fine
+runs are spread over the choices in document order; otherwise all children in document order, cut into runs of
+252. Every choice carries the same wording; questions in one request run in parallel and the state counts once.
+
+**Option form** — *ids*: every piece option has a `null` description; the texts live once in
+`state.excerpts` (`{"x0000": "<text>", …}`), so `state = {source_document, target_context, excerpts}`; the
+unchanged / everything option keeps its text description. **Full-text fallback** when the size model says the state
+would overflow (in the spike: the three-emails résumé, the 300-line list, the too-big copy): option descriptions
+carry the full excerpt text verbatim with real line breaks (`e000`…), no `excerpts` in the state, and the wording's
+option sentence is the full-text one (below). Both shapes ship; one owner of the decision which one a request uses.
+
+**Follow-up** — a step with several choices → one follow-up choice (same wording as the step) over *unchanged* +
+every piece with p ≥ 0.01 in any of the choices + nothing fits + ask the user. If every choice picks the **same**
+non-piece option (unchanged, nothing fits, ask the user), that is the step's answer and no follow-up is sent.
+**Speculative fan-out** (TypeSafe's documented pattern): the follow-up request also carries the next-step question
+for the top 3 carried pieces (only those whose children fit in one choice); if the follow-up picks one of them, its
+next step is already answered and no call is made for it. Log honestly which happened.
+
+**Outcome** — argmax of the deciding choice. Byte-exact check of every pick against the offered pieces at every
+step. *Unchanged* ends Narrowing with the current piece as the Paste Result (the whole copy → outer line breaks
+stripped); *nothing fits* → No Suitable Match with the Enter offer, at any step; *ask the user* → the Candidate
+Chooser listing every option of the deciding choice with p > 0 except nothing/ask, most likely first; a piece →
+the next step on that piece.
+
+**Size model** (`cuts.py`, round 1, unchanged): estimated input tokens = 0.25 per letter, 1.0 per digit, 1.0 per
+other non-space character, +12 per option, +250 per question; +4 per excerpt id in the ids form. Budgets: 92 % of
+32k for state + the largest single question, 92 % of 64k for the whole request. The estimate over-counts Jev's
+real `inputTokens` by ≈ 1.4× (safe side). Jev refuses over the limit with HTTP 400 `max_tokens_exceeded`.
+
+**Expected calls and time** (offline ideal over 82 cells: 1 call × 28, 2 × 51, 4 × 3; explore observed mean 1.65
+calls, median ≈ 1.05 s, one 8.2 s outlier). ⟦Supervisor: replace with the matrix numbers from FINDINGS.⟧
+
+## Wordings (verbatim — do not edit a character; frozen at round 2's Gate A)
+⟦Supervisor: diff against round-2 `FINDINGS.md` "Wordings (verbatim)" before launch.⟧
+
+**Step 1 `instructions`** (a string), ids form:
+> The user copied `source_document` and pressed paste. `target_context` describes the place where the text cursor is, and what surrounds that place. One option is everything that was copied, as it is. Every other excerpt option is the id of an exact excerpt cut from `source_document`; `excerpts` gives the text of each id, character for character. Choose what will be pasted at the text cursor. If that place asks for one particular thing, choose the option that is exactly that thing, with nothing missing and nothing extra; only if no option is exactly that, choose the option that contains all of it with the least extra text. If that place does not ask for one particular thing, choose everything that was copied. If two or more different excerpts are each exactly the thing that place asks for and nothing says which one is meant, choose `ask_user` instead of one of them.
+
+**Later steps** — `instructions` is the object `{"current_piece": <the piece, verbatim>, "question": <text>}`; the text, ids form:
+> The user copied `source_document` and pressed paste. `target_context` describes the place where the text cursor is, and what surrounds that place. `current_piece` is an exact excerpt of `source_document`. One option is `current_piece` kept as it is. Every other excerpt option is the id of a smaller exact excerpt cut from `current_piece`; `excerpts` gives the text of each id, character for character. Choose what will be pasted at the text cursor. If that place asks for one particular thing, choose the option that is exactly that thing, with nothing missing and nothing extra; only if no option is exactly that, choose the option that contains all of it with the least extra text. If that place does not ask for one particular thing, choose `current_piece` as it is. If two or more different excerpts are each exactly the thing that place asks for and nothing says which one is meant, choose `ask_user` instead of one of them.
+
+**Full-text fallback** replaces only the option sentence — step 1:
+> Every other excerpt option is an exact excerpt cut from `source_document`; its description is that excerpt, character for character.
+
+later steps:
+> Every other excerpt option is a smaller exact excerpt cut from `current_piece`; its description is that excerpt, character for character.
+
+**Option `everything`** (step 1; option id `everything`):
+> Everything that was copied, as it is: all of `source_document`, nothing cut away.
+
+**Option `keep`** (later steps):
+> `current_piece` as it is, nothing cut away.
+
+**Option `nothing_fits`**:
+> That place asks for one particular thing, and no part of `source_document` is that thing.
+
+**Option `ask_user`**:
+> That place asks for one particular thing, two or more different excerpts of `source_document` are each exactly that thing, and nothing says which one is meant; the user has to pick.
+
+Parallel choices of one step and the follow-up choice use the wording of the step they belong to. Question `type`
+is `choice` everywhere; there is no `boolean`/`noul` question anywhere in the app after this slice.
+
+Test every wording by exact string equality against the encoded request body; any change is an `ask`.
+
+## Place choice  ⟦Supervisor: keep this section only if Daniel decided it ships; else delete it⟧
+⟦Daniel's decision, the glossary term he chose, the policy (B: everything → whole copy; nothing → No Suitable
+Match; one part → Narrowing's result), and the verbatim wording from FINDINGS (P3): instructions "The user copied
+`source_document` and pressed paste. `target_context` describes the place where the text cursor is, and what
+surrounds that place. What will be pasted at the text cursor?"; options `everything` "Everything that was copied, as
+it is: that place does not ask for one particular part of it." / `one_part` "One part of what was copied: that
+place asks for one particular thing, and `source_document` contains it." / `nothing` "Nothing of what was copied:
+that place asks for one particular thing, and `source_document` does not contain it." — asked in the same request
+as step 1.⟧
 
 ## Scope
 1. **Cutting** (Core, pure): the port of the spike's cutting — pieces are byte-exact slices of the Active Item
