@@ -28,8 +28,9 @@ Units: `location`/`length` are UTF-16 offsets into the element's `AXValue` (NSSt
 
 A cursor is usable when the element reports a range with `location ≥ 0`, `length ≥ 0`, `location + length ≤` the own
 text's UTF-16 length, **and it is not the empty range at the very start `(0,0)`**. The anchor is `location` (a
-selection's start: the pasted text replaces the selection, whose text then counts as "after"). The anchor is rounded
-down to a Character boundary, so the window never splits a grapheme cluster or a surrogate pair.
+selection's start: the pasted text replaces the selection, whose text then counts as "after"). The UTF-16 anchor is
+converted once and rounded down to a Character boundary; the 2 000 are counted in Swift Characters from there, so
+no edge of the window splits a grapheme cluster or a surrogate pair.
 
 ### Why 1 500 before / 500 after
 What precedes the caret is what the user has been reading or writing into: the command output above a prompt, the
