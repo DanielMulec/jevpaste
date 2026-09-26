@@ -19,7 +19,14 @@ final class SmartPasteApplication {
     let historyPanel: HistoryPanelController
 
     init(statusItem: NSStatusItem, options: LaunchOptions) {
-        Self.log.notice("launch apiKeyPresent=\(GatewayCredentials.standard.hasAPIKey, privacy: .public)")
+        let keys = KeychainJevKeyStore()
+        JevKeyImport.runOnce(into: keys, from: .standard, remembering: .standard)
+        let providerChoice = JevProviderChoice(defaults: .standard)
+        let provider = providerChoice.provider
+        let isKeyPresent = keys.apiKey(for: provider) != nil
+        Self.log.notice(
+            "launch provider=\(provider.rawValue, privacy: .public) apiKeyPresent=\(isKeyPresent, privacy: .public)"
+        )
         let clock = RunLoopPasteAttemptClock()
         let statusItemFrame: @MainActor () -> NSRect? = { [weak statusItem] in
             guard let button = statusItem?.button, let window = button.window else { return nil }
@@ -56,7 +63,7 @@ final class SmartPasteApplication {
                 clipboard: clipboard,
                 targetResolver: AccessibilityTargetResolver(),
                 inserter: PasteKeystrokeInserter(),
-                jevProvider: JevGatewayAccess(credentials: GatewayCredentials.standard, chosenProvider: { .standard }),
+                jevProvider: JevGatewayAccess(credentials: keys, chosenProvider: { providerChoice.provider }),
                 clock: clock,
                 presenter: presenter,
                 chooser: PanelCandidateChooser(

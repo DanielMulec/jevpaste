@@ -6,6 +6,8 @@ import os
 /// never replaced by another. Only the Vercel AI Gateway is built; Typesafe direct follows in its own ticket.
 @MainActor
 public struct JevGatewayAccess: JevProviderAccess {
+    /// The providers this adapter can reach; Settings offers only these.
+    public static let builtProviders: Set<JevProvider> = [.vercelAIGateway]
     private static let log = Logger(subsystem: "jevpaste", category: "JevGateway")
 
     private let credentials: any JevCredentials
@@ -23,7 +25,7 @@ public struct JevGatewayAccess: JevProviderAccess {
 
     public func openForPasteAttempt() -> JevProviderOpening {
         let provider = chosenProvider()
-        guard provider == .vercelAIGateway else {
+        guard Self.builtProviders.contains(provider) else {
             Self.log.error("provider \(provider.rawValue, privacy: .public) is not built yet")
             return .noKey(provider)
         }
