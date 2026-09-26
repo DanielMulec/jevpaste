@@ -34,6 +34,15 @@ struct AXElementNode: AccessibilityNode {
         return status == .success && isSettable.boolValue
     }
 
+    var selectedTextRange: SelectedTextRange? {
+        guard let value = copyValue(of: kAXSelectedTextRangeAttribute), CFGetTypeID(value) == AXValueGetTypeID()
+        else { return nil }
+        let rangeValue = unsafeDowncast(value, to: AXValue.self)
+        var range = CFRange()
+        guard AXValueGetType(rangeValue) == .cfRange, AXValueGetValue(rangeValue, .cfRange, &range) else { return nil }
+        return SelectedTextRange(location: range.location, length: range.length)
+    }
+
     func isSameElement(as other: AXElementNode) -> Bool {
         CFEqual(element, other.element)
     }

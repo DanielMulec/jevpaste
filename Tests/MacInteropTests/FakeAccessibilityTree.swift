@@ -12,6 +12,14 @@ final class FakeNode: AccessibilityNode {
     var titleElement: FakeNode?
     var window: FakeNode?
     var isSelectedTextRangeSettable = false
+    /// What the element reports as its selection, unvalidated like an app's report; `nil` = not offered.
+    var reportedSelectedTextRange: SelectedTextRange?
+    private(set) var selectedTextRangeReads = 0
+
+    var selectedTextRange: SelectedTextRange? {
+        selectedTextRangeReads += 1
+        return reportedSelectedTextRange
+    }
 
     init(_ role: String, _ texts: [AccessibilityTextAttribute: String] = [:], children: [FakeNode] = []) {
         self.texts = texts
@@ -49,14 +57,8 @@ final class FakeFocusSource: FocusSource {
     var wakeRequestsTake = true
     private(set) var wakeRequests: [Int32] = []
 
-    func focus(
-        _ node: FakeNode, processIdentifier: Int32 = 42, applicationName: String? = "Google Chrome",
-        bundleIdentifier: String = "com.google.Chrome"
-    ) {
-        focused = FocusedElement(
-            processIdentifier: processIdentifier, bundleIdentifier: bundleIdentifier, node: node,
-            applicationName: applicationName
-        )
+    func focus(_ node: FakeNode, processIdentifier: Int32 = 42, applicationName: String? = "Google Chrome") {
+        focused = FocusedElement(processIdentifier: processIdentifier, node: node, applicationName: applicationName)
     }
 
     func focusedElement() -> FocusedElement<FakeNode>? {

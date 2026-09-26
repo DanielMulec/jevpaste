@@ -55,8 +55,10 @@ decisions sit in small internal value types so they are unit-testable without AX
   ≤ 6 levels); `siblingFieldLabels` = labels of other editable fields of the section (≤ 10, ≤ 200 nodes).
   `surroundingText` always (labelled fields are often underdetermined without it): breadth-first text
   (`AXValue`/`AXTitle`/`AXDescription`, secure fields skipped) of the nearest `AXWebArea` ancestor, else the window,
-  capped at 2 000 characters and 600 nodes. Terminals (bundle-id list: Ghostty, Terminal, iTerm2, kitty, Alacritty,
-  WezTerm, Warp) get the **last** 2 000 characters of their own `AXValue` — nearest the prompt. Cross-pane bleed in
+  capped at 2 000 characters and 600 nodes. A focused field whose own `AXValue` is longer than 2 000 characters
+  (terminals, long documents and textareas; no app list since
+  [51](https://github.com/DanielMulec/jevpaste/issues/51), `cursor-context.md`) gets 2 000 characters of it around
+  its text cursor (`AXSelectedTextRange`; 1 500 before, 500 after), else its **last** 2 000. Cross-pane bleed in
   Herdr is accepted, per the brief. AX does not report visibility; "visible" = what AX exposes.
 - **Walk bounds (review fix).** Trees come from other apps and can be deep, cyclic or huge: ancestor climbs stop
   after 32 levels; each element yields at most its first 100 children (`AXUIElementCopyAttributeValues` range); sibling scan and surrounding text share one 250 ms deadline that starts before any ancestor

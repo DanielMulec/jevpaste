@@ -1,0 +1,112 @@
+# Read nearby text around the text cursor (51) — live proof, 2026-09-26.
+# Build: THROWAWAY instrumented 7c03d9d on cursor-context-probe (pushed, never merged) = cursor-context b8f9ccd + one
+# log line in FocusedTargetResolver: `live51 surroundingChars=<n> <MARKER>=<bool>…` for the synthetic JEVPASTE-<MARKER>-51
+# markers in the resolved Target Context's surroundingText (booleans only). `make app`, production (pid 88342) quit,
+# `open -n build/JevPaste.app --args --accept-signal-trigger` (grant check trusted=true); a second instance of the same
+# build with `--cursor-probe` (no hotkey) set TextEdit's caret and read Ghostty/Chrome read-only (probe4.log).
+# Helpers (/tmp/jevpaste-cursor-51): live.sh <bundle> <fixture> = pbcopy fixture, gate lsappinfo front == bundle,
+# kill -USR1 the instrumented pid only (aborts if it is production), print clipboard digest equality (never contents).
+# sig.sh <bundle> <USR1|USR2> = the same gate for the cursor probe. fill-screen.sh = clear, the OLD marker line on
+# pane row 1, filler lines, the NEAR marker line on the row above the prompt, prompt on the pane's last row (tput lines).
+# herdr50.txt = OLD, 47 fillers, NEAR (50 lines). long.txt = 7218 chars, FARSTART 0, BEFORE 3591, AFTER 3612,
+# FAREND 7200. Paste fixture: one shell-comment line holding the PASTE marker (Direct Paste; a comment even if it ever ran).
+# Herdr gate: scratch pane focused=True and the driving pane focused=False (herdr pane get) before every trigger.
+# Pane reads below: line positions of JEVPASTE markers only (no line text).
+# Helper output:
+vault saved: sha256=63991da41c7d
+pgrep before: 88342 ~/Applications/JevPaste.app/Contents/MacOS/JevPaste;
+production 88342 quit; pgrep: []
+start 2026-09-26 14:01:33
+launched: 78871 ~/.pi/worktrees/jevpaste/cursor-context/build/JevPaste.app/Contents/MacOS/JevPaste --accept-signal-trigger;
+(a) scratch pane wC:p2M
+(a) scratch focused=True self focused=False
+trigger USR1 pid=78871 (production running: []) front=com.mitchellh.ghostty at 14:01:48
+clipboardSameBytes=true
+  pane line 1: OLD marker
+  pane line 49: NEAR marker
+  pane line 50: prompt + PASTE marker
+  (a) lines after paste holding PASTE marker (last 2 lines): 1
+(a) C-c sent to wC:p2M
+(a1) finding: after herdr50.txt (50 lines) the prompt sat on pane row 50 of ~61, so the last 2000 chars of Ghostty's window text (≈ the bottom 9 rows across all panes) held neither NEAR nor OLD; rerun (a2) with fill-screen.sh (OLD on row 1, NEAR above the prompt on the last row)
+  pane line 1: OLD marker
+  pane line 58: NEAR marker
+  pane lines read:       59
+(a2) scratch focused=True self focused=False
+trigger USR1 pid=78871 (production running: []) front=com.mitchellh.ghostty at 14:02:24
+clipboardSameBytes=true
+  pane line 1: OLD marker
+  pane line 58: NEAR marker
+  pane line 59: prompt + PASTE marker
+(a2) C-c sent
+(a3) read-only check of Ghostty's text after fill-screen.sh again: scratch focused=True
+signal USR2 to probe pid=79305 (production pid=) front=com.mitchellh.ghostty at 14:02:42
+(d) TextEdit long.txt: caret set to the middle by the cursor probe (USR1), then a suspected-secret fixture so the attempt reads context and refuses without touching the document
+signal USR1 to probe pid=79305 (production pid=) front=com.apple.TextEdit at 14:02:53
+2026-09-26T12:02:53Z run=2 placeCaret location=3609 setStatus=0
+2026-09-26T12:02:53Z run=2 front=com.apple.TextEdit role=AXTextArea valueReadable=true ownTextLength=7218 ownTextUTF16=7218 cursorReported=true rangeStatus=0 rangeLocation=3609 rangeLength=0 rangeReadMicros=84 numberOfCharacters=7218 insertionLine=38 visibleStatus=0 visible=0+7218
+trigger USR1 pid=78871 (production running: []) front=com.apple.TextEdit at 14:02:54
+clipboardSameBytes=true
+(chrome check) read-only: is the consent sheet still open?
+signal USR2 to probe pid=79305 (production pid=) front=com.google.Chrome at 14:03:03
+2026-09-26T12:03:03Z run=3 front=com.google.Chrome focus=unreadable systemStatus=-25212 appFocusStatus=-25212 focusedWindowStatus=0 focusedWindowRole=AXSheet/none windowsStatus=0 windows=4 enhancedUI=true
+2026-09-26T12:03:06Z run=3 still unreadable after 3 s: unmeasured without a click
+test instances 78871 (--accept-signal-trigger) and 79305 (--cursor-probe) quit; pgrep: []
+production relaunched; pgrep after: 79749 ~/Applications/JevPaste.app/Contents/MacOS/JevPaste;
+clipboard restored from vault: sameBytesAsBeforeRun=true
+vault file deleted
+scratch pane wC:p2M closed; herdr tab focus restored to wC:t1
+# App log (log show --info --predicate 'subsystem == "jevpaste"', 14:01:30–14:03:40):
+2026-09-26 14:01:34.251450+0200 78871 JevPaste: [jevpaste:Launch] launch apiKeyPresent=true
+2026-09-26 14:01:34.304874+0200 78871 JevPaste: [jevpaste:Launch] grant check at launch trusted=true
+2026-09-26 14:01:34.306326+0200 78871 JevPaste: [jevpaste:Launch] acceptance signal trigger on
+2026-09-26 14:01:48.875113+0200 78871 JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-26 14:01:48.895781+0200 78871 JevPaste: [jevpaste:LiveProof51] live51 surroundingChars=2000 OLD=false NEAR=false BEFORE=false AFTER=false FARSTART=false FAREND=false PAGE=false LABEL=false
+2026-09-26 14:01:49.028358+0200 78871 JevPaste: [jevpaste:PasteAttempt] outcome inserted via=directPaste
+2026-09-26 14:02:24.904996+0200 78871 JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-26 14:02:24.912113+0200 78871 JevPaste: [jevpaste:LiveProof51] live51 surroundingChars=2000 OLD=false NEAR=true BEFORE=false AFTER=false FARSTART=false FAREND=false PAGE=false LABEL=false
+2026-09-26 14:02:25.036313+0200 78871 JevPaste: [jevpaste:PasteAttempt] outcome inserted via=directPaste
+2026-09-26 14:02:54.805492+0200 78871 JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-26 14:02:54.822011+0200 78871 JevPaste: [jevpaste:LiveProof51] live51 surroundingChars=2000 OLD=false NEAR=false BEFORE=true AFTER=true FARSTART=false FAREND=false PAGE=false LABEL=false
+2026-09-26 14:02:54.822029+0200 78871 JevPaste: [jevpaste:PasteAttempt] outcome refused.suspectedSecret
+2026-09-26 14:03:36.923577+0200 79749 JevPaste: [jevpaste:Launch] launch apiKeyPresent=true
+2026-09-26 14:03:36.949384+0200 79749 JevPaste: [jevpaste:Launch] grant check at launch trusted=true
+# Cursor probe log (probe4.log, same build, --cursor-probe, pid 79305):
+2026-09-26T12:02:39Z cursor probe start accessibilityTrusted=true pid=79305
+2026-09-26T12:02:42Z run=1 front=com.mitchellh.ghostty role=AXTextArea valueReadable=true ownTextLength=13266 ownTextUTF16=13267 cursorReported=true rangeStatus=0 rangeLocation=0 rangeLength=0 rangeReadMicros=38 numberOfCharacters=13266 insertionLine=none(-25205) visibleStatus=0 visible=0+13266
+2026-09-26T12:02:42Z run=1   marker=JEVPASTE-OLD-51 inValue=true firstFromCursor=551 lastFromCursor=551
+2026-09-26T12:02:42Z run=1   marker=JEVPASTE-NEAR-51 inValue=true firstFromCursor=12749 lastFromCursor=12749
+2026-09-26T12:02:42Z run=1   marker=JEVPASTE-BEFORE-51 inValue=false
+2026-09-26T12:02:42Z run=1   marker=JEVPASTE-AFTER-51 inValue=false
+2026-09-26T12:02:42Z run=1   marker=JEVPASTE-FARSTART-51 inValue=false
+2026-09-26T12:02:42Z run=1   marker=JEVPASTE-FAREND-51 inValue=false
+2026-09-26T12:02:53Z run=2 placeCaret location=3609 setStatus=0
+2026-09-26T12:02:53Z run=2 front=com.apple.TextEdit role=AXTextArea valueReadable=true ownTextLength=7218 ownTextUTF16=7218 cursorReported=true rangeStatus=0 rangeLocation=3609 rangeLength=0 rangeReadMicros=84 numberOfCharacters=7218 insertionLine=38 visibleStatus=0 visible=0+7218
+2026-09-26T12:02:53Z run=2   marker=JEVPASTE-OLD-51 inValue=false
+2026-09-26T12:02:53Z run=2   marker=JEVPASTE-NEAR-51 inValue=false
+2026-09-26T12:02:53Z run=2   marker=JEVPASTE-BEFORE-51 inValue=true firstFromCursor=-18 lastFromCursor=-18
+2026-09-26T12:02:53Z run=2   marker=JEVPASTE-AFTER-51 inValue=true firstFromCursor=3 lastFromCursor=3
+2026-09-26T12:02:53Z run=2   marker=JEVPASTE-FARSTART-51 inValue=true firstFromCursor=-3609 lastFromCursor=-3609
+2026-09-26T12:02:53Z run=2   marker=JEVPASTE-FAREND-51 inValue=true firstFromCursor=3591 lastFromCursor=3591
+2026-09-26T12:03:03Z run=3 front=com.google.Chrome focus=unreadable systemStatus=-25212 appFocusStatus=-25212 focusedWindowStatus=0 focusedWindowRole=AXSheet/none windowsStatus=0 windows=4 enhancedUI=true
+2026-09-26T12:03:06Z run=3 still unreadable after 3 s: unmeasured without a click
+# Results:
+# (a2) Herdr/Ghostty, OLD on screen: NEAR=true, OLD=false, surroundingChars=2000; the probe (a3, same screen
+#      re-drawn) shows OLD IS in Ghostty's text, 551 UTF-16 from its start (12716 from its end), cursor (0,0) → the
+#      last 2000 exclude it for real. Direct Paste inserted at the prompt, not executed (the pane's last line is the
+#      prompt followed by the marker, nothing after); C-c sent. Clipboard same bytes after each attempt.
+# (a1) Open question, not a regression: with the 50-line fixture the prompt sat 11 rows above the pane's bottom
+#      (pane row 50 of ~61); the last 2000 chars of Ghostty's window text (≈ the bottom 9 rows across all panes) held
+#      NEAR=false OLD=false. Ghostty reports no usable cursor, so the tail misses a prompt that is not near the
+#      window's bottom — exactly what main's terminal suffix branch did.
+# (d) TextEdit long document, caret set to 3609 via AX (probe run=2): BEFORE=true AFTER=true FARSTART=false
+#      FAREND=false, surroundingChars=2000; the synthetic secret fixture made the attempt refuse
+#      (refused.suspectedSecret) after the context read, so the document was not touched.
+# Chrome (b) long <textarea> caret in the middle and (c) short labelled field (page-walk regression): NOT RUN — the
+#      Chrome's remote-debugging consent sheet was still open (probe run=3: focusedWindowRole=AXSheet).
+#      Deferred until Daniel has answered it; ready-to-run block in the issue report.
+# Cleanup: both test instances quit by pid; production relaunched (pid 79749, grant check trusted=true 14:03:36).
+# Order slip: production was relaunched before the clipboard was restored, so Launch Adoption adopted the synthetic
+# secret fixture as the Active Item and history holds it plus the PASTE marker fixture (the test
+# instance recorded both too, as in the acceptance suite); Daniel's clipboard was empty before the run and is empty
+# again (vault restore, same bytes); a ⌘⇧V before his next copy refuses as a suspected secret. Vault file deleted.
+# Scratch pane closed, Herdr tab focus restored. TextEdit long.txt and the Chrome gate-a.html tab remain open.

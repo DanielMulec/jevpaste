@@ -7,9 +7,8 @@ import Testing
 struct SurroundingTextTests {
     private let reader = TargetContextReader<FakeNode>()
 
-    private func surroundingText(of node: FakeNode, bundleIdentifier: String = "com.google.Chrome") -> String {
-        let focused = FocusedElement(processIdentifier: 1, bundleIdentifier: bundleIdentifier, node: node)
-        return reader.context(of: focused).surroundingText
+    private func surroundingText(of node: FakeNode) -> String {
+        reader.context(of: FocusedElement(processIdentifier: 1, node: node)).surroundingText
     }
 
     @Test func pageTextIsCollectedBreadthFirstFromTheWebAreaNotTheBrowserChrome() {
@@ -75,16 +74,5 @@ struct SurroundingTextTests {
 
         let collectedLines = surroundingText(of: field).split(separator: "\n").count
         #expect(collectedLines > 500 && collectedLines < 600)
-    }
-
-    @Test func terminalGetsTheLastTwoThousandCharactersOfItsWindowScrape() {
-        let screen = (1...400).map { "line \($0)" }.joined(separator: "\n")
-        let terminal = FakeNode("AXTextArea", [.value: screen])
-        _ = FakeNode("AXWindow", [.title: "zsh"], children: [FakeNode("AXGroup", children: [terminal])])
-
-        let text = surroundingText(of: terminal, bundleIdentifier: "com.mitchellh.ghostty")
-
-        #expect(text.count == 2_000)
-        #expect(screen.hasSuffix(text))
     }
 }
