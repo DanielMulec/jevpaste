@@ -24,11 +24,15 @@ import fixtures  # noqa: E402
 import spans  # noqa: E402
 
 BUDGET = 320  # billed Jev calls for the whole spike, counted across processes from raw.jsonl
+# The previous worker reported 17 smoke calls; raw.jsonl holds 14 billed records. Count the 3 unaccounted calls
+# against the budget so the ceiling holds even if they were billed but never logged.
+UNLOGGED_BILLED = 3
 RAW_PATH = os.path.join(HERE, "results", "raw.jsonl")
 MAX_DESCRIPTION = 255
 CONTAINS_VALUE_THRESHOLD = 0.5  # production Core
 FREE_TEXT_THRESHOLD = 0.8  # production Core
-CONTAINS_MORE_THRESHOLD = 0.5  # new gate: stage 2 runs at or above
+CONTAINS_MORE_THRESHOLD = 0.5  # new gate: stage 2 runs at or above (fixed before the matrix)
+SHADOW_STAGE2 = False  # ran during the withdrawn v6 matrix; off for v7 to keep the budget
 
 # ------------------------------------------------------------------------------------------------ wording
 # Stage 1 choice: production wording, widened to "is, or contains" (the brief: "which belongs in the target, or
@@ -120,6 +124,91 @@ CONTAINS_MORE_VARIANTS = {
     },
 }
 
+
+
+def contains_more_v4(candidates):
+    """The brief's gate as literally as Jev allows: questions are answered independently, so the boolean cannot
+    see the `paste` answer; instead it gets the same Candidates embedded and picks "the chosen one" itself."""
+    return {
+        "type": "boolean",
+        "instructions": {
+            "excerpts": candidates,
+            "question": (
+                "Every entry of `excerpts` is an exact excerpt of `source_document`. Take the entry that belongs "
+                "in `target_context`: the one that is exactly the value for that field, or else the shortest one "
+                "that contains it. Does that entry contain more than what belongs in the field — other words, a "
+                "label, a prefix or other values that would have to be cut away before pasting?"
+            ),
+        },
+        "criteria": {
+            "true": "That entry holds the value plus other text that must be cut away before pasting.",
+            "false": "That entry is exactly what belongs in the field, or the document holds no value for it.",
+        },
+    }
+
+
+# v5: v3's everyday framing plus generic worked examples (no fixture values; names, towns and numbers invented).
+CONTAINS_MORE_VARIANTS["v5"] = {
+    "type": "boolean",
+    "instructions": (
+        "Find the text in `source_document` that belongs in `target_context`, and look at the line it sits on (or "
+        "the value after that line's `Label:` prefix, or its paragraph when the value spans several lines). "
+        "Does that line hold more than what belongs in the field, so the user would have to delete part of it "
+        "after pasting? Examples: a first-name field and the line `Karl Berger` \u2014 yes, the last name must go; "
+        "a postcode field and the line `1010 Wien` \u2014 yes, the town must go; a street field and the line "
+        "`Tel. 0512 44 55` \u2014 no value there at all, so no; an email field and a line that is only an email "
+        "address \u2014 no; a street-and-number field and the line `Ringstra\u00dfe 3` \u2014 no; a field for a short "
+        "text about the person and a paragraph that is exactly that text \u2014 no."
+    ),
+    "criteria": {
+        "true": "The line (or `Label:` value, or paragraph) holding the value also holds text that must be deleted.",
+        "false": "The value is that whole line, `Label:` value or paragraph on its own, or the document holds no "
+                 "value for this field.",
+    },
+}
+
+
+# v6: v5 plus two generic examples for the two v5 misses in tuning (a leading word before an amount; prose
+# paragraphs for a bio-like field).
+CONTAINS_MORE_VARIANTS["v6"] = dict(CONTAINS_MORE_VARIANTS["v5"], instructions=(
+    CONTAINS_MORE_VARIANTS["v5"]["instructions"][:-1] + "; an amount field and the line `Summe 45,00` \u2014 yes, "
+    "the word `Summe` must go; a bio or about-me field and one or two paragraphs of prose about the person "
+    "\u2014 no, they are pasted whole."
+))
+
+
+# v7: after the supervisor's check (Daniel: no field vocabulary anywhere in J). v5/v6 named field types in their
+# examples (first name, postcode, email, ...) and are withdrawn. v7 keeps v5's framing but its examples are about
+# shape only, with placeholder letters instead of values or field types.
+CONTAINS_MORE_VARIANTS["v7"] = {
+    "type": "boolean",
+    "instructions": (
+        "Find the text in `source_document` that belongs in `target_context`, and look at the line it sits on (or "
+        "the value after that line's `Label:` prefix, or its paragraph when the value spans several lines). "
+        "Does that line hold more than what belongs in the field, so the user would have to delete part of it "
+        "after pasting? Answer yes when the line holds the value plus other words, numbers, a label or a prefix. "
+        "Answer no when the line is exactly the value, when the value is a whole paragraph, or when the document "
+        "holds nothing for the field. Shapes, with `A` standing for what belongs in the field: the line `A B` "
+        "\u2014 yes; the line `B A` \u2014 yes; the line `B A C` \u2014 yes; the line `A` \u2014 no; the "
+        "paragraph that is exactly `A` \u2014 no."
+    ),
+    "criteria": {
+        "true": "The line (or `Label:` value, or paragraph) holding the value also holds text that must be deleted.",
+        "false": "The value is that whole line, `Label:` value or paragraph on its own, or the document holds no "
+                 "value for this field.",
+    },
+}
+
+
+def contains_more_question(variant, candidates):
+    if variant == "v4":
+        return contains_more_v4(candidates)
+    return CONTAINS_MORE_VARIANTS[variant]
+
+
+# The gate wording used by the matrix; fixed after tuning (see FINDINGS.md), never changed mid-matrix.
+MATRIX_VARIANT = os.environ.get("CONTAINS_MORE_VARIANT", "v7")
+
 STAGE2_CHOICE = (
     "The user copied `source_document` and is pasting into `target_context`. Every option is an exact "
     "contiguous excerpt of `source_document`, cut at word and punctuation boundaries. Choose the single excerpt "
@@ -130,17 +219,17 @@ STAGE2_NONE = "None of the listed excerpts is exactly the value that belongs in 
 
 # J' (per-span boolean), used only if the batched stage-2 choice is unreliable.
 JPRIME_INSTRUCTIONS = (
-    "The user copied `source_document` and is pasting into `target_context`. Is the exact text {span} the value "
-    "belonging in that field — complete, with nothing extra — as the user would type it?"
+    "The user copied `source_document` and is pasting into `target_context`. Is the exact text {span} the "
+    "{field} — the complete value belonging in that field, with nothing extra, as the user would type it?"
 )
 
 
 # --------------------------------------------------------------------------------------------------- plumbing
 def billed_so_far():
     if not os.path.exists(RAW_PATH):
-        return 0
+        return UNLOGGED_BILLED
     with open(RAW_PATH) as handle:
-        return sum(1 for line in handle if line.strip() and json.loads(line).get("billed"))
+        return UNLOGGED_BILLED + sum(1 for line in handle if line.strip() and json.loads(line).get("billed"))
 
 
 def log(record):
@@ -202,19 +291,26 @@ def is_hit(cell, text):
 
 
 # -------------------------------------------------------------------------------------------------- engine J
-def run_j(item_id, cell, run):
-    item = fixtures.ITEMS[item_id]
-    state = state_for(item_id, cell)
-    candidates = spans.derive(item)
+def stage1_questions(candidates, variant):
     ids, criteria = option_map(candidates, STAGE1_NONE)
     questions = {
         "paste": {"type": "choice", "instructions": STAGE1_CHOICE, "criteria": criteria},
         "contains_value": GATE_CONTAINS_VALUE,
         "free_text": FREE_TEXT,
-        "contains_more": CONTAINS_MORE,
+        "contains_more": contains_more_question(variant, candidates),
     }
-    meta = {"kind": "j_stage1", "cell": cell["id"], "item": item_id, "run": run, "option_map": ids}
-    answers, latency1, _ = evaluate(state, questions, meta)
+    return ids, questions
+
+
+def run_j(item_id, cell, run, variant=None):
+    variant = variant or MATRIX_VARIANT
+    item = fixtures.ITEMS[item_id]
+    state = state_for(item_id, cell)
+    candidates = spans.derive(item)
+    ids, questions = stage1_questions(candidates, variant)
+    meta = {"kind": "j_stage1", "cell": cell["id"], "item": item_id, "run": run, "variant": variant,
+            "option_map": ids}
+    answers, latency1, record1 = evaluate(state, questions, meta)
     paste = answers.get("paste") or {}
     choice = paste.get("choice")
     probs = paste.get("probabilities") or {}
@@ -222,59 +318,85 @@ def run_j(item_id, cell, run):
     p_free = (answers.get("free_text") or {}).get("probability")
     p_more = (answers.get("contains_more") or {}).get("probability")
     chosen = ids.get(choice)
+    free_override = p_free is not None and p_free >= FREE_TEXT_THRESHOLD
 
     result = {
-        "kind": "j_result", "cell": cell["id"], "item": item_id, "run": run, "billed": False,
+        "kind": "j_result", "cell": cell["id"], "item": item_id, "run": run, "variant": variant, "billed": False,
         "expected": cell["expected"], "accept": cell["accept"], "borderline": cell["borderline"],
         "expected_is_candidate": cell["expected"] in candidates if cell["expected"] is not None else None,
         "stage1_choice": choice, "stage1_text": chosen, "stage1_prob": probs.get(choice),
         "stage1_none_prob": probs.get("none_of_these"), "stage1_confidence": paste.get("confidence"),
+        "stage1_hit": is_hit(cell, chosen) if chosen is not None else cell["expected"] is None,
         "contains_value": p_value, "free_text": p_free, "contains_more": p_more,
-        "stage1_latency_ms": round(latency1, 1), "stage2_ran": False, "calls": 1,
+        "free_text_override": free_override,
+        "stage1_latency_ms": round(latency1, 1), "stage1_cold": record1["cold"], "stage2_ran": False, "calls": 1,
     }
 
-    # production order: free text first, then choice + contains_value gate, then (new) contains_more
-    if p_free is not None and p_free >= FREE_TEXT_THRESHOLD:
-        final, path = item, "free_text_whole_item"
-    elif chosen is None or p_value is None or p_value < CONTAINS_VALUE_THRESHOLD:
-        final, path = None, "no_suitable_match"
+    # Engine J's own answer (what J returns when the Target is not judged free text)
+    if chosen is None or p_value is None or p_value < CONTAINS_VALUE_THRESHOLD:
+        j_final, j_path = None, "no_suitable_match"
     elif p_more is not None and p_more >= CONTAINS_MORE_THRESHOLD:
+        # Stage 2 also runs when free_text overrides, so J is measured on every cell; such a call would not be made
+        # in production (`stage2_in_production` False) and is reported apart in the call counts.
         offered, total = spans.spans(chosen)
         sids, scriteria = option_map(offered, STAGE2_NONE)
         squestions = {"span": {"type": "choice", "instructions": STAGE2_CHOICE, "criteria": scriteria}}
-        smeta = {"kind": "j_stage2", "cell": cell["id"], "item": item_id, "run": run, "option_map": sids,
-                 "parent": chosen, "spans_before_cap": total}
-        sanswers, latency2, _ = evaluate(state, squestions, smeta)
+        smeta = {"kind": "j_stage2", "cell": cell["id"], "item": item_id, "run": run, "variant": variant,
+                 "option_map": sids, "parent": chosen, "spans_before_cap": total}
+        sanswers, latency2, record2 = evaluate(state, squestions, smeta)
         span = sanswers.get("span") or {}
         schoice = span.get("choice")
         sprobs = span.get("probabilities") or {}
         stext = sids.get(schoice)
         noise = spans.same_type_alternatives(stext, offered) if stext is not None else []
         result.update({
-            "stage2_ran": True, "stage2_choice": schoice, "stage2_text": stext, "stage2_prob": sprobs.get(schoice),
+            "stage2_ran": True, "stage2_in_production": not free_override,
+            "stage2_choice": schoice, "stage2_text": stext, "stage2_prob": sprobs.get(schoice),
             "stage2_none_prob": sprobs.get("none_of_these"), "stage2_confidence": span.get("confidence"),
+            "stage2_top3": sorted(((p, sids.get(k, k)) for k, p in sprobs.items()), reverse=True)[:3],
             "span_count": len(offered), "spans_before_cap": total,
             "expected_offered": cell["expected"] in offered if cell["expected"] is not None else None,
             "winner_type": spans.candidate_type(stext) if stext else None,
             "chooser_noise": max(0, len(noise) - 1),
             "chooser_noise_spans": [n for n in noise if n != stext],
-            "stage2_latency_ms": round(latency2, 1), "calls": 2,
+            "stage2_latency_ms": round(latency2, 1), "stage2_cold": record2["cold"], "calls": 2,
         })
-        final, path = stext, ("stage2_span" if stext is not None else "stage2_none")
+        j_final, j_path = stext, ("stage2_span" if stext is not None else "stage2_none")
     else:
-        final, path = chosen, "stage1_candidate"
+        j_final, j_path = chosen, "stage1_candidate"
         alternatives = spans.same_type_alternatives(chosen, candidates)
-        result["stage1_chooser_alternatives"] = max(0, len(alternatives) - 1)
+        result["stage1_chooser_noise"] = max(0, len(alternatives) - 1)
+        result["stage1_chooser_noise_candidates"] = [a for a in alternatives if a != chosen]
+        # Shadow stage 2 (not part of J, never changes its answer): when the gate stayed low but the chosen
+        # Candidate is short enough to be offered whole among its own spans, ask stage 2 anyway. Shows whether a
+        # gate-free J (stage 2 always) would keep the whole Candidate or cut it.
+        offered, total = spans.spans(chosen)
+        if SHADOW_STAGE2 and len(offered) > 1 and chosen in offered:
+            sids, scriteria = option_map(offered, STAGE2_NONE)
+            squestions = {"span": {"type": "choice", "instructions": STAGE2_CHOICE, "criteria": scriteria}}
+            smeta = {"kind": "j_stage2_shadow", "cell": cell["id"], "item": item_id, "run": run,
+                     "variant": variant, "option_map": sids, "parent": chosen, "spans_before_cap": total}
+            sanswers, latency2, _ = evaluate(state, squestions, smeta)
+            span = sanswers.get("span") or {}
+            stext = sids.get(span.get("choice"))
+            result.update({"shadow_stage2_text": stext, "shadow_stage2_prob": (span.get("probabilities") or {})
+                           .get(span.get("choice")), "shadow_span_count": len(offered),
+                           "shadow_hit": is_hit(cell, stext), "shadow_latency_ms": round(latency2, 1)})
 
-    result.update({"final": final, "path": path, "hit": is_hit(cell, final),
-                   "hit_note": ("accept" if final in cell["accept"] else "expected" if final == cell["expected"]
-                                else None)})
-    if cell["expect_free_text"]:
-        result["hit"] = path == "free_text_whole_item"
+    # Production order: free text first (whole item, DirectPasteRule strips outer line breaks - none here).
+    final, path = (item, "free_text_whole_item") if free_override else (j_final, j_path)
+    result.update({
+        "j_final": j_final, "j_path": j_path, "j_hit": is_hit(cell, j_final),
+        "final": final, "path": path, "hit": is_hit(cell, final),
+        "hit_note": ("expected" if final is not None and final == cell["expected"]
+                     else "accept" if final in cell["accept"] else None),
+        "production_calls": 1 + (1 if result["stage2_ran"] and not free_override else 0),
+    })
     log(result)
-    print("%-22s r%d s1=%-5s p=%.2f more=%.2f val=%.2f free=%.2f | %s -> %r %s"
-          % (cell["id"], run, choice, probs.get(choice) or 0, p_more or 0, p_value or 0, p_free or 0,
-             path, (final or "")[:40], "HIT" if result["hit"] else "MISS"))
+    print("%-22s r%d %s s1=%-5s p=%.2f more=%.2f val=%.2f free=%.2f | %-20s -> %r %s%s"
+          % (cell["id"], run, variant, choice, probs.get(choice) or 0, p_more or 0, p_value or 0, p_free or 0,
+             path, (final or "")[:40], "HIT" if result["hit"] else "MISS",
+             "" if result["j_hit"] == result["hit"] else " (J alone: %s)" % ("HIT" if result["j_hit"] else "MISS")))
     return result
 
 
@@ -290,7 +412,8 @@ def run_jprime(item_id, cell, run, parent):
         ids[qid] = text
         questions[qid] = {
             "type": "boolean",
-            "instructions": JPRIME_INSTRUCTIONS.format(span=json.dumps(text, ensure_ascii=False)),
+            "instructions": JPRIME_INSTRUCTIONS.format(span=json.dumps(text, ensure_ascii=False),
+                                                       field=json.dumps(cell["field_label"], ensure_ascii=False)),
             "criteria": {"true": "Exactly this text is the value for the field.",
                          "false": "This text is not exactly the value for the field."},
         }
@@ -316,23 +439,28 @@ if __name__ == "__main__":
     elif command == "matrix":
         run = int(sys.argv[2])
         only = set(sys.argv[3:])
+        with open(RAW_PATH) as handle:
+            done = {(x["cell"], x["run"]) for x in map(json.loads, filter(str.strip, handle))
+                    if x.get("kind") == "j_result" and x.get("variant") == MATRIX_VARIANT}
         for item_id, cell in fixtures.all_cells():
             if only and cell["id"] not in only and item_id not in only:
                 continue
-            run_j(item_id, cell, run)
+            if (cell["id"], run) in done:
+                continue  # resume after an interruption; a cell is only ever recorded once per run
+            while True:
+                try:
+                    run_j(item_id, cell, run)
+                    break
+                except RuntimeError as error:  # persistent 429 "upstream high demand": wait, retry the cell
+                    print("retrying %s after: %s" % (cell["id"], str(error)[:80]))
+                    time.sleep(90)
         print("billed so far: %d, throttles this process: %d" % (billed_so_far(), jev.throttles()))
     elif command == "tune":
         variant = sys.argv[2]
         for cell_id in sys.argv[3:]:
             item_id, cell = find_cell(cell_id)
             candidates = spans.derive(fixtures.ITEMS[item_id])
-            ids, criteria = option_map(candidates, STAGE1_NONE)
-            questions = {
-                "paste": {"type": "choice", "instructions": STAGE1_CHOICE, "criteria": criteria},
-                "contains_value": GATE_CONTAINS_VALUE,
-                "free_text": FREE_TEXT,
-                "contains_more": CONTAINS_MORE_VARIANTS[variant],
-            }
+            ids, questions = stage1_questions(candidates, variant)
             answers, latency, _ = evaluate(state_for(item_id, cell), questions,
                                            {"kind": "tune", "variant": variant, "cell": cell_id, "item": item_id,
                                             "option_map": ids})
@@ -348,6 +476,31 @@ if __name__ == "__main__":
             parents = [r["stage1_text"] for r in rows if r.get("kind") == "j_result" and r["cell"] == cell_id
                        and r["run"] == 0]
             run_jprime(item_id, cell, 0, parents[-1])
+    elif command == "extend":
+        # Supervisor addition: re-run stage 2 once with the extended cut set `@ . - _` on unreachable cells,
+        # over the Candidate stage 1 chose in matrix run 0.
+        with open(RAW_PATH) as handle:
+            rows = [json.loads(line) for line in handle if line.strip()]
+        for cell_id in sys.argv[2:]:
+            item_id, cell = find_cell(cell_id)
+            parent = [x["stage1_text"] for x in rows if x.get("kind") == "j_result" and x["cell"] == cell_id
+                      and x["run"] == 0 and x.get("variant") == MATRIX_VARIANT][-1]
+            offered, total = spans.spans(parent, delimiters=spans.EXTENDED_DELIMITERS)
+            sids, scriteria = option_map(offered, STAGE2_NONE)
+            squestions = {"span": {"type": "choice", "instructions": STAGE2_CHOICE, "criteria": scriteria}}
+            answers, latency, _ = evaluate(state_for(item_id, cell), squestions, {
+                "kind": "j_stage2_extended", "cell": cell_id, "item": item_id, "run": 0, "variant": MATRIX_VARIANT,
+                "option_map": sids, "parent": parent, "spans_before_cap": total, "delimiters": "".join(
+                    sorted(spans.EXTENDED_DELIMITERS))})
+            span = answers.get("span") or {}
+            text = sids.get(span.get("choice"))
+            result = {"kind": "extended_result", "cell": cell_id, "billed": False, "parent": parent,
+                      "span_count": len(offered), "spans_before_cap": total,
+                      "expected_offered": cell["expected"] in offered, "text": text,
+                      "prob": (span.get("probabilities") or {}).get(span.get("choice")), "hit": is_hit(cell, text),
+                      "latency_ms": round(latency, 1)}
+            log(result)
+            print(result)
     elif command == "report":
         import analyze
 

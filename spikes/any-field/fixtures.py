@@ -292,6 +292,26 @@ FORMS = {
 }
 
 
+# Stage-3 cells (supervisor addition): values glued to their neighbours without a cut point. Kept out of CELLS so
+# the matrix never runs them; run.py `stage3` runs them once each.
+ADDRESS_NOSPACE = (
+    "Mira Holzner\n"
+    "Prankergasse77\n"
+    "Top 11\n"
+    "8020 Graz\n"
+    "Österreich\n"
+    "mira.holzner@example.org"
+)
+ITEMS["address_nospace"] = ADDRESS_NOSPACE
+
+FORMS["shop_de_login"] = dict(
+    FORMS["shop_de"],
+    surrounding_text=FORMS["shop_de"]["surrounding_text"].replace(
+        "Zugang\nPasswort *", "Zugang\nBenutzername *\nNur Buchstaben, Ziffern und Punkte.\nPasswort *"),
+    sections=dict(FORMS["shop_de"]["sections"], Zugang=["Benutzername", "Passwort"]),
+)
+
+
 def _cell(cid, form, section, field, expected, accept=(), borderline=None, placeholder=None, label=None):
     labels = FORMS[form]["sections"][section]
     siblings = [name for sec in FORMS[form]["sections"].values() for name in sec if name != field]
@@ -354,8 +374,9 @@ CELLS = {
               borderline="only `Austria` in the current job line and `Austrian` as nationality point to a country"),
         _cell("R07_linkedin_NEG", "jobs_en", "Personal details", "LinkedIn URL", None),
         _cell("R08_summary", "portal_en", "Basics", "Profile summary", RESUME_ABOUT),
-        _cell("R09_biography", "speaker_en", "About the speaker", "Biography", RESUME_ABOUT, accept=[RESUME],
-              borderline="About paragraph or the whole item — record which (section/whole item/paragraph)"),
+        _cell("R09_biography", "speaker_en", "About the speaker", "Biography", RESUME_ABOUT,
+              borderline="About paragraph expected; the whole résumé (name, birth line, EXPERIENCE) is not a "
+                         "programme bio and is recorded as a miss — note what Jev takes"),
         _cell("R10_description", "freelance_en", "Listing", "Description", RESUME_ABOUT,
               borderline="a freelance listing description; the About paragraph is the closest excerpt"),
     ],
@@ -404,7 +425,18 @@ CELLS = {
         _cell("C03_availability", "apply_en", "Letter", "Availability", COVER_P3),
         _cell("C04_name", "apply_en", "Applicant", "Name", "Theo Brandner"),
         _cell("C05_notes_freetext", "apply_en", "Letter", "Notes", COVER,
-              borderline="free-text-like field: expect free_text >= 0.8 (whole item pasted); record it"),
+              borderline="open notes field: the whole letter is the only sensible excerpt (via free_text >= 0.8 "
+                         "or via the whole-item Candidate — record which path)"),
+    ],
+}
+
+
+STAGE3_CELLS = {
+    "address_nospace": [
+        _cell("N01_strasse_glued", "shop_de", "Rechnungsadresse", "Straße", "Prankergasse"),
+        _cell("N02_hausnummer_glued", "shop_de", "Rechnungsadresse", "Hausnummer", "77"),
+        _cell("N03_benutzername", "shop_de_login", "Zugang", "Benutzername", "mira.holzner",
+              borderline="username taken from the email's local part: plausible, not certain"),
     ],
 }
 
@@ -440,11 +472,6 @@ def _self_check():
         assert 300 <= len(surrounding) <= 1200, (cell["form"], len(surrounding))
         if cell["expected"] is not None:
             assert cell["expected"] not in surrounding or len(cell["expected"]) < 5, (cell["id"], "leak")
-
-
-
-for _, _c in all_cells():
-    _c["expect_free_text"] = _c["id"].endswith("_freetext")
 
 
 

@@ -189,14 +189,16 @@ def same_type_alternatives(chosen, offered):
 
 # ------------------------------------------------------------------------------------------ stage-2 spans (J)
 SPAN_DELIMITERS = set(",;:()\"'<>/")
+# Supervisor addition (reachability): the extended cut set adds `@ . - _`, used only for unreachable cells.
+EXTENDED_DELIMITERS = SPAN_DELIMITERS | set("@.-_")
 MAX_SPAN_TOKENS = 12
 
 
-def tokens(text):
+def tokens(text, delimiters=SPAN_DELIMITERS):
     """[(start, end)] of maximal runs that are neither whitespace nor a delimiter."""
     out, start = [], None
     for i, ch in enumerate(text):
-        boundary = ch.isspace() or ch in SPAN_DELIMITERS
+        boundary = ch.isspace() or ch in delimiters
         if boundary and start is not None:
             out.append((start, i))
             start = None
@@ -207,13 +209,13 @@ def tokens(text):
     return out
 
 
-def spans(candidate, cap=CAP, max_tokens=MAX_SPAN_TOKENS):
+def spans(candidate, cap=CAP, max_tokens=MAX_SPAN_TOKENS, delimiters=SPAN_DELIMITERS):
     """Every contiguous run of 1..max_tokens tokens of `candidate`, as byte-exact slices.
 
     Order: by start, shorter first. Dedup by UTF-8 bytes (first wins). While more than `cap` remain, the longest
     (most tokens) go first, within a length the last in document order first. Returns (spans, total_before_cap).
     """
-    toks = tokens(candidate)
+    toks = tokens(candidate, delimiters)
     found = []  # (start, n_tokens, text)
     for i in range(len(toks)):
         for n in range(1, max_tokens + 1):
