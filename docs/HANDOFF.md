@@ -1,97 +1,83 @@
-# Handoff — jevpaste orchestrator (Implement Narrowing: Gate B passed, live run found two chooser problems → diagnose, then Daniel decides)
+# Handoff — jevpaste orchestrator (Narrowing beta merged; Typesafe decision made; next: prototype the new menu + Settings)
 
-Written for a fresh orchestrator session (`anthropic/claude-opus-5-5:xhigh`; **check `env | grep '^PI_'` first**:
-`PI_MODEL=claude-opus-5-5`, `PI_REASONING_LEVEL=xhigh`, provider anthropic). Repo: `/Users/danielmulec/Projekte/experiments/jevpaste`
-(public, `DanielMulec/jevpaste`, no licence; `main` pushed). Owner: Daniel Mulec. Tracker: GitHub Issues with native
-sub-issues + blocking (`gh` authenticated; wiring via GraphQL `addSubIssue` / `addBlockedBy` with header
-`GraphQL-Features: sub_issues,issue_dependencies`). Workers: fresh `anthropic/claude-opus-5-5:high` Pi instances in
-Herdr tabs. Your intercom id: `echo $PI_INTERCOM_SESSION_ID` — it is **not** the id written in the brief (see step 2).
+Written for a fresh orchestrator session. **Model:** Daniel ran this session on `claude-fable-5-1` (medium) as the
+orchestrator and said to stay on it; the map Notes still name `anthropic/claude-opus-5-5:xhigh` — check
+`env | grep '^PI_'` and tell Daniel which you are. Repo: `/Users/danielmulec/Projekte/experiments/jevpaste` (public,
+`DanielMulec/jevpaste`, no licence; `main` pushed, tree clean apart from an untracked `.vscode/`). Owner: Daniel Mulec.
+Tracker: GitHub Issues with native sub-issues + blocking (`gh` authenticated; wiring via GraphQL `addSubIssue` /
+`addBlockedBy` with header `GraphQL-Features: sub_issues,issue_dependencies`; **resolve issue node ids one query per
+issue** — an aliased two-issue query returned nulls this session). Workers: fresh `anthropic/claude-opus-5-5:high` Pi
+instances in Herdr tabs. Your intercom id: `echo $PI_INTERCOM_SESSION_ID`; it overrides any id in a brief.
 
 ## Context (read, don't re-derive)
-- Map: [Build Daniel's Jev-powered macOS smart-paste app](https://github.com/DanielMulec/jevpaste/issues/1): **read
-  its body first** (Notes: **Jev-first rule**, **Orchestrator latitude**, **Chrome rights**, new **Other users** line).
-- Ticket in flight: [Implement Narrowing](https://github.com/DanielMulec/jevpaste/issues/50) (assigned to Daniel = the claim).
-  Brief `docs/briefs/narrowing-brief.md`; design as built `docs/design/narrowing.md` (branch `narrowing`).
-- **Worker handoff (read it fully):** `docs/briefs/narrowing-worker-handoff.md` on branch `narrowing` (worker 2 wrote
-  it at ~331k context). Worker 1's older handoff with the **Gate A reply verbatim**:
-  `~/.pi/worktrees/jevpaste/narrowing-handoff.md` (outside the repo) + stash `~/.pi/worktrees/jevpaste/narrowing-handoff-stash/`.
-- Live-run log: `docs/acceptance/run-2026-09-26-narrowing.log` (branch `narrowing`).
-- Contract: [Decide the extraction engine for any-field Smart Paste](https://github.com/DanielMulec/jevpaste/issues/47#issuecomment-5845599979);
-  spike: [Spike: does choice-only Narrowing pass the any-field matrix?](https://github.com/DanielMulec/jevpaste/issues/49)
-  (data on branch `spike/narrowing` @ ba32886).
+- Map: [Build Daniel's Jev-powered macOS smart-paste app](https://github.com/DanielMulec/jevpaste/issues/1): **read its
+  body first** (Notes: Jev-first rule, Orchestrator latitude, Chrome rights, Other users; Decisions so far ends with
+  the two closed tonight).
+- Glossary: `CONTEXT.md` — tonight added **Jev Provider**, **History Search**, **Full History**.
+- Closed tonight:
+  - [Implement Narrowing](https://github.com/DanielMulec/jevpaste/issues/50#issuecomment-5849414390) — the Narrowing
+    **beta** (Daniel's word, from the spike's decision 3) merged as `6af3fda`, installed; chooser now filled by Jev
+    (exclusion re-asks); known misses listed there and on the post-timeline ticket.
+  - [Decide how JevPaste supports Typesafe direct alongside the Vercel AI Gateway](https://github.com/DanielMulec/jevpaste/issues/45#issuecomment-5849649811)
+    — nine decisions incl. **Daniel's menu redesign** (history panel goes; menu = History Search · Settings… · Quit).
 
-## Where things stand (2026-09-26, ~20:45)
-- **Branch `narrowing`** (worktree `~/.pi/worktrees/jevpaste/narrowing`), pushed. Commits: 9e2a6d4 design → d81c604
-  code+tests+fixtures → 6958ebd replay 14 cells → b117e47 docs → 568c96d README privacy → 7e4d172/da75606 live log →
-  **1c06af2 fix (A)** → c59d368 live log parts 2–3 + worker handoff (tree clean). `make check` green (442 tests, 3.4 s); `make planning-time` (release)
-  within ceilings (recorded pastes ≤ 5 ms, 300-line list 32 ms, 3000-line copy 72 ms — worker 2 fixed an O(n²) search
-  that had made planning take 83 s).
-- **Gate A approved** (wordings byte-checked by me against FINDINGS; condition 1 "one JSON writer" = `OrderedJSON.rendered`
-  in Core, met; condition 2 fixtures ignored by make check, met). **Gate B approved** (I ran make check + planning-time
-  and read Narrowing.swift, FollowUp.swift, +Narrowing coordinator, JevRefusal, JevGatewayDecisionService).
-- **Live run so far** (installed build = **branch 568c96d**, i.e. WITHOUT fix (A)): (b) Herdr lone URL → whole URL, not
-  executed, 1.25 s cold; (d) 3000-line copy → sent, Jev 400 → "Too long for Smart Paste", nothing inserted; (a) Chrome form:
-  Ort → `Graz`, E-Mail ← signature → the address, Kommentar → whole copy (p=0.56), Telefon → offer timed out, empty.
-  (c) 300-line list with trailing newline → **"Too long"** — root cause: the stripped whole copy was offered as a child,
-  a byte-identical duplicate of *keep* (spike fixtures never had trailing newlines). **Fix (A), Daniel "Agree"**: no child
-  equals what keeping its parent pastes → 1c06af2, tested, replay byte-identical, **not installed yet**.
-  **(B), Daniel "Agree"**: a follow-up that fits no size form still sends the last form and Jev refuses → record for Gate C
-  and the later Narrowing round, no fix now. Also for Gate C: the size model says a 350-line list doesn't fit one call
-  while 300 and 400 do (grouping not monotonic).
-- **Daniel's block, step 1 (two emails → chooser) FAILED in two ways** (screenshot on his Desktop,
-  `Bildschirmfoto 2026-09-26 um 20.35.57.png`; log 20:35:42–20:36:02, 1 question, 92 options, ask_user p=0.51):
-  (1) the chooser listed 6 rows: address 1, three multi-line pieces of the copy (whole copy, its stripped duplicate —
-  gone with (A) — and a 3-line run) and two **fragments** of address 2 (`holzner@studio-`, `.example`);
-  (2) **the full second address was not listed at all**; Daniel picked the fragment and exactly that was inserted.
-  The spike's criterion 4 only checked *that* ask_user was chosen, never *what* the chooser lists — a measurement gap.
-  Steps 2+3 (WhatsApp / ChatGPT whole copy) **not run**.
-- Handovers this session: worker 1 → worker 2 at ~460k context (clean, ~2 min, tarball backup
-  `~/.pi/worktrees/jevpaste/narrowing-wip-1832.tar.gz`); worker 2 → (next) at ~331k; this orchestrator at ~200k.
-- **Tracker changes this session:** Implement Narrowing assigned to Daniel (it had no assignee);
-  [Decide how JevPaste supports Typesafe direct alongside the Vercel AI Gateway](https://github.com/DanielMulec/jevpaste/issues/45)
-  retitled; body: **addition, not replacement; every user picks the provider in the app's settings** (Daniel), open:
-  key entry/storage, missing-key behaviour, fit with the history-panel UI ticket; [Daniel's comment](https://github.com/DanielMulec/jevpaste/issues/45#issuecomment-5847682270).
-  Map Notes gained **Other users**: others run JevPaste from the public repo with their own key; "no bigger plans yet"
-  (onboarding, notarized distribution, public release stay out of scope; licence stays in the fog).
+## Where things stand (2026-09-26, ~22:30)
+- **Installed app** `~/Applications/JevPaste.app` = `main` @ 6af3fda (Narrowing beta + chooser fill + stepP logging),
+  running normally, Open-at-Login ON. No worktrees or branches for Narrowing remain (`spike/narrowing` is a kept
+  primary source). Worktrees present: research spikes only (`jev`, `macos`, `macos-probe`, `quality`, `signing`,
+  `spike-contract`, `history-ui-screens`).
+- **No worker running.** Herdr has only the orchestrator's `jevpaste` tab.
+- Daniel's mood: "Very cool" about the chooser fill; he does **not** like the cutter's history ("fuckery") but agreed
+  to park Narrowing until its post-timeline ticket; he wants his menu design.
 
-## Open tickets (children of the map)
-| ticket | type | note |
+## Open tickets (children of the map), in chain order
+| ticket | type | state |
 |---|---|---|
-| [Implement Narrowing](https://github.com/DanielMulec/jevpaste/issues/50) | task | in flight; next: F1 diagnosis |
-| [Decide how JevPaste supports Typesafe direct alongside the Vercel AI Gateway](https://github.com/DanielMulec/jevpaste/issues/45) | grilling | after Narrowing; settings UI is new (app has none) |
-| [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37) | prototype | after 45 |
+| [Prototype the status-item menu with History Search and the Settings window](https://github.com/DanielMulec/jevpaste/issues/37) | prototype | **frontier — next** (repurposed from the old history-panel ticket; unassigned) |
+| [Implement the status-item menu with History Search and the Settings window](https://github.com/DanielMulec/jevpaste/issues/53) | task | blocked by 37 |
+| [Add Typesafe direct as a Jev Provider](https://github.com/DanielMulec/jevpaste/issues/54) | task | blocked by 53 |
+| [Open Settings on first launch when no Jev Provider has a key](https://github.com/DanielMulec/jevpaste/issues/55) | grilling | post-timeline, blocked by 53 |
+| [Improve Narrowing after the beta](https://github.com/DanielMulec/jevpaste/issues/52) | grilling | post-timeline, blocked by 37 + 54; collect daily-use misses as comments |
 | [Decide what the secure-field pre-check uses when the OS secure-input flag is absent](https://github.com/DanielMulec/jevpaste/issues/38) | grilling | post-timeline |
 
 ## Next session — exact steps
-1. `env | grep '^PI_'`. Read the map body, this file, the brief, `docs/design/narrowing.md`, the worker handoff
-   (`git -C ~/.pi/worktrees/jevpaste/narrowing show HEAD:docs/briefs/narrowing-worker-handoff.md`).
-2. **Launch worker 3** in the same worktree (no new worktree): `herdr tab create --cwd ~/.pi/worktrees/jevpaste/narrowing
-   --label narrowing-3 --no-focus`; `herdr agent start narrowing3 --kind pi --pane <id> --timeout 60000 -- --model
-   anthropic/claude-opus-5-5:high`; prompt: "First run env | grep '^PI_MODEL' and '^PI_REASONING'. You are the THIRD worker
-   on this slice. Read docs/briefs/narrowing-brief.md, docs/design/narrowing.md, docs/briefs/narrowing-worker-handoff.md
-   (and the Gate A reply in ~/.pi/worktrees/jevpaste/narrowing-handoff.md). Your supervisor intercom id is **<YOUR ID>** —
-   it overrides the id written in the brief and the handoffs. Do not reset or discard anything. Start with the F1
-   diagnosis; send me one line when you've read everything." (Worker 2's tab `narrowing-2` is already closed.)
-3. **F1 diagnosis (worker):** rebuild the exact step-1 request (copy + the form's Target Context are deterministic),
-   run it live ~5× in the ids form and ~5× in the full-text form (synthetic data, ~$0.0003/call), print per option: text,
-   p. Questions: why does the full second address get no weight while its fragments do (hypothesis: excerpt-id
-   confusion — weight landing on ids near the line's id)? What would the chooser list under candidate rules?
-4. **Take the finding to Daniel** as short numbered questions with a recommendation each. It is **his** decision: the
-   chooser list rule (today: every option with p > 0) and any design change to the option form; any threshold/cap is
-   a local rule under the Jev-first rule → justify it. Never tune for the fixture alone.
-5. Then: install (ask the worker; `make install`), re-run (c) + Kommentar, then **Daniel's block in one go**: step 1 again,
-   steps 2+3 (WhatsApp, ChatGPT) — the worker **stages every copy itself** (pbcopy + verify the history row); Daniel only
-   presses ⌘⇧V. Report → **Gate C** → one fresh GPT-6-Sol review (brief pattern below) → fixes → delta review → merge
-   (`make check` before push) → `make install` of main → resolution comment (review-chain summary; call it the Narrowing
-   **beta**; list (B), the 350-line finding, the chooser finding) → close → map gist → close tabs, remove the worktree,
-   delete the branch; delete `~/.pi/worktrees/jevpaste/narrowing-handoff*` and `narrowing-wip-*.tar.gz` after the merge.
-6. Then the frontier: the Typesafe-direct grilling (grilling + domain-modeling; the settled points are in its body),
-   then the history-panel UI prototype. The map fog "Narrowing accuracy after the beta" comes only after those.
+1. `env | grep '^PI_'`; read the map body, `CONTEXT.md`, ticket 37's body and the #45 resolution comment.
+2. **Claim 37** (assign Daniel). Write `docs/briefs/menu-settings-prototype-brief.md` on `main` (commit; the hook runs
+   `make check`, ~20–60 s): the decided design verbatim (from the #45 resolution), the three open questions in 37's
+   body (text field inside an `NSMenu` — typing focus, ↑/↓, Enter, Esc — or a menu-shaped panel; row look; Settings
+   layout), **throwaway** code on branch `prototype/menu-settings` (kept, never merged), screenshots as a contact sheet
+   (PIL, 4 across) for Daniel via `telegram_attach`, no `make check` obligation for the prototype, no install over the
+   production app (run the prototype as its own ad-hoc bundle or a `swift run` panel). Skills for the worker:
+   `/prototype`, `~/.agents/skills/prototype/SKILL.md`.
+3. Launch the worker (protocol below), relay contact sheets to Daniel, he picks by number; loop until he says the look
+   and behaviour are right. Resolution comment = the settled look/behaviour + links to the prototype branch and the
+   chosen screenshots → close → map gist → then 53 is on the frontier (brief it from 37's resolution + #45).
+4. **Typesafe key:** before 54, Daniel must create a key at console.typesafe.ai (task step for him; store via the new
+   Settings, never in the repo).
 
-## Installed app right now
-`~/Applications/JevPaste.app` = **branch build 568c96d** (Narrowing beta without fix (A)), running normally (no trigger
-flag), Open-at-Login ON. If Daniel's daily use suffers before the merge, reinstall main (`make install` from the main
-checkout) — orchestrator latitude covers that; tell him.
+## Facts checked tonight (save the lookups)
+- Menu today: "Clipboard History…", "Open at Login", "Quit" (`MenuBarDelegate.swift`); no Settings item exists.
+- Key today: `~/.config/jevpaste/env`, `AI_GATEWAY_API_KEY` (`GatewayCredentials.swift`); missing → "Jev unavailable".
+- Narrowing sends **only choice questions**, so the research's `noul` yes/no difference between Gateway and Typesafe
+  direct no longer matters; remaining differences: URL, auth header, model id (`jev-1.13.0`), 422/529, usage casing.
+- Jev gives all non-`ask_user` weight to the **first** exact candidate in the copy (second gets 0.00, 16/16); that is
+  why the chooser is now filled by re-asking, not by probabilities. Jev asks at step 1 only ~⅔–¾ of the time on the
+  two-address copy (press 1 took the first address outright) — a beta miss, recorded.
+
+## Session lessons (2026-09-26 late)
+- Daniel wants **/wait-what** answers sometimes: context first, Simplified Technical English, glossary terms.
+  He asked "who told you to call it beta?" — always be able to cite where a label came from (spike #49, decision 3).
+- Daniel answers grilling rounds as "Q1: …" lists; he adds design of his own mid-round (the menu redesign) — fold it
+  into the model immediately (CONTEXT.md) and re-check which open tickets it supersedes (#37 was repurposed).
+- Explain code-structure questions ("one adapter or two") as *behaviour is unchanged either way*; he reads them as
+  behaviour questions otherwise.
+- `gh issue create` + GraphQL wiring: fetch each issue's node id in its own query.
+- Review chain tonight: GPT-6-Sol MERGE with 3 non-blocking → fixes → fresh delta MERGE with 1 doc line (fixed by the
+  orchestrator, doc-only) → merge; ~3 min per review. `git worktree add --detach` at the branch head + `REVIEW-BRIEF.md`
+  with a mandatory `intercom send` last step worked first time, twice.
+- Worker 3 (Opus 5.5 high) diagnosed F1 with 46 live calls, falsified the id-confusion hypothesis, found the
+  position effect, and proposed the exclusion re-ask itself — give diagnosis workers the `diagnosing-bugs` skill and
+  a budget, not a hypothesis to confirm.
 
 ## Orchestrator latitude (Daniel, 2026-09-26; also in the map Notes)
 Daniel: "I gave you the blessing to do tasks relevant for proper orchestration just yourself without asking me."
