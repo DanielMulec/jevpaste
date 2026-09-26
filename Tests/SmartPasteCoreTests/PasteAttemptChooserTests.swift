@@ -3,45 +3,34 @@ import Testing
 
 @MainActor
 struct PasteAttemptChooserTests {
-    /// Jev asks the user at step 1, weighting the two emails and — a little — the whole copy.
+    /// Jev asks the user at step 1 and fills the chooser with the two emails, the backup first.
     private static func harnessWithChooserOpen() -> PasteAttemptHarness {
         let harness = PasteAttemptHarness()
         harness.hotkey.press()
-        harness.jev.askUser(
-            weighting: [("ada@work.example", 0.2), ("ada@example.com", 0.3), (PasteAttemptHarness.sourceText, 0.01)]
-        )
+        harness.jev.askUser(weighting: [("ada@example.com", 0.3)])
+        harness.jev.fillChooser(with: ["ada@work.example", "ada@example.com"])
         return harness
     }
 
-    @Test func askTheUserOpensTheChooserWithEveryWeightedOptionMostLikelyFirst() {
+    @Test func askTheUserOpensTheChooserForTheBoundTargetWithJevsRows() {
         let harness = Self.harnessWithChooserOpen()
 
-        let offered = ["ada@example.com", "ada@work.example", PasteAttemptHarness.sourceText]
+        let offered = ["ada@work.example", "ada@example.com"]
         #expect(harness.chooser.offeredCandidates == offered.map { Candidate(text: $0) })
         #expect(harness.chooser.offeredTarget == PasteAttemptHarness.emailField)
         #expect(harness.presenter.outcomes.isEmpty)
     }
 
-    @Test func askTheUserAtALaterStepOffersThatStepsOptions() {
+    @Test func askTheUserAtALaterStepFillsTheChooserFromThatStepsPiece() {
         let harness = PasteAttemptHarness()
 
         harness.hotkey.press()
         harness.jev.pick("Email: ada@example.com")
-        harness.jev.askUser(weighting: [("ada@example.com", 0.4), ("Email: ada@example.com", 0.2)])
+        harness.jev.askUser(weighting: [])
+        harness.jev.fillChooser(with: ["ada@example.com"])
 
-        let offered = ["ada@example.com", "Email: ada@example.com"]
-        #expect(harness.chooser.offeredCandidates == offered.map { Candidate(text: $0) })
-    }
-
-    @Test func choosingTheWholeCopyPastesItWithoutItsOuterLineBreaks() {
-        let harness = PasteAttemptHarness(sourceText: "\nAda\nada@example.com\n")
-        harness.hotkey.press()
-        harness.jev.askUser(weighting: [("\nAda\nada@example.com\n", 0.3), ("ada@example.com", 0.2)])
-
-        harness.chooser.choose("\nAda\nada@example.com\n")
-        harness.clock.advance(by: .milliseconds(120))
-
-        #expect(harness.log.steps == [.write("Ada\nada@example.com"), .pasteKeystroke, .restore])
+        #expect(harness.chooser.offeredCandidates == [Candidate(text: "ada@example.com")])
+        #expect(harness.jev.requests.count == 4)
     }
 
     @Test func chooserCancelInsertsNothing() {
@@ -97,7 +86,8 @@ struct PasteAttemptChooserTests {
     @Test func chooserReplyInADifferentEncodingOfAnOfferedAlternativeFails() {
         let harness = PasteAttemptHarness(sourceText: "Z\u{FC}rich, Zu\u{308}rich\nBern")
         harness.hotkey.press()
-        harness.jev.askUser(weighting: [("Z\u{FC}rich", 0.3), ("Bern", 0.3)])
+        harness.jev.askUser(weighting: [])
+        harness.jev.fillChooser(with: ["Z\u{FC}rich", "Bern"])
 
         harness.chooser.choose("Zu\u{308}rich")
 

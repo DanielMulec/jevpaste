@@ -46,6 +46,12 @@ final class FakeDecisionService: DecisionService {
         answer(probability: probability, others: weights) { _, _ in "ask_user" }
     }
 
+    /// Jev fills the Candidate Chooser after asking the user: picks each row in turn, then finds nothing more fits.
+    @MainActor func fillChooser(with rows: [String]) {
+        for row in rows { pick(row) }
+        nothingFits()
+    }
+
     /// Picks `text`, then keeps it at the next step: a two-step Narrowing to `text`.
     @MainActor func narrow(to text: String) {
         pick(text)
@@ -74,9 +80,10 @@ final class FakeDecisionService: DecisionService {
 }
 
 extension ChoiceQuestion {
-    /// The piece options with their texts: every option between the unchanged piece and `nothing_fits`.
+    /// The piece options with their texts: every option after the unchanged piece but `nothing_fits` and `ask_user`
+    /// (a fill choice has no `ask_user`).
     func pieceOptions(in request: NarrowingRequest) -> [(id: String, text: String)] {
-        options.dropFirst().dropLast(2).compactMap { option in
+        options.dropFirst().filter { $0.id != "nothing_fits" && $0.id != "ask_user" }.compactMap { option in
             switch option.description {
             case .excerpt: request.excerpts.first { $0.id == option.id }.map { (option.id, $0.text) }
             case .text(let text): (option.id, text)

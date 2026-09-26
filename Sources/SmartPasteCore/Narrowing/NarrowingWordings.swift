@@ -12,6 +12,12 @@ public struct NarrowingWordings: Equatable, Sendable {
     public let laterStepWithExcerptIDs: String
     /// Later steps: the `question` beside `current_piece`, full-text fallback form.
     public let laterStepWithFullText: String
+    /// The Candidate Chooser's fill choices (Daniel, 2026-09-26, live finding F1): each step wording above without its
+    /// last sentence, the one naming `ask_user` — a fill choice offers no `ask_user`.
+    public let firstStepFillWithExcerptIDs: String
+    public let firstStepFillWithFullText: String
+    public let laterStepFillWithExcerptIDs: String
+    public let laterStepFillWithFullText: String
     /// Step 1's option for the whole copy, unchanged.
     public let everything: String
     /// Later steps' option for `current_piece`, unchanged.
@@ -43,17 +49,22 @@ public struct NarrowingWordings: Equatable, Sendable {
             "Choose what will be pasted at the text cursor. If that place asks for one particular thing, choose the "
                 + "option that is exactly that thing, with nothing missing and nothing extra; only if no option is "
                 + "exactly that, choose the option that contains all of it with the least extra text. If that place "
-                + "does not ask for one particular thing, choose \(whole). If two or more different excerpts are "
-                + "each exactly the thing that place asks for and nothing says which one is meant, choose `ask_user` "
-                + "instead of one of them."
+                + "does not ask for one particular thing, choose \(whole)."
         }
+        let askUserSentence =
+            " If two or more different excerpts are each exactly the thing that place asks for and nothing says "
+            + "which one is meant, choose `ask_user` instead of one of them."
         let decideFirst = decide("everything that was copied")
         let decideLater = decide("`current_piece` as it is")
         return NarrowingWordings(
-            firstStepWithExcerptIDs: preamble + firstOptions + firstExcerptIDs + decideFirst,
-            firstStepWithFullText: preamble + firstOptions + firstFullText + decideFirst,
-            laterStepWithExcerptIDs: preamble + laterOptions + laterExcerptIDs + decideLater,
-            laterStepWithFullText: preamble + laterOptions + laterFullText + decideLater,
+            firstStepWithExcerptIDs: preamble + firstOptions + firstExcerptIDs + decideFirst + askUserSentence,
+            firstStepWithFullText: preamble + firstOptions + firstFullText + decideFirst + askUserSentence,
+            laterStepWithExcerptIDs: preamble + laterOptions + laterExcerptIDs + decideLater + askUserSentence,
+            laterStepWithFullText: preamble + laterOptions + laterFullText + decideLater + askUserSentence,
+            firstStepFillWithExcerptIDs: preamble + firstOptions + firstExcerptIDs + decideFirst,
+            firstStepFillWithFullText: preamble + firstOptions + firstFullText + decideFirst,
+            laterStepFillWithExcerptIDs: preamble + laterOptions + laterExcerptIDs + decideLater,
+            laterStepFillWithFullText: preamble + laterOptions + laterFullText + decideLater,
             everything: "Everything that was copied, as it is: all of `source_document`, nothing cut away.",
             keep: "`current_piece` as it is, nothing cut away.",
             nothingFits: "That place asks for one particular thing, and no part of `source_document` is that thing.",

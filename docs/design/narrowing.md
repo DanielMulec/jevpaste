@@ -30,9 +30,9 @@ one rolling-hash pass per piece length for document order, children once per ste
 holds ≤ 20 ms per step on the recorded pastes, ≤ 100 ms on N03, ≤ 250 ms on a 3000-line copy.
 
 ## One home for what a later round retunes — `NarrowingPolicy` (Core), injected through `PasteAttemptRules`
-`NarrowingPolicy.r2b`: `wordings` (`NarrowingWordings.swift`: step-1/later instructions in both forms, `everything`,
-`keep`, `nothing_fits`, `ask_user`), option ids, fine-run length 8, coarse-repeat limit 126, 12 questions, carry
-p ≥ 0.01, fan-out width 3, `sizeModel`. No number or text elsewhere.
+`NarrowingPolicy.r2b`: `wordings` (`NarrowingWordings.swift`: step-1/later instructions in both forms and their fill
+variants, `everything`, `keep`, `nothing_fits`, `ask_user`), option ids, fine-run length 8, coarse-repeat limit 126, 12
+questions, carry p ≥ 0.01, fan-out width 3, `sizeModel`. No number or text elsewhere.
 
 ## Step loop (`Narrowing/Narrowing.swift`, a pure value; coordinator `PasteAttemptCoordinator+Narrowing.swift`)
 `Narrowing.start() / receive(answers) -> NarrowingAction` = `.send(NarrowingRequest)` · `.pasteResult(String)` ·
@@ -47,44 +47,44 @@ p ≥ 0.01, fan-out width 3, `sizeModel`. No number or text elsewhere.
   ids, full; the first that fits is sent (else the last).
 - Every pick passes `ClipboardItem.acceptsPasteResult(_:offeredAmong:)` (UTF-8 bytes, offered, verbatim in the item;
   plus strictly inside the current piece) → else `failed(.invalidResult)`, no retry. Keep → the piece (the whole copy
-  with outer line breaks stripped); nothing → the Enter offer at any step; ask → chooser with every option of the
-  deciding choice with p > 0 except nothing/ask, most likely first, ties in Jev's listed order (keep included when
-  weighted; the chooser's pick is checked the same way; a chosen whole copy is stripped too).
-- Clock: 5 s from the Bound Target over every step and 429 wait (`JevConsultation.deadline`); phase `deciding` spans
-  the steps, so a click cancels between them; chooser and offer off the clock; the 150 ms indicator once.
+  with outer line breaks stripped); nothing → the Enter offer at any step; ask → the chooser fill.
+- **Chooser fill** (`ChooserFill.swift`; F1, Daniel 2026-09-26: Jev gives the non-ask weight to the first exact
+  candidate only; the second address got 0 in 16/16 runs): the deciding choice asked again (same ids, form, order;
+  `*Fill*` wording = the step's minus its `ask_user` sentence) without `ask_user` and every piece with an occurrence
+  overlapping a row's (UTF-8, in the current piece); each checked pick is the next row; keep/nothing → chooser with
+  the rows in order (no row yet: keep → the paste, nothing → the offer). No cap. Clock, 429 past it, `.failed` or
+  `.tooLarge` mid-fill → chooser with the rows found; none → the step's outcome.
+- Clock: 5 s from the Bound Target over every step, fill call and 429 wait (`JevConsultation.deadline`); phase
+  `deciding` spans them, so a click cancels between them; chooser and offer off the clock; the 150 ms indicator once.
 
 ## Seam — `DecisionService.evaluate(_ NarrowingRequest, reply: (NarrowingReply) -> Void)`
-`NarrowingRequest { sourceDocument, targetContext, excerpts: [id, text], questions: [ChoiceQuestion { id,
-instructions: .text | .onPiece(currentPiece, question), options: [id, .text | .excerpt(null) | .keptPiece(option,
-text)] }] }`. `NarrowingReply = .answered([questionID: ChoiceAnswer { choice, probabilities }]) | .rateLimited(retryAfter:)
-| .tooLarge | .failed`. The Gateway wraps Core's JSON of state + questions (keys in the spike's order, which Jev
-reads) with `model`, maps 200/429/400-`max_tokens_exceeded` (top-level `error.message`/`param.error`, or any
+`NarrowingRequest { sourceDocument, targetContext, excerpts: [id, text], questions: [ChoiceQuestion { id, instructions:
+.text | .onPiece(currentPiece, question), options: [id, .text | .excerpt(null) | .keptPiece(option, text)] }] }`.
+`NarrowingReply = .answered([questionID: ChoiceAnswer { choice, probabilities }]) | .rateLimited(retryAfter:) |
+.tooLarge | .failed`. The Gateway wraps Core's JSON of state + questions (keys in the spike's order, which Jev reads)
+with `model`, maps 200/429/400-`max_tokens_exceeded` (top-level `error.message`/`param.error`, or any
 `providerAttempts[].error` whose JSON `error_type` is it)/other, and logs status, questions, options, bytes, latency.
 
 ## Outcome and log line
 `.tooLarge` → `PasteAttemptFailure.tooLongForSmartPaste`: "Too long for Smart Paste — ⌘V pastes it whole", log key
-`failed.tooLongForSmartPaste`. `SmartPastePath` = `{ narrowing: NarrowingTrace, offer }`:
-`via=narrowing steps=<n> calls=<m> p=<deciding p> questions=<per step>` (+ ` offer=dismissed|timedOut`); per step
-`<questions in its request>`, `+f<speculative questions>` when a follow-up went, `s` when answered speculatively
-(N03: `questions=2+f0,2+f2,s`); `calls` counts every POST, 429 retries included; ` full=<k>` when k requests used the
-full-text form. Enter after No Suitable Match: `via=directPaste reason=enterAfterNoMatch p=<deciding p>`.
+`failed.tooLongForSmartPaste`. Log line: `via=narrowing steps=<n> calls=<m> p=<deciding p> questions=<per step>`,
+per step `<questions>`, `+f<spec>` after a follow-up, `s` when answered speculatively (N03: `2+f0,2+f2,s`); `calls`
+counts every POST (429 retries too); after an ask ` fill=<n> fillEnd=<keep|nothingFits|clock|failed>`; then
+` full=<k>` for k full-text requests and ` offer=dismissed|timedOut`. Enter after No Suitable Match:
+`via=directPaste reason=enterAfterNoMatch p=<deciding p>`.
 
 ## Removed
-Core `Candidates/*` (8 files), `Seams/CandidateExtraction.swift`, `Values/Decision.swift`, `PasteAttemptCoordinator+Decision.swift`,
-`DirectPasteRule` (`withoutOuterLineBreaks` → `Values/OuterLineBreaks.swift`); Gateway's three questions,
-`none_of_these`, 254 cap, 255-character cut, `tooManyCandidates`; tests: `FreeTextTarget(Gateway,LogLine)Tests`,
-`PasteAttempt{DirectPaste,Decision}Tests`, `Candidate*Tests`, `DirectPasteRuleTests`, `JevGateway{Request,Reply}Tests`.
+Core `Candidates/*`, `CandidateExtraction`, `Decision`, `+Decision`, `DirectPasteRule` (→ `OuterLineBreaks`); the
+Gateway's three questions, `none_of_these`, 254 cap, 255-character cut, `tooManyCandidates`; and their tests.
 
 ## Tests per scope item
 1 `PieceCuttingTests`, `PieceChildrenTests` (byte-exact slices, CRLF, graphemes, dedupe, parent excluded, blocks,
-fine drop), `NarrowingReachabilityTests` (spike `self_check` exhaustive on its samples + every expected excerpt of
-all 82 round-1/round-2 cells that fit, from `Fixtures/narrowing-cells.json`).
+fine drop), `NarrowingReachabilityTests` (spike `self_check` on its samples + every target of the 82 cells that fit).
 2 `NarrowingRequestEncodingTests` (every wording by exact string equality in the body, full text verbatim > 255
 characters, key order), `NarrowingReplyTests` (probabilities, unknown id, 429, both 400 forms → tooLarge, other 400).
 3 `PasteAttemptNarrowing(Clock)Tests` (clock over steps and 429, cancel between steps, invalid pick, one-character
-piece final, no call for whitespace), `NoSuitableMatchOfferTests` (offer at step 2), `PasteAttemptChooserTests`.
-4 `StepPlannerTests` (layout, forms, size model, N03: fallback re-split 151 + 151, not 252 + 50), `NarrowingStepTests`
-(agreement, follow-up carry, speculation), **`NarrowingReplayTests`**: 14 recorded `r2b` pastes (raw.jsonl, place
-question stripped) through Core and the Gateway encoder — every request byte-identical, every outcome identical.
-5–6 `OutcomeMessageTests`, `NarrowingLogLineTests`. Kept (adapted to the fake answering by option id): byte-exact
-validation, 5 s clock, 429, Enter offer, Wake Wait, chooser, delivery, clipboard, screening. Live: brief step 4.
+piece final, no call for whitespace), `NoSuitableMatchOfferTests`, `PasteAttempt{Chooser,ChooserFill}Tests`.
+4 `StepPlannerTests` (layout, forms, size model, N03 fallback re-split 151 + 151), `NarrowingStepTests` (agreement,
+carry, speculation), `NarrowingChooserFillTests`, **`NarrowingReplayTests`**: 14 recorded `r2b` pastes through Core and
+the Gateway encoder, every request byte-identical, every outcome identical (ending in `ask_user`: the first fill).
+5–6 `OutcomeMessageTests`, `NarrowingLogLineTests`. Kept, adapted: the older Core and App tests. Live: brief step 4.

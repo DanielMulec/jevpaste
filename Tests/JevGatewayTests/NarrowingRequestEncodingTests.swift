@@ -42,6 +42,14 @@ private enum FrozenWording {
         with: "Every other excerpt option is a smaller exact excerpt cut from `current_piece`; its description is that "
             + "excerpt, character for character."
     )
+    /// The Candidate Chooser's fill wordings (Daniel, 2026-09-26): each step wording without its last sentence.
+    static let askUserSentence =
+        " If two or more different excerpts are each exactly the thing that place asks for and nothing says which "
+        + "one is meant, choose `ask_user` instead of one of them."
+    static let firstStepFillIDs = firstStepIDs.replacingOccurrences(of: askUserSentence, with: "")
+    static let laterStepFillIDs = laterStepIDs.replacingOccurrences(of: askUserSentence, with: "")
+    static let firstStepFillFullText = firstStepFullText.replacingOccurrences(of: askUserSentence, with: "")
+    static let laterStepFillFullText = laterStepFullText.replacingOccurrences(of: askUserSentence, with: "")
     static let everything = "Everything that was copied, as it is: all of `source_document`, nothing cut away."
     static let keep = "`current_piece` as it is, nothing cut away."
     static let nothingFits = "That place asks for one particular thing, and no part of `source_document` is that thing."
@@ -121,6 +129,33 @@ struct NarrowingRequestEncodingTests {
         #expect(laterSent["criteria"]?["keep"]?["text"] == .string(long + "\n8020 Graz"))
         #expect(laterSent["criteria"]?["e000"] == .string(long))
         #expect(try excerpts(of: first) == nil)
+    }
+
+    @Test(arguments: [
+        (OptionForm.excerptIDs, false, FrozenWording.firstStepFillIDs),
+        (.excerptIDs, true, FrozenWording.laterStepFillIDs),
+        (.fullText, false, FrozenWording.firstStepFillFullText),
+        (.fullText, true, FrozenWording.laterStepFillFullText),
+    ])
+    func aFillChoiceCarriesItsStepWordingWithoutTheAskUserSentenceAndNoAskUserOption(
+        form: OptionForm, isLaterStep: Bool, wording: String
+    ) throws {
+        let copy = Self.copy
+        let piece = isLaterStep ? copy.suffix(9) : copy[...]
+        var assembly = RequestAssembly(copy: copy, context: TargetContext(fieldLabel: "Ort"), policy: .r2b, form: form)
+        assembly.addChoice(id: "narrow_0", on: piece, offering: [copy.suffix(4)])
+        let fill = ChooserFill(deciding: try #require(assembly.questions.first))
+        let (planned, excerpts) = fill.nextQuestion(wordings: NarrowingPolicy.r2b.wordings)
+        let request = NarrowingRequest(
+            sourceDocument: copy, targetContext: TargetContext(fieldLabel: "Ort"), excerpts: excerpts,
+            questions: [planned.question])
+
+        let sent = try question("narrow_0", of: request)
+
+        let instructions = isLaterStep ? sent["instructions"]?["question"] : sent["instructions"]
+        #expect(instructions == .string(wording))
+        #expect(sent["criteria"]?["ask_user"] == nil)
+        #expect(sent["criteria"]?["nothing_fits"] == .string(FrozenWording.nothingFits))
     }
 
     @Test func theBodyIsTheModelThenCoresStateAndQuestionsInOrder() {

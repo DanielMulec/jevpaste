@@ -1,6 +1,6 @@
 # Candidate Chooser — shell adapter
 
-> **Since Narrowing** ([narrowing.md](narrowing.md), #50): Core opens the chooser when Jev chooses `ask_user`, with every option of the deciding choice Jev gave weight to, most likely first (the piece unchanged included); the shell adapter below is unchanged.
+> **Since Narrowing** ([narrowing.md](narrowing.md), #50): Core opens the chooser when Jev chooses `ask_user`, with the rows Jev then filled it with, in the order found (the chooser fill; live finding F1, Daniel 2026-09-26); the shell adapter below is unchanged.
 
 Slice: [Implement the Candidate Chooser UI](https://github.com/DanielMulec/jevpaste/issues/26).
 Lifecycle: [Choose paste lifecycle, cancellation and clipboard preservation](https://github.com/DanielMulec/jevpaste/issues/8).

@@ -12,6 +12,10 @@ import Testing
 /// the spike sent `json.dumps(body)` (separators ", " and ": ", non-ASCII as `\uXXXX`); the fixture holds that body
 /// parsed and re-serialised with `json.dumps(ensure_ascii=False, separators=(",", ":"))`, member order kept, without
 /// the measurement-only `place` question. Same JSON value, same member order, same characters.
+///
+/// A paste the spike ended in `ask_user` now goes on with the Candidate Chooser's fill (Daniel, 2026-09-26), which the
+/// spike never recorded: its outcome here is the first fill request — the deciding choice without `ask_user`. The
+/// spike's chooser lists (every option with p > 0) are the rule the fill replaced and are not compared.
 struct NarrowingReplayTests {
     @Test(arguments: RecordedPaste.all.map(\.cell))
     func everyRequestIsTheSpikesAndTheOutcomeIsTheSame(cell: String) throws {
@@ -31,7 +35,24 @@ struct NarrowingReplayTests {
             let answers = try EvaluateResponse.answers(from: call.responseBody, to: request).get()
             action = narrowing.receive(answers)
         }
-        #expect(action == paste.expectedAction)
+        guard let expected = paste.expectedAction else {
+            try expectTheFillOfTheDecidingChoice(after: paste, action)
+            return
+        }
+        #expect(action == expected)
+    }
+
+    /// The last recorded request asked the user; Narrowing asks its deciding choice again, without `ask_user`.
+    private func expectTheFillOfTheDecidingChoice(after paste: RecordedPaste, _ action: NarrowingAction) throws {
+        guard case .send(let fill) = action else {
+            Issue.record("expected the chooser's fill request, got \(action)")
+            return
+        }
+        let last = try #require(paste.calls.last.flatMap { OrderedJSONParser.parse($0.request.utf8) })
+        let filling = try #require(fill.questions.first)
+        let recordedOptions = last["questions"]?[filling.id]?["criteria"]?.objectMembers?.map(\.key)
+        #expect(fill.questions.count == 1)
+        #expect(filling.options.map(\.id) == recordedOptions?.filter { $0 != "ask_user" })
     }
 
     @Test func theReplayCoversEveryShapeOfStep() {
@@ -52,7 +73,8 @@ struct RecordedPaste {
 
     let cell: String
     let calls: [Call]
-    let expectedAction: NarrowingAction
+    /// `nil` when the spike's paste ended asking the user.
+    let expectedAction: NarrowingAction?
 
     static let all: [RecordedPaste] = {
         guard
@@ -72,9 +94,7 @@ struct RecordedPaste {
         switch outcome {
         case "paste": expectedAction = .pasteResult(row["final"]?.stringValue ?? "")
         case "nothing": expectedAction = .nothingFits
-        default:
-            let texts = row["chooser"]?.arrayElements?.compactMap(\.stringValue) ?? []
-            expectedAction = .askUser(texts.map { Candidate(text: $0) })
+        default: expectedAction = nil
         }
     }
 

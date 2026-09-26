@@ -4,7 +4,8 @@ import Testing
 @testable import JevPasteApp
 
 /// The outcome log line says what Narrowing did: its steps, its calls, Jev's probability of the deciding option, the
-/// questions per step and the full-text requests. Numbers and fixed names only, never text.
+/// questions per step, the Candidate Chooser's fill and the full-text requests. Numbers and fixed names only, never
+/// text.
 @MainActor
 struct NarrowingLogLineTests {
     private typealias Step = NarrowingTrace.Step
@@ -32,6 +33,25 @@ struct NarrowingLogLineTests {
                 narrowing: NarrowingTrace(steps: longList, fullTextRequests: 2, decidingProbability: 0.046), calls: 4
             ),
             "outcome inserted via=narrowing steps=3 calls=4 p=0.05 questions=2+f0,2+f2,s full=2"
+        ),
+        (
+            .inserted,
+            SmartPastePath(
+                narrowing: NarrowingTrace(
+                    steps: oneStep, fullTextRequests: 4, decidingProbability: 0.71,
+                    chooserFill: ChooserFillTrace(calls: 3, end: .nothingFits)),
+                calls: 4
+            ),
+            "outcome inserted via=narrowing steps=1 calls=4 p=0.71 questions=1 fill=3 fillEnd=nothingFits full=4"
+        ),
+        (
+            .cancelled,
+            SmartPastePath(
+                narrowing: NarrowingTrace(
+                    steps: oneStep, decidingProbability: 0.6, chooserFill: ChooserFillTrace(calls: 2, end: .clock)),
+                calls: 3
+            ),
+            "outcome cancelled via=narrowing steps=1 calls=3 p=0.60 questions=1 fill=2 fillEnd=clock"
         ),
         (
             .failed(.timedOut), SmartPastePath(narrowing: NarrowingTrace(steps: oneStep), calls: 2),

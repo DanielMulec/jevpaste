@@ -34,33 +34,48 @@ enum FirstOccurrences {
     private static func firstOccurrences(of needles: [[UInt8]], length: Int, in haystack: [UInt8]) -> [Int?] {
         guard length > 0 else { return needles.map { _ in 0 } }
         guard length <= haystack.count else { return needles.map { _ in nil } }
-        var waiting: [UInt64: [Int]] = [:]
-        for (position, needle) in needles.enumerated() { waiting[hash(needle[...]), default: []].append(position) }
+        let waiting = RollingHash.table(of: needles)
         var starts = [Int?](repeating: nil, count: needles.count)
         var unfound = needles.count
-        let dropFactor = (1..<length).reduce(UInt64(1)) { power, _ in power &* base }
-        var rolling = hash(haystack[0..<length])
-        var offset = 0
-        while true {
-            if let candidates = waiting[rolling] {
-                for position in candidates where starts[position] == nil {
-                    if haystack[offset..<offset + length].elementsEqual(needles[position]) {
-                        starts[position] = offset
-                        unfound -= 1
-                    }
+        RollingHash.windows(of: length, in: haystack, starting: 0...(haystack.count - length)) { offset, hash in
+            for position in waiting[hash] ?? [] where starts[position] == nil {
+                if haystack[offset..<offset + length].elementsEqual(needles[position]) {
+                    starts[position] = offset
+                    unfound -= 1
                 }
-                if unfound == 0 { break }
             }
-            guard offset + length < haystack.count else { break }
-            rolling = (rolling &- UInt64(haystack[offset]) &* dropFactor) &* base &+ UInt64(haystack[offset + length])
-            offset += 1
+            return unfound > 0
         }
         return starts
     }
+}
 
-    private static let base: UInt64 = 1_099_511_628_211
+/// A polynomial rolling hash over byte windows: one pass finds every window equal to one of many texts of a length.
+enum RollingHash {
+    /// The texts' positions by their hash.
+    static func table(of texts: [[UInt8]]) -> [UInt64: [Int]] {
+        var table: [UInt64: [Int]] = [:]
+        for (position, text) in texts.enumerated() { table[of(text[...]), default: []].append(position) }
+        return table
+    }
 
-    private static func hash(_ bytes: ArraySlice<UInt8>) -> UInt64 {
+    static func of(_ bytes: ArraySlice<UInt8>) -> UInt64 {
         bytes.reduce(0) { $0 &* base &+ UInt64($1) }
     }
+
+    /// Calls `visit` with the start and hash of every `length`-byte window of `bytes` that starts in `starts`, in
+    /// order, until `visit` returns `false`. Every window must lie inside `bytes`.
+    static func windows(
+        of length: Int, in bytes: [UInt8], starting starts: ClosedRange<Int>, _ visit: (Int, UInt64) -> Bool
+    ) {
+        let dropFactor = (1..<length).reduce(UInt64(1)) { power, _ in power &* base }
+        var offset = starts.lowerBound
+        var rolling = of(bytes[offset..<offset + length])
+        while visit(offset, rolling), offset < starts.upperBound {
+            rolling = (rolling &- UInt64(bytes[offset]) &* dropFactor) &* base &+ UInt64(bytes[offset + length])
+            offset += 1
+        }
+    }
+
+    private static let base: UInt64 = 1_099_511_628_211
 }

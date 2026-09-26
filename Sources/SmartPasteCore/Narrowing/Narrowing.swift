@@ -6,7 +6,7 @@ enum NarrowingAction: Equatable {
     case pasteResult(String)
     /// Jev chose "nothing fits": No Suitable Match, with the Enter offer.
     case nothingFits
-    /// Jev chose "ask the user": the Candidate Chooser, with the options Jev gave weight to, most likely first.
+    /// Jev asked the user and filled the Candidate Chooser: these rows, in the order Jev found them.
     case askUser([Candidate])
     /// Jev's pick was not an offered piece, or not a verbatim excerpt inside the current piece.
     case invalidPick
@@ -16,7 +16,8 @@ enum NarrowingAction: Equatable {
 
 /// Narrowing as a pure value: from the whole Active Item, one step after another, each step one request with one or
 /// several choices (and a follow-up choice when several picked different pieces), until Jev keeps a piece unchanged,
-/// finds nothing fits, or asks the user. Every pick is checked byte for byte before it is used.
+/// finds nothing fits, or asks the user — then Jev fills the Candidate Chooser (`ChooserFill`). Every pick is checked
+/// byte for byte before it is used.
 struct Narrowing {
     private let copy: String
     private let item: ClipboardItem
@@ -28,6 +29,8 @@ struct Narrowing {
     private var speculating: [PlannedQuestion] = []
     /// Speculative next steps already answered, by piece.
     private var answeredAhead: [ExactText: AnsweredChoice] = [:]
+    /// The Candidate Chooser's fill, once Jev asked the user.
+    private var fill: ChooserFill?
     private(set) var trace = NarrowingTrace()
 
     init(item: ClipboardItem, context: TargetContext, policy: NarrowingPolicy) {
@@ -45,6 +48,7 @@ struct Narrowing {
 
     /// Jev's answers to the request `send` last asked for.
     mutating func receive(_ answers: [String: ChoiceAnswer]) -> NarrowingAction {
+        if fill != nil { return receiveFill(answers) }
         let questions = pending
         let speculative = speculating
         pending = []
@@ -121,34 +125,76 @@ struct Narrowing {
     private mutating func decide(_ choice: AnsweredChoice) -> NarrowingAction {
         guard let chosen = choice.chosen else { return .invalidPick }
         trace.decidingProbability = choice.chosenProbability
-        let current = choice.planned.currentPiece
         switch chosen {
         case .unchanged:
-            let isWholeCopy = current.utf8.elementsEqual(copy.utf8)
-            return .pasteResult(isWholeCopy ? OuterLineBreaks.stripped(from: copy) : String(current))
+            return .pasteResult(pasteResult(keeping: choice.planned.currentPiece))
         case .nothingFits:
             return .nothingFits
         case .askUser:
-            return .askUser(chooserCandidates(of: choice))
+            fill = ChooserFill(deciding: choice.planned)
+            trace.chooserFill = ChooserFillTrace()
+            return askFill()
         case .piece(let text):
-            let offered = choice.planned.offeredPieces.map { Candidate(text: String($0)) }
-            guard item.acceptsPasteResult(Candidate(text: String(text)), offeredAmong: offered),
-                current.utf8.count > text.utf8.count, current.containsExactly(text)
-            else { return .invalidPick }
+            guard isVerbatimPick(text, of: choice.planned) else { return .invalidPick }
             piece = text
             return step()
         }
     }
 
-    /// Every option of the deciding choice Jev gave weight to, except nothing fits and ask the user, most likely first.
-    private func chooserCandidates(of choice: AnsweredChoice) -> [Candidate] {
-        choice.ranked.compactMap { option in
-            guard option.probability > 0 else { return nil }
-            switch option.meaning {
-            case .unchanged: return Candidate(text: String(choice.planned.currentPiece))
-            case .piece(let text): return Candidate(text: String(text))
-            case .nothingFits, .askUser: return nil
-            }
+    /// What keeping `current` pastes: the piece, or the whole copy with its outer line breaks stripped.
+    private func pasteResult(keeping current: Substring) -> String {
+        current.utf8.elementsEqual(copy.utf8) ? OuterLineBreaks.stripped(from: copy) : String(current)
+    }
+
+    /// Whether `text` is a piece `planned` offered, verbatim in the Active Item and strictly inside its current piece.
+    private func isVerbatimPick(_ text: Substring, of planned: PlannedQuestion) -> Bool {
+        let offered = planned.offeredPieces.map { Candidate(text: String($0)) }
+        let current = planned.currentPiece
+        return item.acceptsPasteResult(Candidate(text: String(text)), offeredAmong: offered)
+            && current.utf8.count > text.utf8.count && current.containsExactly(text)
+    }
+
+    /// Sends the next fill choice.
+    private mutating func askFill() -> NarrowingAction {
+        guard let fill else { return .invalidPick }
+        let (question, excerpts) = fill.nextQuestion(wordings: policy.wordings)
+        pending = [question]
+        trace.chooserFill?.calls += 1
+        if question.form == .fullText { trace.fullTextRequests += 1 }
+        return .send(
+            NarrowingRequest(
+                sourceDocument: copy, targetContext: planner.context, excerpts: excerpts,
+                questions: [question.question]))
+    }
+
+    /// A fill choice's answer: the next row, or the end of the fill — the chooser with the rows found, or, before
+    /// the first row, what keeping the piece or finding nothing fits means at a step.
+    private mutating func receiveFill(_ answers: [String: ChoiceAnswer]) -> NarrowingAction {
+        guard let planned = pending.first, let answer = answers[planned.question.id] else { return .invalidPick }
+        pending = []
+        switch AnsweredChoice(planned: planned, answer: answer).chosen {
+        case .piece(let text):
+            guard isVerbatimPick(text, of: planned) else { return .invalidPick }
+            fill?.add(row: text)
+            return askFill()
+        case .unchanged:
+            let rows = stopFilling(because: .keep)
+            return rows.isEmpty ? .pasteResult(pasteResult(keeping: planned.currentPiece)) : .askUser(rows)
+        case .nothingFits:
+            let rows = stopFilling(because: .nothingFits)
+            return rows.isEmpty ? .nothingFits : .askUser(rows)
+        case .askUser, nil:
+            return .invalidPick
         }
+    }
+
+    /// Ends the Candidate Chooser's fill for `end` and gives the rows Jev found, in order; empty when there are none
+    /// or no fill is running. The coordinator calls it when the clock runs out or the Gateway fails mid-fill.
+    mutating func stopFilling(because end: ChooserFillEnd) -> [Candidate] {
+        guard let rows = fill?.rows else { return [] }
+        fill = nil
+        pending = []
+        trace.chooserFill?.end = end
+        return rows.map { Candidate(text: String($0)) }
     }
 }

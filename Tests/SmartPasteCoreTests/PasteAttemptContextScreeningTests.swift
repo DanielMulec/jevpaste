@@ -93,7 +93,8 @@ struct PasteAttemptContextScreeningTests {
                 harness.targetResolver.focusedTarget = nil
                 harness.jev.narrow(to: "Ada Lovelace")
             case .chooserCancel:
-                harness.jev.askUser(weighting: [("ada@example.com", 0.3), ("ada@work.example", 0.3)])
+                harness.jev.askUser(weighting: [])
+                harness.jev.fillChooser(with: ["ada@example.com"])
                 harness.chooser.dismiss()
             case .indicatorClick:
                 harness.clock.advance(by: .milliseconds(150))

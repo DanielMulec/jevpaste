@@ -112,7 +112,7 @@ Active Item is never changed by the coordinator; a copy during the attempt reach
 ## Clocks
 - **3 s Wake Wait limit**: starts at ⌘⇧V when the focus is unreadable; ends when it resolves (then the 5 s
   deadline starts) or at the limit. Re-reads every 50 ms; the 150 ms indicator shows "Waking <App>…" meanwhile.
-- **5 s deadline**: starts when the Bound Target is resolved and the pre-checks pass (after any Wake Wait); covers every Narrowing step's call and 429 back-off; a retry is
+- **5 s deadline**: starts when the Bound Target is resolved and the pre-checks pass (after any Wake Wait); covers every Narrowing step's call, every chooser-fill call and 429 back-off; a retry is
   scheduled only if it starts before the deadline. Stops at: chooser or No Suitable Match offer opens (both off it),
   delivery starts (delivery is uninterruptible), or any outcome. Not restarted after the chooser.
 - **150 ms indicator**: same start (at ⌘⇧V during a Wake Wait; if "Waking…" was shown, processing replaces it at once); cancelled by any earlier outcome/chooser/delivery.

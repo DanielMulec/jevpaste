@@ -3,7 +3,7 @@
 /// Pins the Active Item at ⌘⇧V and the Bound Target once the focus is readable (after a Wake Wait if it is not yet),
 /// then applies the Pre-checks and runs Narrowing within the 5 s clock: Jev's choices, step after step, until it keeps
 /// a piece (delivered as the Paste Result), finds nothing fits (No Suitable Match with the Enter offer) or asks the
-/// user (the Candidate Chooser). Delivery is one uninterruptible step.
+/// user (the Candidate Chooser, which Jev fills). Delivery is one uninterruptible step.
 @MainActor
 public final class PasteAttemptCoordinator {
     let ports: PasteAttemptPorts
@@ -61,7 +61,7 @@ public final class PasteAttemptCoordinator {
             wakeWait: start.wakeWait, path: SmartPastePath()
         )
         schedule(after: consultation.deadline - ports.clock.now) { coordinator in
-            coordinator.finish(.failed(.timedOut))
+            coordinator.stopNarrowing(ending: .failed(.timedOut), fill: .clock)
         }
         if start.isIndicatorShown {
             showProcessingIndicator()

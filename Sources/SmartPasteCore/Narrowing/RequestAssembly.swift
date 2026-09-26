@@ -19,6 +19,7 @@ enum OptionMeaning: Equatable {
 struct PlannedQuestion {
     let question: ChoiceQuestion
     let currentPiece: Substring
+    let form: OptionForm
     let meanings: [String: OptionMeaning]
 
     /// The pieces this question offered, besides the current piece unchanged.
@@ -75,7 +76,7 @@ struct RequestAssembly {
         meanings[ids.nothingFits] = .nothingFits
         meanings[ids.askUser] = .askUser
         let question = ChoiceQuestion(id: id, instructions: instructions(on: piece, isFirstStep), options: options)
-        questions.append(PlannedQuestion(question: question, currentPiece: piece, meanings: meanings))
+        questions.append(PlannedQuestion(question: question, currentPiece: piece, form: form, meanings: meanings))
     }
 
     /// Whether the request stays within Jev's limits by the size model: the whole request, and the state plus its

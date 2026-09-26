@@ -1,6 +1,6 @@
 /// Narrowing inside a Paste Attempt: sending each step's request, turning Jev's replies into the next step, and the
-/// outcomes Narrowing ends in. The steps run back to back in the `deciding` phase, so a click cancels between them and
-/// the 5 s clock covers them all.
+/// outcomes Narrowing ends in. The steps and the Candidate Chooser's fill run back to back in the `deciding` phase, so
+/// a click cancels between them and the 5 s clock covers them all.
 extension PasteAttemptCoordinator {
     func act(on action: NarrowingAction) {
         guard let narrowing = attempt?.consultation.narrowing else { return }
@@ -35,14 +35,24 @@ extension PasteAttemptCoordinator {
         case .rateLimited(let retryAfter):
             waitToRetry(after: retryAfter)
         case .tooLarge:
-            finish(.failed(.tooLongForSmartPaste))
+            stopNarrowing(ending: .failed(.tooLongForSmartPaste), fill: .failed)
         case .failed:
-            finish(.failed(.decisionUnavailable))
+            stopNarrowing(ending: .failed(.decisionUnavailable), fill: .failed)
         }
     }
 
-    /// Opens the Candidate Chooser; the attempt waits for the user, off the clock. The pick is checked like Jev's; a
-    /// picked whole copy is pasted with its outer line breaks stripped, like every whole-copy paste.
+    /// The clock ran out or the Gateway failed: in the Candidate Chooser's fill with rows found, the chooser opens with
+    /// them; otherwise the attempt ends with `outcome`.
+    func stopNarrowing(ending outcome: PasteAttemptOutcome, fill end: ChooserFillEnd) {
+        guard var narrowing = attempt?.consultation.narrowing else { return finish(outcome) }
+        let rows = narrowing.stopFilling(because: end)
+        attempt?.consultation.narrowing = narrowing
+        attempt?.path.narrowing = narrowing.trace
+        if rows.isEmpty { finish(outcome) } else { offerChoice(among: rows) }
+    }
+
+    /// Opens the Candidate Chooser with the rows Jev filled it with; the attempt waits for the user, off the clock. The
+    /// pick is checked like Jev's.
     private func offerChoice(among alternatives: [Candidate]) {
         guard let attempt else { return }
         stopClocks()
@@ -54,14 +64,13 @@ extension PasteAttemptCoordinator {
             guard attempt.item.acceptsPasteResult(choice, offeredAmong: alternatives) else {
                 return finish(.failed(.invalidResult))
             }
-            let isWholeCopy = choice.text.utf8.elementsEqual(attempt.item.text.utf8)
-            deliver(isWholeCopy ? OuterLineBreaks.stripped(from: choice.text) : choice.text)
+            deliver(choice.text)
         }
     }
 
     private func waitToRetry(after delay: Duration) {
         guard let deadline = attempt?.consultation.deadline, ports.clock.now + delay < deadline else {
-            return finish(.failed(.timedOut))
+            return stopNarrowing(ending: .failed(.timedOut), fill: .clock)
         }
         phase = .waitingToRetry
         ports.presenter.showRetrying()
