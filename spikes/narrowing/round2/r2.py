@@ -94,6 +94,14 @@ DECIDE = {
                   "exactly the thing that place asks for and nothing says which one is meant, choose `ask_user` "
                   "instead of one of them.",
 }
+# later steps only: `current_piece` itself is named as the pick when it already is exactly that thing
+DECIDE["particular_keep"] = (
+    "Choose what will be pasted at the text cursor. If that place asks for one particular thing, choose the option "
+    "that is exactly that thing, with nothing missing and nothing extra: `current_piece` as it is when it already is "
+    "exactly that thing; only if no option is exactly that, choose the option that contains all of it with the least "
+    "extra text. If that place does not ask for one particular thing, choose {all}. If two or more different "
+    "excerpts are each exactly the thing that place asks for and nothing says which one is meant, choose `ask_user` "
+    "instead of one of them.")
 ALL_FIRST = "everything that was copied"
 ALL_LATER = "`current_piece` as it is"
 
@@ -150,6 +158,17 @@ VARIANTS = {
                 keep_text=False),
     "V7": dict(pre="keys", decide="particular", keep_key="everything", nothing="particular", ask="particular",
                 keep_text=False),
+    # confirm-step fix candidates (GATE A2): step 1 identical to V5
+    "L0": dict(pre="cursor", decide="particular", keep_key="everything", nothing="particular", ask="particular",
+               keep_text=False),
+    "L1": dict(pre="cursor", decide="particular", keep_key="everything", nothing="particular", ask="particular",
+               keep_text=False, keep_later="text"),
+    "L2": dict(pre="cursor", decide="particular", keep_key="everything", nothing="particular", ask="particular",
+               keep_text=False, keep_later="id"),
+    "L3": dict(pre="cursor", decide="particular", later_decide="particular_keep", keep_key="everything",
+               nothing="particular", ask="particular", keep_text=False),
+    "L4": dict(pre="cursor", decide="particular", later_decide="particular_keep", keep_key="everything",
+               nothing="particular", ask="particular", keep_text=False, keep_later="id"),
     "V6": dict(pre="cursor", decide="exact_ask", keep_key="everything", nothing="asks", ask="belongs",
                 keep_text=False),
 }
@@ -159,6 +178,8 @@ DESIGNS = {
     "base": dict(variant="V2", k=8, layout="doc", form="full", place="P1", speculate=3),
     # candidate frozen at GATE A (pending approval)
     "r2": dict(variant="V5", k=8, layout="cont", form="ids", place="P3", speculate=3),
+    # GATE A2 candidate: r2 with "unchanged" offered as an excerpt id at later steps (wordings unchanged)
+    "r2b": dict(variant="L2", k=8, layout="cont", form="ids", place="P3", speculate=3),
 }
 
 
@@ -175,6 +196,8 @@ def design_of(name):
 
 def keep_description(v, piece, first):
     if not first:
+        if v.get("keep_later") == "text":
+            return {"option": KEEP_LATER, "text": piece}
         return KEEP_LATER
     text = KEEP_FIRST["r1"]
     if v["keep_text"]:
@@ -184,7 +207,8 @@ def keep_description(v, piece, first):
 
 def instructions(v, form, piece, first):
     pre = {"cursor": PRE_CURSOR, "keys": PRE_KEYS}.get(v.get("pre"), PRE)
-    decide_text = DECIDE[v["decide"]].replace("{all}", ALL_FIRST if first else ALL_LATER)
+    decide_text = DECIDE[v["decide"] if first else v.get("later_decide", v["decide"])].replace(
+        "{all}", ALL_FIRST if first else ALL_LATER)
     if first:
         return pre + FORM_FIRST[form] + decide_text
     return {"current_piece": piece, "question": pre + FORM_LATER[form] + decide_text}
@@ -254,8 +278,12 @@ class Request:
 
     def add_choice(self, qid, v, piece, first, pieces):
         keep_key = v["keep_key"] if first else "keep"
-        ids = {keep_key: piece}
+        if not first and v.get("keep_later") == "id" and self.form == "ids":
+            keep_key = self.excerpt_id(piece)  # "unchanged" is an excerpt id like every other piece
+        ids = {keep_key: piece, "__keep__": keep_key}
         criteria = {keep_key: keep_description(v, piece, first)}
+        if not first and v.get("keep_later") == "id" and self.form == "full":
+            criteria[keep_key] = {"option": KEEP_LATER, "text": piece}  # full-text fallback: keep carries its text
         for index, text in enumerate(pieces):
             if self.form == "ids":
                 oid = self.excerpt_id(text)
@@ -445,13 +473,13 @@ def decide(ids, answer):
     choice = answer.get("choice")
     probs = answer.get("probabilities") or {}
     r = ranked(ids, answer)
-    keep_key = next((k for k in KEEP_KEYS if k in ids), "keep")
+    keep_key = ids.get("__keep__") or next((k for k in KEEP_KEYS if k in ids), "keep")
     return {
-        "choice": "keep" if choice in KEEP_KEYS else choice, "choice_text": ids.get(choice), "p": probs.get(choice),
+        "choice": "keep" if (choice in KEEP_KEYS or choice == keep_key) else choice, "choice_text": ids.get(choice), "p": probs.get(choice),
         "p_keep": probs.get(keep_key), "p_nothing": probs.get(NOTHING), "p_ask": probs.get(ASK),
         "confidence": answer.get("confidence"), "top": [(round(p, 4), o, t) for p, o, t in r[:6]],
         "chooser_list": [t for p, o, t in r if p > 0 and o not in (NOTHING, ASK)],
-        "options": len(ids) + 2,
+        "options": len(ids) + 1,  # ids holds "__keep__"; + nothing fits + ask the user
     }
 
 
@@ -463,7 +491,7 @@ def carry(chunk_answers):
         per.append({"choice": answer.get("choice"), "choice_text": ids.get(answer.get("choice")),
                     "top": [(round(p, 4), o, t) for p, o, t in r[:5]]})
         for p, oid, text in r:
-            if oid in KEEP_KEYS + (NOTHING, ASK) or p < 0.01:
+            if oid in KEEP_KEYS + (NOTHING, ASK) or oid == ids.get("__keep__") or p < 0.01:
                 continue
             carried[text] = max(carried.get(text, 0), p)
     return carried, per
@@ -471,7 +499,8 @@ def carry(chunk_answers):
 
 def agree(chunk_answers):
     """All choices pick the same non-excerpt option -> that option (no follow-up needed)."""
-    picks = {("keep" if a.get("choice") in KEEP_KEYS else a.get("choice")) for _, a in chunk_answers}
+    picks = {("keep" if (a.get("choice") in KEEP_KEYS or a.get("choice") == ids.get("__keep__"))
+              else a.get("choice")) for ids, a in chunk_answers}
     if len(picks) == 1 and next(iter(picks)) in ("keep", NOTHING, ASK):
         return next(iter(picks))
     return None
@@ -716,6 +745,60 @@ def screen(tag, variant_names, cell_ids, design_name="base"):
             print("   place %s: %s" % (pw, {k: round(x, 2) for k, x in (pr or {}).items()}))
 
 
+def replay(tag, variant_names, specs, design_name="r2"):
+    """Later-step replay: for each (cell, piece) the step question on `piece` (as Narrowing would ask it), once per
+    variant as parallel questions in one request; several choices -> follow-ups in a second request."""
+    design = design_of(design_name)
+    for cid, piece in specs:
+        cell = BY_ID[cid]
+        chunks, how = step_chunks(cell, design, piece)
+        req = Request(cell, design["form"])
+        for vn in variant_names:
+            for k, part in enumerate(chunks):
+                req.add_choice("%s__c%d" % (vn, k), VARIANTS[vn], piece, False, part)
+        if design["form"] == "ids" and not req.fits():
+            full = Request(cell, "full")
+            for q in req.questions:
+                vn, k = q.split("__c")
+                full.add_choice(q, VARIANTS[vn], piece, False, chunks[int(k)])
+            req = full
+        status, payload, rec = send(req, {"phase": tag, "cell": cid, "run": -1, "step": 1, "sub": "replay",
+                                          "design": design["name"], "variants": variant_names, "piece": piece})
+        if status != 200:
+            print(cid, "error", status, str(payload)[:300])
+            continue
+        answers = payload.get("answers") or {}
+        results, fu = {}, Request(cell, req.form)
+        for vn in variant_names:
+            ca = [(req.maps["%s__c%d" % (vn, k)], answers.get("%s__c%d" % (vn, k)) or {}) for k in range(len(chunks))]
+            if len(chunks) == 1:
+                results[vn] = decide(*ca[0])
+                continue
+            carried, per = carry(ca)
+            if agree(ca):
+                results[vn] = dict(decide(*ca[0]), chunk_winners=per, follow_up="skipped")
+                continue
+            order = doc_order(piece, sorted(carried, key=lambda t: -carried[t])[:PIECES_PER_CHOICE])
+            fu.add_choice("%s__fu" % vn, VARIANTS[vn], piece, False, order)
+            results[vn] = {"chunk_winners": per}
+        if fu.questions:
+            status, payload, rec = send(fu, {"phase": tag, "cell": cid, "run": -1, "step": 1, "sub": "replay_fu",
+                                             "design": design["name"], "variants": variant_names, "piece": piece})
+            if status == 200:
+                a = payload.get("answers") or {}
+                for q in fu.questions:
+                    results[q.split("__")[0]].update(decide(fu.maps[q], a.get(q) or {}))
+        log({"kind": "replay", "phase": tag, "cell": cid, "piece": piece, "design": design["name"], "how": how,
+             "choices": len(chunks), "results": results, "timestamp": time.time()})
+        print("%s  piece %r [%d choices]" % (cid, piece[:30], len(chunks)))
+        for vn, r in results.items():
+            print("   %s: keep %.2f  pick %s %.2f  | %s" % (
+                vn, r.get("p_keep") or 0, r.get("choice") if r.get("choice") in ("keep", NOTHING, ASK)
+                else repr((r.get("choice_text") or "")[:20]), r.get("p") or 0,
+                ", ".join("%s %.2f" % (o if o in ("keep", NOTHING, ASK) else repr((t or "")[:14]), p)
+                          for p, o, t in r.get("top", [])[:3])))
+
+
 # ============================================================================================== OFFLINE
 def plan(cell_ids, design_name="base"):
     design = design_of(design_name)
@@ -804,10 +887,25 @@ def main():
             if rest and rest[0].split("+")[0] in DESIGNS:
                 design, rest = rest[0], rest[1:]
             screen(tag, variants, rest, design)
+        elif cmd == "replay":
+            tag, variants = args[0], args[1].split(",")
+            specs = []
+            for a in args[2:]:
+                cid, _, idx = a.partition("@")
+                pieces = []  # later-step pieces as recorded in the frozen r2 pastes, in order of first appearance
+                for r in rows():
+                    if r.get("kind") == "paste" and r.get("design") == "r2" and r["cell"] == cid:
+                        for st in r["steps"][1:]:
+                            if st["piece"] not in pieces:
+                                pieces.append(st["piece"])
+                for i in ([int(idx)] if idx else range(len(pieces))):
+                    specs.append((cid, pieces[i]))
+            replay(tag, variants, specs)
         elif cmd == "run":
             tag, design, run = args[0], design_of(args[1]), int(args[2])
             done = {(r["cell"], r["run"], r["design"]) for r in rows()
-                    if r.get("kind") == "paste" and r.get("phase") == tag and r.get("outcome") != "error"}
+                    if r.get("kind") == "paste" and r.get("phase") == tag
+                    and (r.get("outcome") != "error" or r.get("expected_outcome") == "too_long")}
             for cell in select(args[3:]):
                 if (cell["id"], run, design["name"]) in done and tag != "smoke":
                     continue
