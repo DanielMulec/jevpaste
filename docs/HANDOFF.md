@@ -1,4 +1,4 @@
-# Handoff — jevpaste orchestrator (Narrowing spike round 2 done; build brief ready; waiting on Daniel's 3 answers)
+# Handoff — jevpaste orchestrator (Narrowing spike resolved; build brief ready → launch the Implement Narrowing worker)
 
 Written for a fresh orchestrator session (`anthropic/claude-opus-5-5:xhigh`; **check `env | grep '^PI_MODEL'` first** —
 the last session started on `claude-fable-5-1` by accident and Daniel had to switch it; `/model` mid-session keeps the
@@ -31,48 +31,46 @@ Workers: fresh `anthropic/claude-opus-5-5:high` Pi instances in Herdr tabs. Get 
   keep is offered as an excerpt id — a text-less keep lost its mass to near-duplicates, `7` under `77`) and an
   **N03 bug fix** (the full-text fallback now re-splits by size budget). The frozen `r2` matrix was stopped at 29
   pastes, before any held-out cell ran.
-- **Daniel was asked 3 questions on Telegram (~17:30) with recommendations:** (1) ship the place choice? → rec. **no**;
-  (2) C03: count Jev's first sentence as a hit? → rec. **yes, hit**; (3) accept R10 + C04 as known misses and build
-  now? → rec. **yes, build** (held-out passed; a round 3 would tune on the test cells). ⟦If the answers arrived before
-  this session ended, they are recorded right here: — none yet — ⟧
+- **Daniel answered (2026-09-26, in the TUI):** (1) **no place choice** ("I trust you"); (2) **"Availability" = hit**
+  ("not 100 % happy"); (3) **build now as a beta / WIP**, known misses accepted, but **Narrowing must be improved
+  later** ("not really happy forward momentum, but better than stuck in perfectionism"). He asked whether to plan the
+  improvement with Fable (`claude-fable-5-1`) and how much refactoring it needs; answer given: it's a new spike round
+  with real misses and fresh held-out cells, and if the build keeps every wording and tunable in one policy value, the
+  code change is small. Any model outside the map Notes (Fable) is his call: ask, and add it to the Notes if he
+  confirms.
+- **Done this session:** spike resolved ([resolution](https://github.com/DanielMulec/jevpaste/issues/49#issuecomment-5847510877)),
+  closed, gisted on the map; map fog gained "Narrowing accuracy after the beta"; brief finalised apart from the
+  supervisor id (place-choice section deleted, a **one-home-for-tunables** rule added); worker tab closed, the
+  `narrowing-spike` worktree removed (branch `spike/narrowing` stays).
 - **Gateway is on the paid tier** since ~17:05 (Daniel bought $10; the monthly $5 free credit is gone): a 30-call burst
   went from 2×200/28×429 to 30×200. No more free-tier waits.
-- Worker `narrowing-r2` (tab `wC:t1Q`, pane `wC:p2R`, ~32 % context) is **idle and done**; keep it only if Daniel
-  wants a round 3, else close the tab. Its worktree `~/.pi/worktrees/jevpaste/narrowing-spike` is clean.
 - Installed app unchanged (code of 5a44ab7). `main` = the brief commits after the last handoff; no code changes.
 
 ## Open tickets (children of the map)
 | ticket | type | note |
 |---|---|---|
-| [Spike: does choice-only Narrowing pass the any-field matrix?](https://github.com/DanielMulec/jevpaste/issues/49) | task | report posted; **resolve after Daniel's 3 answers** |
-| [Implement Narrowing](https://github.com/DanielMulec/jevpaste/issues/50) | task | blocked by the spike; brief ready; body needs no change unless the place choice ships |
+| [Implement Narrowing](https://github.com/DanielMulec/jevpaste/issues/50) | task | **unblocked now**; brief `docs/briefs/narrowing-brief.md` ready → launch |
 | [Decide how JevPaste switches Jev providers from the Vercel AI Gateway to Typesafe direct](https://github.com/DanielMulec/jevpaste/issues/45) | grilling | after Implement Narrowing; paid-tier evidence added |
 | [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37) | prototype | Daniel: "get the app complete first" |
 | [Decide what the secure-field pre-check uses when the OS secure-input flag is absent](https://github.com/DanielMulec/jevpaste/issues/38) | grilling | post-timeline |
 
 ## Next session — exact steps
-1. Read the map body, this file, the round-2 report comment and the brief's banner. Skim `round2/FINDINGS.md` sections
-   "Verdict" and "Every miss" only.
-2. **Get Daniel's 3 answers** (Telegram or here). If missing, ask exactly the 3 questions above with the
-   recommendations; don't answer for him. Any other answer (e.g. "round 3") → write a round-3 brief and reuse the
-   `narrowing-spike` worktree; the held-out cells are now spent, so write new ones first.
-3. **Resolve [Spike: does choice-only Narrowing pass the any-field matrix?](https://github.com/DanielMulec/jevpaste/issues/49)**:
-   a resolution comment (verdict, his 3 answers, design `r2b` + link to FINDINGS, the two approved changes, accepted
-   known misses, cost), close it, and add a gist line to the map's Decisions so far. Close the worker's tab
-   (`herdr tab close wC:t1Q`) and remove the worktree (`git worktree remove ~/.pi/worktrees/jevpaste/narrowing-spike`;
-   the branch stays).
-4. **Finish the brief:** apply answer 1 (no → delete the "Place choice" section; yes → grill the glossary term with
-   Daniel via `domain-modeling`, complete the section, update the Implement Narrowing body and `CONTEXT.md`), fill
-   `⟦SUPERVISOR-ID⟧` with your intercom id, remove the banner, commit + push (redirect the hook output:
-   `git commit … > /tmp/jevpaste-commit.log 2>&1`).
-5. **Launch the build worker** (protocol below): `git worktree add -b narrowing ~/.pi/worktrees/jevpaste/narrowing main`;
+1. `env | grep '^PI_MODEL'` (must be the map's orchestrator model). Read the map body, this file and the brief.
+2. Fill `⟦SUPERVISOR-ID⟧` in `docs/briefs/narrowing-brief.md` with `$PI_INTERCOM_SESSION_ID`, remove the banner, commit +
+   push (redirect the hook output: `git commit … > /tmp/jevpaste-commit.log 2>&1`).
+3. **Launch the build worker** (protocol below): `git worktree add -b narrowing ~/.pi/worktrees/jevpaste/narrowing main`;
    `herdr tab create --cwd ~/.pi/worktrees/jevpaste/narrowing --label narrowing --no-focus`; start
    `anthropic/claude-opus-5-5:high`; prompt: "First run env | grep '^PI_MODEL'. Then read docs/briefs/narrowing-brief.md
-   completely and follow it. Supervisor intercom id <ID>."
-6. Gates per the brief: **A** (check every wording in its tests against the brief character for character; shapes;
-   one owner for grouping/size model), **B** (read the Core + Gateway diff yourself), live proof (automated parts need
-   no Daniel; his block = the chooser on two emails + WhatsApp/ChatGPT), **C** → one fresh GPT-6-Sol review → fixes →
-   delta review → merge (`make check` before push) → `make install` → resolution comment, close, map gist.
+   completely and follow it. Supervisor intercom id <ID>." Claim nothing new: Implement Narrowing is assigned to Daniel.
+4. **Gate A:** every wording in its tests matches the brief character for character; the shapes; **one home for
+   every tunable** (Daniel will retune later); one owner for grouping and the size model; the fallback re-split test.
+5. **Gate B:** read the Core and Gateway diff yourself. Live proof: the automated parts need no Daniel; his block is
+   the chooser on two emails plus WhatsApp and ChatGPT. **Gate C** → one fresh GPT-6-Sol review → fixes → delta
+   review → merge (`make check` before push) → `make install` → resolution comment, close, map gist (call it the
+   Narrowing **beta**).
+6. Then the frontier: [Decide how JevPaste switches Jev providers from the Vercel AI Gateway to Typesafe direct](https://github.com/DanielMulec/jevpaste/issues/45)
+   (the paid tier removed the 429 motive; re-ask Daniel whether the switch still matters) and the map fog
+   "Narrowing accuracy after the beta" once real misses exist.
 
 ## Orchestrator latitude (Daniel, 2026-09-26; also in the map Notes)
 Daniel: "I gave you the blessing to do tasks relevant for proper orchestration just yourself without asking me."
@@ -348,8 +346,8 @@ on Flash was stopped and redone this session — don't repeat.
 - This session reached ~270k context; the handoff was written before Daniel's answers arrived.
 
 ## Suggested skills (next session)
-`wayfinder` (every session; resolving the spike ticket and gisting the map), `pi-intercom` + Herdr CLI (the build
-worker launch and its gates), `telegram-bridge` (Daniel answers from his phone), `domain-modeling` + `grilling` (only if
-the place choice ships and needs a glossary term), `codebase-design` + `tdd` (Gate A and Gate B of Implement
+`wayfinder` (every session; resolving Implement Narrowing and gisting the map), `pi-intercom` + Herdr CLI (the build
+worker launch and its gates), `telegram-bridge` (Daniel answers from his phone), `grilling` + `domain-modeling` (the provider
+switch and the later Narrowing-accuracy round), `codebase-design` + `tdd` (Gate A and Gate B of Implement
 Narrowing), `code-review` pattern for the GPT-6-Sol review brief, `handoff` (write the next handoff into
 `docs/HANDOFF.md`, not the temp dir — Daniel's override; before ~250k context).

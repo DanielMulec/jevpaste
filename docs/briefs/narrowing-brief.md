@@ -1,9 +1,8 @@
 # Brief — Implement Narrowing (issue #50)
 
-> **READY, not launched — waits for Daniel's three answers on the round-2 result** ([report](https://github.com/DanielMulec/jevpaste/issues/49#issuecomment-5847452658)):
-> (1) ship the place choice? (2) "Availability" expectation; (3) accept the two misses and build? The design and wordings
-> below were checked against `spikes/narrowing/round2/FINDINGS.md` @ ba32886 on 2026-09-26. At launch the supervisor
-> fills `⟦SUPERVISOR-ID⟧`, applies Daniel's answer to the "Place choice" section, and removes this banner.
+> **READY, not launched.** Daniel answered the round-2 questions on 2026-09-26: (1) no place choice; (2) "Availability"
+> counts as a hit; (3) build now as a **beta**, accepting the known misses, with a later round to improve Narrowing.
+> At launch the supervisor fills `⟦SUPERVISOR-ID⟧` and removes this banner.
 
 You are a fresh Pi session (`anthropic/claude-opus-5-5:high`) in worktree `~/.pi/worktrees/jevpaste/narrowing`,
 branch `narrowing` (forked from `main`). This is a **production slice**: TDD, review chain, merged when done. Your
@@ -31,7 +30,7 @@ Communication protocol:
    Port the **design** and **every wording verbatim** (the section below repeats them; the FINDINGS win on any
    difference — say so). Python modules there (`cuts.py`, `run.py`, `round2/*.py`) are the reference behaviour
    for cutting, grouping, the follow-up choice and the size model; they are not to be copied line by line.
-   Known misses the spike left (accepted or not by Daniel — see the #49 resolution): "Description" on a freelance
+   Known misses Daniel accepted for this beta (see the #49 resolution): "Description" on a freelance
    listing gets the whole résumé; "Name" from a cover letter gets the whole letter in about half the runs. Don't tune
    for them in Swift; report them if the live runs show them.
 4. `CONTEXT.md` (**Narrowing**, **Candidate**, **Candidate Chooser**, **No Suitable Match**, **Direct Paste**,
@@ -174,16 +173,12 @@ is `choice` everywhere; there is no `boolean`/`noul` question anywhere in the ap
 
 Test every wording by exact string equality against the encoded request body; any change is an `ask`.
 
-## Place choice  ⟦Supervisor: delete this section if Daniel said no (the supervisor's recommendation: it fixed nothing
-and broke the lone URL into a chat box); keep and complete it only if he said it ships⟧
-⟦Daniel's decision, the glossary term he chose, the policy (B: everything → whole copy; nothing → No Suitable
-Match; one part → Narrowing's result), and the verbatim wording from FINDINGS (P3): instructions "The user copied
-`source_document` and pressed paste. `target_context` describes the place where the text cursor is, and what
-surrounds that place. What will be pasted at the text cursor?"; options `everything` "Everything that was copied, as
-it is: that place does not ask for one particular part of it." / `one_part` "One part of what was copied: that
-place asks for one particular thing, and `source_document` contains it." / `nothing` "Nothing of what was copied:
-that place asks for one particular thing, and `source_document` does not contain it." — asked in the same request
-as step 1.⟧
+**One home for everything a later round may retune.** Daniel wants to improve Narrowing after this beta (a new
+spike round with real misses and fresh held-out cells). So every wording, the option form rules, the fine-run length
+(8 tokens), the layout rule (coarse ≤ 126 repeated per choice), the 12-question cap, the carry threshold (p ≥ 0.01)
+and the speculative fan-out width (3) live in **one** Narrowing policy value in Core (or one file per concern next to
+it), named, documented, and injected, not scattered through the loop and the gateway. A later round then changes that
+value and its tests, not the architecture. Say at Gate A where it lives.
 
 ## Scope
 1. **Cutting** (Core, pure): the port of the spike's cutting — pieces are byte-exact slices of the Active Item
@@ -225,8 +220,7 @@ as step 1.⟧
    `candidate-chooser.md` (mark superseded or fold, one line each pointing at `narrowing.md`). `CONTEXT.md` only
    if the implementation proves a wording wrong (say so; Daniel decides names).
 
-Out of scope: the place choice (measured in round 2; ships only on Daniel's word — if that word came, the
-supervisor added a section below), splitting a too-big copy into windows, the history UI look, the provider
+Out of scope: the place choice (measured in round 2; Daniel said no), splitting a too-big copy into windows, the history UI look, the provider
 switch to Typesafe direct, any new gate, cap or classifier.
 
 ## Steps
