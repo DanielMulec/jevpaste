@@ -74,7 +74,7 @@ Communication protocol:
 8. Run `npm ci` and one plain `swift build` before the first commit (the pre-commit hook cannot fetch deps).
    If the link fails with an undefined-symbol mangling mismatch after adding files, `swift package clean` first.
 
-## The design you port (design `r2`, frozen at round 2's Gate A on 2026-09-26)
+## The design you port (design `r2b`: `r2` frozen at round 2's Gate A, plus the Gate A2 keep-form change, 2026-09-26)
 ⟦Supervisor: confirm every line against round-2 `FINDINGS.md` "Design (as run)" before launch; FINDINGS wins.⟧
 
 **Cutting** — character classes only, no meaning rules (round 1 `cuts.py`, round 2 `r2.py: children2`):
@@ -101,11 +101,16 @@ runs are spread over the choices in document order; otherwise all children in do
 252. Every choice carries the same wording; questions in one request run in parallel and the state counts once.
 
 **Option form** — *ids*: every piece option has a `null` description; the texts live once in
-`state.excerpts` (`{"x0000": "<text>", …}`), so `state = {source_document, target_context, excerpts}`; the
-unchanged / everything option keeps its text description. **Full-text fallback** when the size model says the state
-would overflow (in the spike: the three-emails résumé, the 300-line list, the too-big copy): option descriptions
-carry the full excerpt text verbatim with real line breaks (`e000`…), no `excerpts` in the state, and the wording's
-option sentence is the full-text one (below). Both shapes ship; one owner of the decision which one a request uses.
+`state.excerpts` (`{"x0000": "<text>", …}`), so `state = {source_document, target_context, excerpts}`. Step 1's
+`everything` option keeps its text-less description. **At later steps the unchanged option is itself the excerpt id
+of `current_piece`**: its text sits in `state.excerpts` like every other piece, its description stays verbatim
+"`current_piece` as it is, nothing cut away.", and local code maps that id back to *unchanged*. (Gate A2: with a
+text-less keep, near-duplicate children such as `7` under `77` took its mass; keep went from 0.52 to 0.97.)
+**Full-text fallback** when the size model says the state would overflow (in the spike: the three-emails résumé,
+the 300-line list, the too-big copy): option descriptions carry the full excerpt text verbatim with real line breaks
+(`e000`…), no `excerpts` in the state, the wording's option sentence is the full-text one (below), and the later-step
+unchanged option's description is the object `{"option": "`current_piece` as it is, nothing cut away.", "text":
+<current_piece>}`. Both shapes ship; one owner of the decision which one a request uses.
 
 **Follow-up** — a step with several choices → one follow-up choice (same wording as the step) over *unchanged* +
 every piece with p ≥ 0.01 in any of the choices + nothing fits + ask the user. If every choice picks the **same**
