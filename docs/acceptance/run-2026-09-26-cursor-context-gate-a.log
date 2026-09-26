@@ -1,0 +1,115 @@
+# Read nearby text around the text cursor (51) — Gate A measurement, 2026-09-26.
+# Probe: branch cursor-context-probe (pushed, never merged): 22582ab (runs 1–8 of probe.log), 8ddad78 (probe2.log:
+# + Wake Wait on an unreadable focus: AXEnhancedUserInterface once per pid if not true, re-read 50 ms ≤ 3 s),
+# 910fba5 (probe3.log: + status codes/roles of a failed focus read), 2062c8b (fix: whole durations; the 910fba5
+# "readable after ms=80" field dropped whole seconds). Built with `make app`, launched
+# `open -n build/JevPaste.app --args --cursor-probe <log>` (trusted=true), beside the production app (pid 88342, never
+# signalled, still running at the end). No hotkey, no clipboard, no paste. SIGUSR2 = measure the focused element;
+# SIGUSR1 = set its AXSelectedTextRange to the middle of its value (caret only), then measure.
+# Logged: numbers, AX status codes (0 ok, -25205 attribute unsupported, -25208 not implemented, -25212 no value),
+# roles, bundle ids, marker booleans and UTF-16 offsets from the cursor. Never text.
+# Fixtures (/tmp/jevpaste-cursor-51): scrollback.txt = 300 lines: 3× "# JEVPASTE-OLD-51", 296 filler, "# JEVPASTE-NEAR-51"
+# last. long.txt = 7218 chars: JEVPASTE-FARSTART-51 at 0, JEVPASTE-BEFORE-51 at 3591, JEVPASTE-AFTER-51 at 3612,
+# JEVPASTE-FAREND-51 at 7200 (middle = 3609, right after BEFORE). gate-a.html = <textarea autofocus> holding long.txt,
+# caret set to the middle on load. fixture.command = cat scrollback.txt; read.
+# Helper sig.sh <bundle> <USR1|USR2>: aborts unless exactly one probe pid ≠ production pid and lsappinfo front == bundle.
+# (a) Herdr: scratch pane wC:p2K split right of my pane, `clear; cat scrollback.txt`, herdr tab/pane focus, open -a Ghostty.
+# (b) open -a Terminal fixture.command. (c) open -a TextEdit long.txt. (d) open -a "Google Chrome" file://…/gate-a.html.
+# (e) open -a ChatGPT (composer as is).
+# Helper output:
+(a) scratch pane wC:p2K focused=True; self pane wC:p2J focused=False
+signal USR2 to probe pid=63714 (production pid=88342) front=com.mitchellh.ghostty at 13:37:59
+(b) Terminal not running before
+signal USR2 to probe pid=63714 (production pid=88342) front=com.apple.Terminal at 13:38:10
+(b) Terminal (pid 64131, started by me) quit
+signal USR2 to probe pid=63714 (production pid=88342) front=com.apple.TextEdit at 13:38:22
+signal USR1 to probe pid=63714 (production pid=88342) front=com.apple.TextEdit at 13:38:22
+(c) TextEdit: /tmp/jevpaste-cursor-51/long.txt left open, unmodified (caret moved only), per supervisor
+signal USR2 to probe pid=63714 (production pid=88342) front=com.openai.codex at 13:42:10
+signal USR2 to probe pid=63714 (production pid=88342) front=com.openai.codex at 13:42:15
+signal USR2 to probe pid=63714 (production pid=88342) front=com.google.Chrome at 13:43:19
+signal USR1 to probe pid=63714 (production pid=88342) front=com.google.Chrome at 13:43:19
+--- probe 63714 (22582ab) quit; relaunch 8ddad78
+(d) rerun: open -a 'Google Chrome' re-activates the JEVPASTE-CURSOR-51-GATEA tab
+signal USR2 to probe pid=67730 (production pid=88342) front=com.google.Chrome at 13:44:35
+signal USR1 to probe pid=67730 (production pid=88342) front=com.google.Chrome at 13:44:38
+--- probe 67730 (8ddad78) quit; relaunch 910fba5
+(d) rerun 2
+signal USR2 to probe pid=68748 (production pid=88342) front=com.google.Chrome at 13:45:30
+(e) rerun with wake
+signal USR2 to probe pid=68748 (production pid=88342) front=com.openai.codex at 13:45:42
+(e) ChatGPT window/app restored to background: open -a Ghostty
+(a) scratch pane wC:p2K closed; herdr tab focus restored to wC:t1
+--- probe 68748 (910fba5) quit by pid; production pid 88342 still running: 88342
+# Probe log 1 (22582ab, pid 63714):
+2026-09-26T11:37:03Z cursor probe start accessibilityTrusted=true pid=63714
+2026-09-26T11:37:59Z run=1 front=com.mitchellh.ghostty role=AXTextArea valueReadable=true ownTextLength=13266 ownTextUTF16=13267 cursorReported=true rangeStatus=0 rangeLocation=0 rangeLength=0 rangeReadMicros=32 numberOfCharacters=13266 insertionLine=none(-25205) visibleStatus=0 visible=0+13266
+2026-09-26T11:37:59Z run=1   marker=JEVPASTE-OLD-51 inValue=false
+2026-09-26T11:37:59Z run=1   marker=JEVPASTE-NEAR-51 inValue=true firstFromCursor=12749 lastFromCursor=12749
+2026-09-26T11:37:59Z run=1   marker=JEVPASTE-BEFORE-51 inValue=false
+2026-09-26T11:37:59Z run=1   marker=JEVPASTE-AFTER-51 inValue=false
+2026-09-26T11:37:59Z run=1   marker=JEVPASTE-FARSTART-51 inValue=false
+2026-09-26T11:37:59Z run=1   marker=JEVPASTE-FAREND-51 inValue=false
+2026-09-26T11:38:10Z run=2 front=com.apple.Terminal role=AXTextArea valueReadable=true ownTextLength=20138 ownTextUTF16=20138 cursorReported=true rangeStatus=0 rangeLocation=20137 rangeLength=0 rangeReadMicros=139 numberOfCharacters=20138 insertionLine=303 visibleStatus=0 visible=18242+1896
+2026-09-26T11:38:10Z run=2   marker=JEVPASTE-OLD-51 inValue=true firstFromCursor=-19903 lastFromCursor=-19867
+2026-09-26T11:38:10Z run=2   marker=JEVPASTE-NEAR-51 inValue=true firstFromCursor=-17 lastFromCursor=-17
+2026-09-26T11:38:10Z run=2   marker=JEVPASTE-BEFORE-51 inValue=false
+2026-09-26T11:38:10Z run=2   marker=JEVPASTE-AFTER-51 inValue=false
+2026-09-26T11:38:10Z run=2   marker=JEVPASTE-FARSTART-51 inValue=false
+2026-09-26T11:38:10Z run=2   marker=JEVPASTE-FAREND-51 inValue=false
+2026-09-26T11:38:22Z run=3 front=com.apple.TextEdit role=AXTextArea valueReadable=true ownTextLength=7218 ownTextUTF16=7218 cursorReported=true rangeStatus=0 rangeLocation=0 rangeLength=0 rangeReadMicros=43 numberOfCharacters=7218 insertionLine=0 visibleStatus=0 visible=0+7218
+2026-09-26T11:38:22Z run=3   marker=JEVPASTE-OLD-51 inValue=false
+2026-09-26T11:38:22Z run=3   marker=JEVPASTE-NEAR-51 inValue=false
+2026-09-26T11:38:22Z run=3   marker=JEVPASTE-BEFORE-51 inValue=true firstFromCursor=3591 lastFromCursor=3591
+2026-09-26T11:38:22Z run=3   marker=JEVPASTE-AFTER-51 inValue=true firstFromCursor=3612 lastFromCursor=3612
+2026-09-26T11:38:22Z run=3   marker=JEVPASTE-FARSTART-51 inValue=true firstFromCursor=0 lastFromCursor=0
+2026-09-26T11:38:22Z run=3   marker=JEVPASTE-FAREND-51 inValue=true firstFromCursor=7200 lastFromCursor=7200
+2026-09-26T11:38:22Z run=4 placeCaret location=3609 setStatus=0
+2026-09-26T11:38:22Z run=4 front=com.apple.TextEdit role=AXTextArea valueReadable=true ownTextLength=7218 ownTextUTF16=7218 cursorReported=true rangeStatus=0 rangeLocation=3609 rangeLength=0 rangeReadMicros=40 numberOfCharacters=7218 insertionLine=38 visibleStatus=0 visible=0+7218
+2026-09-26T11:38:22Z run=4   marker=JEVPASTE-OLD-51 inValue=false
+2026-09-26T11:38:22Z run=4   marker=JEVPASTE-NEAR-51 inValue=false
+2026-09-26T11:38:22Z run=4   marker=JEVPASTE-BEFORE-51 inValue=true firstFromCursor=-18 lastFromCursor=-18
+2026-09-26T11:38:22Z run=4   marker=JEVPASTE-AFTER-51 inValue=true firstFromCursor=3 lastFromCursor=3
+2026-09-26T11:38:22Z run=4   marker=JEVPASTE-FARSTART-51 inValue=true firstFromCursor=-3609 lastFromCursor=-3609
+2026-09-26T11:38:22Z run=4   marker=JEVPASTE-FAREND-51 inValue=true firstFromCursor=3591 lastFromCursor=3591
+2026-09-26T11:42:10Z run=5 front=com.openai.codex focus=unreadable
+2026-09-26T11:42:15Z run=6 front=com.openai.codex focus=unreadable
+2026-09-26T11:43:19Z run=7 front=com.google.Chrome focus=unreadable
+2026-09-26T11:43:19Z run=8 front=com.google.Chrome focus=unreadable
+# Probe log 2 (8ddad78, pid 67730):
+2026-09-26T11:44:28Z cursor probe start accessibilityTrusted=true pid=67730
+2026-09-26T11:44:35Z run=1 front=com.google.Chrome focus=unreadable
+2026-09-26T11:44:38Z run=1 still unreadable after 3 s: unmeasured without a click
+2026-09-26T11:44:38Z run=2 front=com.google.Chrome focus=unreadable
+2026-09-26T11:44:41Z run=2 still unreadable after 3 s: unmeasured without a click
+# Probe log 3 (910fba5, pid 68748):
+2026-09-26T11:45:24Z cursor probe start accessibilityTrusted=true pid=68748
+2026-09-26T11:45:30Z run=1 front=com.google.Chrome focus=unreadable systemStatus=-25212 appFocusStatus=-25212 focusedWindowStatus=0 focusedWindowRole=AXSheet/none windowsStatus=0 windows=4 enhancedUI=true
+2026-09-26T11:45:33Z run=1 still unreadable after 3 s: unmeasured without a click
+2026-09-26T11:45:42Z run=2 front=com.openai.codex focus=unreadable systemStatus=-25212 appFocusStatus=-25212 focusedWindowStatus=0 focusedWindowRole=AXWindow/AXStandardWindow windowsStatus=0 windows=2 enhancedUI=false
+2026-09-26T11:45:42Z run=2 enhancedUIBefore=false set=-25208
+2026-09-26T11:45:44Z run=2 readable after ms=80
+2026-09-26T11:45:44Z run=2 front=com.openai.codex role=AXGroup valueReadable=true ownTextLength=0 ownTextUTF16=0 cursorReported=true rangeStatus=0 rangeLocation=0 rangeLength=0 rangeReadMicros=59 numberOfCharacters=0 insertionLine=9223372036854775807 visibleStatus=0 visible=0+0
+2026-09-26T11:45:44Z run=2   marker=JEVPASTE-OLD-51 inValue=false
+2026-09-26T11:45:44Z run=2   marker=JEVPASTE-NEAR-51 inValue=false
+2026-09-26T11:45:44Z run=2   marker=JEVPASTE-BEFORE-51 inValue=false
+2026-09-26T11:45:44Z run=2   marker=JEVPASTE-AFTER-51 inValue=false
+2026-09-26T11:45:44Z run=2   marker=JEVPASTE-FARSTART-51 inValue=false
+2026-09-26T11:45:44Z run=2   marker=JEVPASTE-FAREND-51 inValue=false
+# Readings:
+# (a) Ghostty (Herdr): AXTextArea, own text 13266 chars (the visible Ghostty window, all Herdr panes; Herdr's own
+#     scrollback is not in it: OLD absent), AXSelectedTextRange reported but (0,0) — the top of the text, not the
+#     prompt; NEAR at +12749 from it. AXInsertionPointLineNumber unsupported (-25205). Range read 32 µs.
+# (b) Terminal.app: AXTextArea, own text 20138 chars (whole scrollback: OLD in it), cursor (20137,0) = the prompt,
+#     NEAR at −17, OLD at −19903; insertion line 303. Range read 139 µs.
+# (c) TextEdit: AXTextArea, 7218 chars, cursor (0,0) as opened; after the AX setter (status 0) (3609,0): BEFORE −18,
+#     AFTER +3. Range read 40–43 µs.
+# (d) Chrome: unmeasured — Chrome had a modal consent sheet open ("Allow remote debugging?", raised by this session's
+#     chrome-devtools MCP connection; focusedWindowRole=AXSheet, AXFocusedUIElement -25212 system-wide and on the app,
+#     enhancedUI=true): not a Chrome AX limitation. Nothing clicked; the gate-a.html tab was left open for the
+#     supervisor. The Chrome caret is measured in the step-5 live proof instead.
+# (e) ChatGPT app: first unreadable twice (22582ab: no wake); with the wake (enhancedUI false → set -25208, as
+#     production) readable after 1.08–2.08 s (bounded by the 1-s log timestamps 11:45:42→44), composer AXGroup,
+#     empty (0 chars), cursor (0,0); insertion line reads 9223372036854775807.
+# TextEdit /tmp/jevpaste-cursor-51/long.txt left open, unmodified (caret moved only), per supervisor. Terminal was
+# started by this run and quit (kill by pid). Scratch pane closed; Herdr tab focus restored.
