@@ -1,75 +1,78 @@
-# Handoff — jevpaste orchestrator (cursor-context merged; Narrowing spike round 1 failed → launch round 2)
+# Handoff — jevpaste orchestrator (Narrowing spike round 2 done; build brief ready; waiting on Daniel's 3 answers)
 
-Written for a fresh orchestrator session (`anthropic/claude-opus-5-5:xhigh`) that has never seen the previous one.
-Repo: `/Users/danielmulec/Projekte/experiments/jevpaste` (public, `DanielMulec/jevpaste`, no licence; `main`
-pushed). Owner: Daniel Mulec. Tracker: GitHub Issues with native sub-issues + blocking (`gh` authenticated; wiring
-via GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues,issue_dependencies`).
+Written for a fresh orchestrator session (`anthropic/claude-opus-5-5:xhigh`; **check `env | grep '^PI_MODEL'` first** —
+the last session started on `claude-fable-5-1` by accident and Daniel had to switch it; `/model` mid-session keeps the
+context and the intercom id). Repo: `/Users/danielmulec/Projekte/experiments/jevpaste` (public, `DanielMulec/jevpaste`,
+no licence; `main` pushed). Owner: Daniel Mulec. Tracker: GitHub Issues with native sub-issues + blocking (`gh`
+authenticated; wiring via GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues,issue_dependencies`).
 Workers: fresh `anthropic/claude-opus-5-5:high` Pi instances in Herdr tabs. Get your intercom id with
 `echo $PI_INTERCOM_SESSION_ID`.
 
 ## Context (read, don't re-derive)
 - Map: [Build Daniel's Jev-powered macOS smart-paste app](https://github.com/DanielMulec/jevpaste/issues/1): **read
-  its body first**. Its Notes open with the **Jev-first rule** (everything that can be a Jev choice is a Jev choice:
-  no yes/no, no local classifiers, no field vocabulary, no app names). Two new Notes lines from 2026-09-26:
-  **Orchestrator latitude** and **Chrome rights** (both below).
-- **The contract:** [Decide the extraction engine for any-field Smart Paste](https://github.com/DanielMulec/jevpaste/issues/47#issuecomment-5845599979).
-  It defines choice-only J, **Narrowing**, 12 inventory rules each decided on its own, the time budget and too-big
-  copies.
-- **The live question:** [Spike: does choice-only Narrowing pass the any-field matrix?](https://github.com/DanielMulec/jevpaste/issues/49).
-  Read its comments: the round-1 worker's report and the supervisor's "Round 1 → round 2" comment with
-  Daniel's three decisions.
-- **Round-2 brief, written and committed:** `docs/briefs/narrowing-spike-round2-brief.md`. Round 1 data:
-  `spikes/narrowing/` on branch `spike/narrowing` (`FINDINGS.md`, `results/raw.jsonl`).
-- Glossary `CONTEXT.md` (**Narrowing**, **Embedded Value**, Free-text Target retired). Design docs
-  `docs/design/*.md` (new: `cursor-context.md`), quality gate `docs/quality-gate.md`, signing `docs/signing.md`.
+  its body first** (Notes open with the **Jev-first rule**, then **Orchestrator latitude** and **Chrome rights**).
+- The contract: [Decide the extraction engine for any-field Smart Paste](https://github.com/DanielMulec/jevpaste/issues/47#issuecomment-5845599979).
+- The spike: [Spike: does choice-only Narrowing pass the any-field matrix?](https://github.com/DanielMulec/jevpaste/issues/49).
+  Read the comments in order: round 1 → round 2 (supervisor), round-1 report, **round-2 report**
+  ([comment](https://github.com/DanielMulec/jevpaste/issues/49#issuecomment-5847452658)). Data:
+  `spikes/narrowing/round2/FINDINGS.md` on branch `spike/narrowing` @ ba32886 (kept, never merged).
+- **The build brief, ready:** `docs/briefs/narrowing-brief.md` on `main` (8f9149a). Design `r2b` and every wording
+  ported verbatim and checked against FINDINGS; its banner lists what's left before launch.
+- Gateway evidence (429s were the Gateway's own free-tier limit; paid tier since today):
+  [comment on the provider-switch ticket](https://github.com/DanielMulec/jevpaste/issues/45#issuecomment-5847367061).
 
-## Where things stand (2026-09-26, ~14:50)
-- **`main` = this handoff commit** (after 1d28612, the round-2 brief), pushed. **Installed app = the code of 5a44ab7** (cursor-context merge; everything after
-  it is docs only). 479 tests / 83 suites. JevPaste is running with `trusted=true`.
-- **Merged today:** [Read nearby text around the text cursor, without an app list](https://github.com/DanielMulec/jevpaste/issues/51#issuecomment-5846178840)
-  (closed, gisted on the map). The terminal bundle-id list is gone. A field whose own text is > 2000 characters
-  gives 1500 before / 500 after the cursor, else the last 2000; `(0,0)` counts as no cursor (Ghostty always
-  reports it). Real carets: Terminal.app, TextEdit, Chrome `<textarea>` ([Chrome rows](https://github.com/DanielMulec/jevpaste/issues/51#issuecomment-5846305850)).
-  Kept probe branch: `cursor-context-probe`.
-- **Narrowing spike round 1 failed** criteria 1, 3, 4 and 7 in run 0: 55 of 65 hits, all 6 traps passed, median
-  ≈ 1.2 s, ~160 billed calls. The failure classes are in the #49 comment. Daniel (2026-09-26): (1) **yes to round
-  2** with a changed design; (2) **measure a place choice**, everything / one part / nothing as a *choice* in the
-  same request, measurement only; (3) **three emails → "ask the user" stays the goal**.
-- **Round 1 is closed out:** [round-1 report](https://github.com/DanielMulec/jevpaste/issues/49#issuecomment-5846374586)
-  (FAIL on 1, 3, 4, 7; PASS on 2, 5, 6; run 0 complete, run 1 partial with 21 cells). `spike/narrowing` @ 9c9e636 is
-  pushed with `spikes/narrowing/FINDINGS.md`, which includes "What round 2 should know". The worker's tab is
-  closed; its worktree `~/.pi/worktrees/jevpaste/narrowing-spike` is clean and kept for round 2. **No worker in
-  flight.** Only Herdr tabs left: `jevpaste` (supervisor) and `wB:t1` (Daniel's knowledgebase Claude, not ours).
+## Where things stand (2026-09-26, ~17:35)
+- **Round 2 verdict** (policy A = Narrowing alone): **held-out cells (18, never tuned on): PASS all 7 criteria, both
+  runs.** Round-1 cells: FAIL criteria 1 and 3 on C03 "Availability" ×2 (an expectation question), C04 "Name" from a
+  cover letter (whole letter, run 0 only; coin flip) and R10 "Description" → the whole résumé ×2. Policy B (place
+  choice decides) adds N02 (lone URL into ChatGPT → "nothing") and fixes nothing. Median ≈ 1.0 s, max 3.4 s,
+  1.74 calls/paste, 166/166 pastes byte-exact. Spike total 710 billed calls (≤ 900); round 2 cost $0.20.
+- Round 2 had two supervisor-approved changes, both named in FINDINGS: **Gate A2** (design `r2` → `r2b`: at later steps
+  keep is offered as an excerpt id — a text-less keep lost its mass to near-duplicates, `7` under `77`) and an
+  **N03 bug fix** (the full-text fallback now re-splits by size budget). The frozen `r2` matrix was stopped at 29
+  pastes, before any held-out cell ran.
+- **Daniel was asked 3 questions on Telegram (~17:30) with recommendations:** (1) ship the place choice? → rec. **no**;
+  (2) C03: count Jev's first sentence as a hit? → rec. **yes, hit**; (3) accept R10 + C04 as known misses and build
+  now? → rec. **yes, build** (held-out passed; a round 3 would tune on the test cells). ⟦If the answers arrived before
+  this session ended, they are recorded right here: — none yet — ⟧
+- **Gateway is on the paid tier** since ~17:05 (Daniel bought $10; the monthly $5 free credit is gone): a 30-call burst
+  went from 2×200/28×429 to 30×200. No more free-tier waits.
+- Worker `narrowing-r2` (tab `wC:t1Q`, pane `wC:p2R`, ~32 % context) is **idle and done**; keep it only if Daniel
+  wants a round 3, else close the tab. Its worktree `~/.pi/worktrees/jevpaste/narrowing-spike` is clean.
+- Installed app unchanged (code of 5a44ab7). `main` = the brief commits after the last handoff; no code changes.
 
 ## Open tickets (children of the map)
 | ticket | type | note |
 |---|---|---|
-| [Spike: does choice-only Narrowing pass the any-field matrix?](https://github.com/DanielMulec/jevpaste/issues/49) | task | round 2 next: brief written, **Daniel already approved** it; launch without asking |
-| [Implement Narrowing](https://github.com/DanielMulec/jevpaste/issues/50) | task | blocked by the spike. Its body lists what gets removed (incl. `free_text`); **update the body** if round 2's place choice ships |
+| [Spike: does choice-only Narrowing pass the any-field matrix?](https://github.com/DanielMulec/jevpaste/issues/49) | task | report posted; **resolve after Daniel's 3 answers** |
+| [Implement Narrowing](https://github.com/DanielMulec/jevpaste/issues/50) | task | blocked by the spike; brief ready; body needs no change unless the place choice ships |
+| [Decide how JevPaste switches Jev providers from the Vercel AI Gateway to Typesafe direct](https://github.com/DanielMulec/jevpaste/issues/45) | grilling | after Implement Narrowing; paid-tier evidence added |
 | [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37) | prototype | Daniel: "get the app complete first" |
 | [Decide what the secure-field pre-check uses when the OS secure-input flag is absent](https://github.com/DanielMulec/jevpaste/issues/38) | grilling | post-timeline |
-| [Decide how JevPaste switches Jev providers from the Vercel AI Gateway to Typesafe direct](https://github.com/DanielMulec/jevpaste/issues/45) | grilling | after Implement Narrowing (both rewrite `JevGateway`) |
 
 ## Next session — exact steps
-1. Read the map body, this file, the #47 resolution, the #49 comments, `docs/briefs/narrowing-spike-round2-brief.md`.
-2. Round 1 is already closed out (see above). Skim its `FINDINGS.md` section "What round 2 should know".
-3. **Launch round 2** (Daniel approved; no "go?" needed): `git -C ~/.pi/worktrees/jevpaste/narrowing-spike pull`;
-   `herdr tab create --cwd ~/.pi/worktrees/jevpaste/narrowing-spike --label narrowing-r2 --no-focus`; start
-   `anthropic/claude-opus-5-5:high`; prompt: "First run env | grep '^PI_MODEL'. Then read
-   `/Users/danielmulec/Projekte/experiments/jevpaste/docs/briefs/narrowing-spike-round2-brief.md` completely (it
-   lives on main, not on your branch) and follow it. Supervisor intercom id <ID>."
-4. **Step 1 check:** the held-out cells must be committed **before** the first round-2 Jev call. Compare the
-   commit time with the first round-2 row's timestamp in its `results/`.
-5. **GATE A is yours:** read every wording verbatim, including the place choice. There must be no field or place
-   types, no examples naming them, no yes/no (`noul`), no local rule deciding meaning, and no piece made
-   unreachable. Check that exploration stayed ≤ 150 calls and names its tuned-on cells. Relay approval.
-6. **Result → Daniel**, in plain words with a recommendation. Report policies A (Narrowing alone) and B (place
-   choice decides everything/nothing), round-1 cells vs held-out. Whether the place choice ships is **his**
-   decision. Any failed criterion goes to him; no silent fallback.
-7. Spike passes (under a policy Daniel accepts) → update the body of [Implement Narrowing](https://github.com/DanielMulec/jevpaste/issues/50),
-   write `docs/briefs/narrowing-brief.md` (production slice, TDD, review chain; port the design and wordings
-   verbatim from round 2's FINDINGS), resolve #49 with a comment, gist it on the map, and launch the build worker.
-   Update `CONTEXT.md` if the place choice ships (it needs a glossary term, and Daniel cares about naming: grill it).
+1. Read the map body, this file, the round-2 report comment and the brief's banner. Skim `round2/FINDINGS.md` sections
+   "Verdict" and "Every miss" only.
+2. **Get Daniel's 3 answers** (Telegram or here). If missing, ask exactly the 3 questions above with the
+   recommendations; don't answer for him. Any other answer (e.g. "round 3") → write a round-3 brief and reuse the
+   `narrowing-spike` worktree; the held-out cells are now spent, so write new ones first.
+3. **Resolve [Spike: does choice-only Narrowing pass the any-field matrix?](https://github.com/DanielMulec/jevpaste/issues/49)**:
+   a resolution comment (verdict, his 3 answers, design `r2b` + link to FINDINGS, the two approved changes, accepted
+   known misses, cost), close it, and add a gist line to the map's Decisions so far. Close the worker's tab
+   (`herdr tab close wC:t1Q`) and remove the worktree (`git worktree remove ~/.pi/worktrees/jevpaste/narrowing-spike`;
+   the branch stays).
+4. **Finish the brief:** apply answer 1 (no → delete the "Place choice" section; yes → grill the glossary term with
+   Daniel via `domain-modeling`, complete the section, update the Implement Narrowing body and `CONTEXT.md`), fill
+   `⟦SUPERVISOR-ID⟧` with your intercom id, remove the banner, commit + push (redirect the hook output:
+   `git commit … > /tmp/jevpaste-commit.log 2>&1`).
+5. **Launch the build worker** (protocol below): `git worktree add -b narrowing ~/.pi/worktrees/jevpaste/narrowing main`;
+   `herdr tab create --cwd ~/.pi/worktrees/jevpaste/narrowing --label narrowing --no-focus`; start
+   `anthropic/claude-opus-5-5:high`; prompt: "First run env | grep '^PI_MODEL'. Then read docs/briefs/narrowing-brief.md
+   completely and follow it. Supervisor intercom id <ID>."
+6. Gates per the brief: **A** (check every wording in its tests against the brief character for character; shapes;
+   one owner for grouping/size model), **B** (read the Core + Gateway diff yourself), live proof (automated parts need
+   no Daniel; his block = the chooser on two emails + WhatsApp/ChatGPT), **C** → one fresh GPT-6-Sol review → fixes →
+   delta review → merge (`make check` before push) → `make install` → resolution comment, close, map gist.
 
 ## Orchestrator latitude (Daniel, 2026-09-26; also in the map Notes)
 Daniel: "I gave you the blessing to do tasks relevant for proper orchestration just yourself without asking me."
@@ -162,8 +165,9 @@ on Flash was stopped and redone this session — don't repeat.
   (SMAppService [enabled, allowed, notified]). The `jevpaste-dev` identity keeps the Accessibility grant.
 - `~/Library/Application Support/jevpaste/history.sqlite` (0600) holds synthetic rows, fixtures and rows of
   Daniel's real clipboard — never print it; read only `JEVPASTE-…` rows.
-- Jev key at `~/.config/jevpaste/env` (never print). Jev live ~1.1–1.7 s cold, ~0.2–0.5 s warm.
-- Worktrees present: `narrowing-spike` (branch `spike/narrowing`, reused by round 2) + research spikes (`jev`,
+- Jev key at `~/.config/jevpaste/env` (never print). Jev live ~0.5–1.4 s cold, ~0.6 s warm per call (round 2).
+  **Gateway on the paid tier** since 2026-09-26 ~17:05 ($10 of credits; no free-tier 429s any more).
+- Worktrees present: `narrowing-spike` (branch `spike/narrowing`, rounds 1+2 done; remove after #49 resolves) + research spikes (`jev`,
   `macos`, `macos-probe`, `quality`, `signing`, `spike-contract`). Kept branches, no worktree: `multiline-probe`,
   `history-probe`, `spike/jev-contract` (free-text spike source), `spike/any-field-extraction`, `cursor-context-probe`.
 - `/tmp/jevpaste-chooser.txt`, `/tmp/jevpaste-chooser-test.html`, `/tmp/jevpaste-harden.txt`, `/tmp/jevpaste-cursor-51/`
@@ -321,9 +325,31 @@ on Flash was stopped and redone this session — don't repeat.
 - Daniel was AFK for a long stretch and didn't read Telegram. Telegram summaries are fine, but repeat the essentials
   when he's back.
 
+## Wave-14 lessons (2026-09-26, Narrowing round 2, Daniel AFK most of the afternoon)
+- **Check `PI_MODEL` at session start** and say so if it isn't the map's orchestrator model. `/model <id>` inside the
+  session switches it without losing context or the intercom id; a new session would orphan the worker's messages.
+- **Read the Gateway's routing before blaming anyone for a 429.** The free tier's 429 said "The upstream provider is
+  currently experiencing high demand" but carried `providerAttemptCount: 0` — the Gateway refused it itself. I first
+  inferred the opposite from the message text and had to correct a ticket comment. A 30-call parallel burst of a
+  1-option choice (~$0.0003) is the cheap test.
+- **Stop a doomed matrix before the held-out cells run.** Held-out cells are spent once they have seen a design; a
+  design change after Gate A = Gate A2 (verbatim diff, updated tuned-on list) + full re-run. Test levers **alone** in
+  their own requests: several variants in one request contaminated each other (the state is shared).
+- **Every option Jev weighs should be presented the same way.** A keep option without visible text lost to
+  near-duplicate children that had text.
+- **Workers sleep in 25–30-minute chunks** during free-tier matrices; an intercom message waits until the sleep ends.
+  `pkill -f "sleep <N>"` delivers it. On the paid tier, brief workers to poll every 2–3 minutes.
+- **Implementation bugs found mid-matrix** (not design changes) get a targeted re-run of the affected cells only, as
+  their own labelled phase; the frozen design text decides which it is.
+- The pre-commit hook prints ~1,700 lines of test output — redirect it to a file.
+- Daniel asked for summaries "in human warm language" on Telegram: plain sentences, what happened, what's next, what
+  he needs to decide, numbered, with a recommendation each. He asked whether each long re-run was necessary — explain
+  why in one screen when runs repeat.
+- This session reached ~270k context; the handoff was written before Daniel's answers arrived.
+
 ## Suggested skills (next session)
-`wayfinder` (every session), `pi-intercom` + Herdr CLI (worker launches and gates), `writing-for-agents` (the
-Narrowing build brief), `codebase-design` + `tdd` (briefing and reviewing Implement Narrowing), `domain-modeling`
-(a glossary term if the place choice ships), `grilling` (Daniel's round-2 decisions), `telegram-bridge` +
-`telegram_attach` (Daniel is often on his phone), `handoff` (write the next handoff into `docs/HANDOFF.md`, not the
-temp dir — Daniel's override; write it only after tickets and briefs exist, and before ~250k context).
+`wayfinder` (every session; resolving the spike ticket and gisting the map), `pi-intercom` + Herdr CLI (the build
+worker launch and its gates), `telegram-bridge` (Daniel answers from his phone), `domain-modeling` + `grilling` (only if
+the place choice ships and needs a glossary term), `codebase-design` + `tdd` (Gate A and Gate B of Implement
+Narrowing), `code-review` pattern for the GPT-6-Sol review brief, `handoff` (write the next handoff into
+`docs/HANDOFF.md`, not the temp dir — Daniel's override; before ~250k context).
