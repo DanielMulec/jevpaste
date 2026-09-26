@@ -1,5 +1,7 @@
 # Candidate Chooser — shell adapter
 
+> **Since Narrowing** ([narrowing.md](narrowing.md), #50): Core opens the chooser when Jev chooses `ask_user`, with every option of the deciding choice Jev gave weight to, most likely first (the piece unchanged included); the shell adapter below is unchanged.
+
 Slice: [Implement the Candidate Chooser UI](https://github.com/DanielMulec/jevpaste/issues/26).
 Lifecycle: [Choose paste lifecycle, cancellation and clipboard preservation](https://github.com/DanielMulec/jevpaste/issues/8).
 Core is unchanged: Core calls `CandidateChooser.presentChoice(among:for:reply:)` with ≥ 2 same-type alternatives

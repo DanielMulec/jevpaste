@@ -1,5 +1,7 @@
 # Free-text Target — design
 
+> **Superseded** by [narrowing.md](narrowing.md) (#50): no third question; Jev keeps the whole copy at step 1 like any other option. The window-title and app-name context stays (`WindowTitleScreeningTests`, `AppAndWindowTitleContextTests`).
+
 Slice: [Implement Free-text Target via Jev's third question](https://github.com/DanielMulec/jevpaste/issues/41).
 Decision: [Skip Jev when the target gives it nothing to reason about](https://github.com/DanielMulec/jevpaste/issues/35#issuecomment-5821465655);
 wording and numbers: [Spike: does Jev reliably tell free-text places from value fields?](https://github.com/DanielMulec/jevpaste/issues/40#issuecomment-5821700475).

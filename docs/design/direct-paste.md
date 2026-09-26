@@ -1,5 +1,7 @@
 # Direct Paste — design
 
+> **Superseded in part** by [narrowing.md](narrowing.md) (#50): the single-line rule and the Free-text Target doorway are gone; every paste goes through Narrowing. Enter after No Suitable Match (doorway 3) and outer-line-break stripping (`OuterLineBreaks`) stay.
+
 Slice: [Implement Direct Paste for single-line items](https://github.com/DanielMulec/jevpaste/issues/34). Decision: Rule 1 of
 [Skip Jev for a single line, and skip Jev when there is nothing to reason about](https://github.com/DanielMulec/jevpaste/issues/32)
 (Rule 2 deferred, not built). Glossary: **Direct Paste**, **Smart Paste** in `CONTEXT.md`.

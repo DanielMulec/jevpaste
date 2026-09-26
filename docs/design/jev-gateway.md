@@ -4,73 +4,46 @@ Slice: [Implement the JevGateway adapter](https://github.com/DanielMulec/jevpast
 [Choose Jev context and excerpt-selection semantics](https://github.com/DanielMulec/jevpaste/issues/7) and the
 `spike/jev-contract` spikes (`abstention/` for the batched questions, `context/` for the Target Context fields).
 
-## Request — one `POST https://ai-gateway.vercel.sh/v1/evaluate` per `requestDecision`
-Headers: `Authorization: Bearer <key>`, `Content-Type: application/json`. Body (JSON, keys sorted):
-```json
-{ "model": "typesafe-ai/jev",
-  "state": { "source_document": "<DecisionRequest.sourceDocument>",
-             "target_context": { "field_label": "…", "placeholder": "…", "section_heading": "…",
-                                 "sibling_field_labels": ["…"], "surrounding_text": "…",
-                                 "app_name": "…", "window_title": "…" } },
-  "questions": {
-    "paste": { "type": "choice", "instructions": "<choice wording>",
-               "criteria": { "c000": "<candidate 0>", "c001": "…", "none_of_these": "<abstain wording>" } },
-    "contains_value": { "type": "boolean", "instructions": "<gate wording>",
-                        "criteria": { "true": "…", "false": "…" } },
-    "free_text": { "type": "boolean", "instructions": "<free-text wording>",
-                   "criteria": { "true": "…", "false": "…" } } } }
-```
-- `target_context` omits `nil` strings and empty values; the field names are the `TargetContext` properties.
-  `surrounding_text` is sent as the resolver bounded it (the adapter does not trim it).
-- Option id `c` + 3-digit zero-based index into `DecisionRequest.candidates`. The description is the
-  Candidate with line breaks as spaces, cut to 255 characters (Jev's limit); only the id maps back, so a
-  cut description never changes the Paste Result.
-- Wording of the choice, `none_of_these` and gate questions is taken from `spikes/abstention/run.py`
-  (`CHOICE_INSTRUCTIONS`, `GATE_POSITIVE`, `as_criteria`), with `target_field` renamed `target_context`.
-- **Third question `free_text`** ([Implement Free-text Target via Jev's third question](https://github.com/DanielMulec/jevpaste/issues/41)),
-  verbatim from `spikes/free-text/` on `spike/jev-contract` (pinned in `FreeTextTargetGatewayTests`):
-  instructions "Judge only the place described by `target_context`, not `source_document`. Is `target_context` a
-  free-text place — a chat or message composer, a document or text editor, a code editor, a terminal — where the
-  user would paste whatever they copied, as it is? Or is it a field that expects one specific value, such as a
-  name, an email address, a phone number, an address line or a single short entry?"; criteria `true` "A
-  free-text place: the user would paste whatever they copied, whole.", `false` "A field for one specific value."
-  Cost measured in the spike: +~135 input tokens per call, median 436 ms vs 360 ms for two questions (n small).
-- `app_name` is the focused app's localized name, `window_title` its window's `AXTitle` (screened for secrets in
-  Core like `surrounding_text`). The bundle id is never sent.
-- Jev accepts at most 255 options, `none_of_these` included, so at most **254 Candidates**. More → `.failed`
-  without a call (a 256-option request is an HTTP 400 anyway).
+Since Narrowing ([#50](https://github.com/DanielMulec/jevpaste/issues/50)) this adapter sends one Narrowing step
+per call; what the request holds, its wordings and its size are Core's — [narrowing.md](narrowing.md).
 
-## Response parsing
-Only `answers.paste.choice` (string), `answers.contains_value.probability` and `answers.free_text.probability`
-(numbers in 0…1) are read.
-Everything else (`probabilities`, `confidence`, `usage`, `providerMetadata`) is ignored.
+## Request — one `POST https://ai-gateway.vercel.sh/v1/evaluate` per `evaluate(_:reply:)`
+Headers: `Authorization: Bearer <key>`, `Content-Type: application/json`. Body: `{"model":"typesafe-ai/jev",
+"state":…,"questions":…}` — `state` and `questions` exactly as Core renders them (`NarrowingRequest.stateJSON` /
+`questionsJSON`, one ordered compact JSON writer, `OrderedJSON`), member order kept; the adapter adds only `model`.
+- N choice questions (`type: "choice"`) per step, each with up to 255 options: the unchanged piece, the pieces,
+  `nothing_fits`, `ask_user`. Option descriptions go in full and verbatim, real line breaks included — no
+  255-character cut (it was never Jev's limit), no cap, no local wording. No `boolean` question remains.
+- `state` = `source_document`, `target_context` (nil strings and empty values left out; `app_name`, `window_title`
+  screened in Core like `surrounding_text`; the bundle id is never sent) and, in the excerpt-id form, `excerpts`.
 
-## Mapping to `DecisionReply`
+## Response parsing (`EvaluateResponse`, own ordered parser)
+For every question asked: `answers.<id>.choice` (must be one of that question's option ids) and
+`answers.<id>.probabilities` (numbers in 0…1), kept **in the order Jev listed them** — it breaks ties in Core.
+Everything else (`confidence`, `usage`, `providerMetadata`) is ignored.
+
+## Mapping to `NarrowingReply`
 | HTTP / body | reply |
 |---|---|
-| 200, `choice` = `cNNN` with NNN < candidate count | `.decided(Decision(choice: .candidate(candidates[NNN]), containsValueProbability: p, freeTextProbability: f))` |
-| 200, `choice` = `none_of_these` | `.decided(Decision(choice: .noneOfThese, containsValueProbability: p, freeTextProbability: f))` |
-| 200, `choice` id unknown or out of range, `p` or `f` missing or outside 0…1, JSON malformed | `.failed` |
+| 200, every question answered with an offered id and valid probabilities | `.answered([questionID: ChoiceAnswer])` |
+| 200, a question missing, an unknown choice id, a probability outside 0…1, JSON malformed | `.failed` |
 | 429 with `retry-after: <seconds>` (integer or decimal ≥ 0) | `.rateLimited(retryAfter: .seconds(min(n, 60)))` |
-| 429 without a finite, non-negative `retry-after` | `.rateLimited(retryAfter: .seconds(1))` (free tier ≈ 1 call/s) |
-| any other status, transport error | `.failed` |
+| 429 without a finite, non-negative `retry-after` | `.rateLimited(retryAfter: .seconds(1))` |
+| 400 carrying `{"error_type":"max_tokens_exceeded"}` — as `error.message` / `error.param.error`, or inside any `providerAttempts[].error` (the Gateway's "typesafe returned status 400" form) | `.tooLarge` |
+| any other status (other 400s included), transport error | `.failed` |
 | key file missing/unreadable, or no non-empty `AI_GATEWAY_API_KEY=` line | `.failed`, no call |
-| more than 254 Candidates | `.failed`, no call |
 
-The gate threshold (< 0.5), the free-text threshold (≥ 0.8) and the verbatim/offered checks stay in Core; the
-adapter only reports.
-No retry and no timeout here: `URLRequest.timeoutInterval` is left at the system default because the Paste
-Attempt drops late replies itself.
+Byte-exact checks, the follow-up rule and every outcome stay in Core; the adapter only reports. No retry and no
+timeout here: the Paste Attempt drops late replies itself.
 
 ## Error taxonomy (diagnostics only)
-`JevGatewayFailure`: `missingKey(file:)`, `tooManyCandidates(count:)`, `malformedRequest` (encoding),
-`transport`, `httpStatus(Int)`, `malformedResponse`, `unknownChoice`. Each `.failed` logs one line through `os.Logger`
-(subsystem `jevpaste`, category `JevGateway`) with the case, and `.decided`/`.rateLimited` log the latency and
-option count. Never logged: the key, source document, Target Context, Candidates, request or response body.
-`missingKey` names the file path (`~/.config/jevpaste/env`), never a value.
+`JevGatewayFailure`: `missingKey(file:)`, `transport`, `httpStatus(Int)`, `malformedResponse`, `unknownChoice`. Each
+`.failed` logs one line through `os.Logger` (subsystem `jevpaste`, category `JevGateway`); every reply logs the
+status, the question and option counts, the request bytes and the latency. Never logged: the key, source document,
+Target Context, excerpts, request or response body. `missingKey` names the file path, never a value.
 
 ## Seams
-- `JevGatewayDecisionService(credentials:transport:)`, `Sendable` struct. `requestDecision` starts one
+- `JevGatewayDecisionService(credentials:transport:)`, `Sendable` struct. `evaluate` starts one
   `Task`, awaits the transport, then calls `reply` exactly once on the main actor (`await reply(result)`).
 - `HTTPTransport: Sendable { func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) }`;
   production `URLSessionTransport` (`URLSession.shared`). Unit tests inject a stub that records the request
@@ -80,13 +53,14 @@ option count. Never logged: the key, source document, Target Context, Candidates
   surrounding quotes. `hasAPIKey` tells the live test (and later the shell) whether a key exists.
 - Files: `JevGatewayDecisionService.swift` (orchestration), `EvaluateRequestBody.swift` (encoding),
   `EvaluateResponse.swift` (decoding + mapping), `GatewayCredentials.swift`, `HTTPTransport.swift`,
-  `JevGatewayFailure.swift`, `RateLimit.swift` (`retry-after`). Tests split by concern: request shape, reply mapping, rate limit, credentials.
+  `JevGatewayFailure.swift`, `JevRefusal.swift` (the 400 size refusal), `OrderedJSONParser.swift` (+`Lookup`),
+  `RateLimit.swift` (`retry-after`). Tests: `NarrowingRequestEncodingTests`, `NarrowingReplyTests`,
+  `NarrowingReplayTests`, `JevGatewayRateLimitAndKeyTests` (`JevGatewayRateLimitTests`, `JevGatewayKeyTests`).
 
 ## Live test
-`JEVPASTE_LIVE_JEV=1` and a readable key → one real call with a synthetic document (name/email/city lines,
-target `Email address`), expects `.decided` with the email Candidate and reports the wall-clock latency.
-Otherwise the test is skipped via `.enabled(if:)`, so `make check` stays offline.
+`JEVPASTE_LIVE_JEV=1` and a readable key → one real step-1 request with a synthetic document (name/email/city lines,
+target `Email address`), expects `.answered` with a piece holding the email and reports the wall-clock latency.
+Otherwise skipped via `.enabled(if:)`, so `make check` stays offline.
 
 ## Open questions
-1. Candidate derivation caps at 255; with `none_of_these` the adapter can take 254. Cap derivation at 254?
-2. HTTP-date `retry-after` values are treated as absent (1 s). Not observed in the spikes.
+1. HTTP-date `retry-after` values are treated as absent (1 s). Not observed in the spikes.

@@ -17,17 +17,16 @@ Spec: [Choose paste lifecycle, cancellation and clipboard preservation](https://
 byte-for-byte) · `ClipboardChange { changeCount: Int, item: ClipboardItem? }` ·
 `TargetIdentity { processIdentifier: Int32, elementToken: UInt64 }` (token minted by the adapter) ·
 `TargetContext { fieldLabel?, placeholder?, sectionHeading?, siblingFieldLabels, surroundingText }` ·
-`BoundTarget { identity, context, isSecureField }` · `DecisionRequest { sourceDocument, targetContext,
-candidates }` · `Decision { choice: .candidate(Candidate) | .noneOfThese, containsValueProbability: Double }`
-· `DecisionReply = .decided(Decision) | .rateLimited(retryAfter: Duration) | .failed` ·
+`BoundTarget { identity, context, isSecureField }` · `NarrowingRequest { sourceDocument, targetContext, excerpts,
+questions }` and `NarrowingReply = .answered([questionID: ChoiceAnswer]) | .rateLimited(retryAfter: Duration) |
+.tooLarge | .failed` (one Narrowing step; [narrowing.md](narrowing.md)) ·
 `PreCheckRefusal = .noEditableTarget | .targetNotReady(applicationName:) | .secureField | .suspectedSecret |
 .noActiveItem` ·
-`PasteAttemptFailure = .timedOut | .decisionUnavailable | .invalidResult | .targetChanged` ·
+`PasteAttemptFailure = .timedOut | .decisionUnavailable | .tooLongForSmartPaste | .invalidResult | .targetChanged` ·
 `PasteAttemptOutcome = .inserted | .insertedWithoutRestore | .noSuitableMatch | .refused(PreCheckRefusal)
-| .cancelled | .failed(PasteAttemptFailure)` · `SmartPastePath = .jev(freeTextProbability:, offer:) |
-.freeTextTarget(probability:) | .directPaste` (diagnostics only; stored on the running attempt, refined when Jev's
-decision arrives and when the No Suitable Match offer ends) · `NoSuitableMatchOfferEnd = .accepted | .dismissed |
-.timedOut`.
+| .cancelled | .failed(PasteAttemptFailure)` · `SmartPastePath { narrowing: NarrowingTrace, calls,
+noSuitableMatchOfferEnd? }` (diagnostics only; stored on the running attempt, refined with every request and step
+and when the No Suitable Match offer ends) · `NoSuitableMatchOfferEnd = .accepted | .dismissed | .timedOut`.
 
 ## Ports
 ```swift
@@ -45,8 +44,8 @@ decision arrives and when the No Suitable Match offer ends) · `NoSuitableMatchO
     func isStillFocused(_ target: TargetIdentity) -> Bool // same pid + same focused element
 }
 @MainActor protocol Inserter { func postPasteKeystroke() }   // synthetic ⌘V only; never Return
-protocol DecisionService: Sendable {
-    func requestDecision(_ request: DecisionRequest, reply: @escaping @MainActor @Sendable (DecisionReply) -> Void)
+protocol DecisionService: Sendable {   // one Narrowing step per call
+    func evaluate(_ request: NarrowingRequest, reply: @escaping @MainActor @Sendable (NarrowingReply) -> Void)
 }
 protocol HistoryRepository: Sendable { func record(_ item: ClipboardItem) }
 @MainActor protocol PasteAttemptClock {
@@ -68,11 +67,7 @@ protocol HistoryRepository: Sendable { func record(_ item: ClipboardItem) }
     func presentChoice(among candidates: [Candidate], for target: BoundTarget,
                        reply: @escaping @MainActor (Candidate?) -> Void)   // nil = Esc / click-away
 }
-// Rule seams, stubbed in tests; real rules arrive in the Candidate derivation and Pre-check slices.
-protocol CandidateExtraction: Sendable {
-    func candidates(in item: ClipboardItem) -> [Candidate]
-    func sameTypeAlternatives(to chosen: Candidate, among candidates: [Candidate]) -> [Candidate]  // ≥2 → chooser
-}
+// Rules, injected as `PasteAttemptRules { narrowingPolicy: NarrowingPolicy, preCheck }`.
 protocol PreCheck: Sendable {   // adapter: LocalPreChecks (Core), see pre-checks.md
     func refusal(for item: ClipboardItem, in target: BoundTarget) -> PreCheckRefusal?
     func screenedContext(of target: BoundTarget) -> ScreenedTargetContext  // pinned at ⌘⇧V, sent in every request
@@ -86,26 +81,26 @@ protocol PreCheck: Sendable {   // adapter: LocalPreChecks (Core), see pre-check
 | wakeWaiting | focus resolves | continue as from idle with the Bound Target (rows below); outcome carries `wakeWait` |
 | wakeWaiting | still unreadable at 3 s / readable, nothing editable / click | `.refused(.targetNotReady(app))` / `.refused(.noEditableTarget)` / `.cancelled` |
 | idle | ⌘⇧V, no Active Item / no target / `PreCheck` refusal | `showOutcome(.refused(r))` → idle (no Jev, no write) |
-| idle | ⌘⇧V, checks pass, single-line item (`DirectPasteRule`) | Direct Paste: pin item+target, no Jev, no clocks, no indicator → delivering ([direct-paste.md](direct-paste.md)) |
-| idle | ⌘⇧V, checks pass, candidates empty | `showOutcome(.noSuitableMatch)` → idle |
-| idle | ⌘⇧V, checks pass | pin item+target; start 5 s deadline + 150 ms indicator timer; `requestDecision` → deciding |
+| idle | ⌘⇧V, checks pass, copy holds no visible character | `showOutcome(.noSuitableMatch)` → idle, no call |
+| idle | ⌘⇧V, checks pass | pin item+target; start 5 s deadline + 150 ms indicator timer; Narrowing step 1 → `evaluate` → deciding |
 | wakeWaiting, deciding, retrying, choosing, delivering | ⌘⇧V | ignored (offeringDirectPaste: ends the offer, row below) |
 | deciding | 150 ms timer | `showProcessing(onCancel:)` |
 | deciding | `.rateLimited(d)`, now+d < deadline | `showRetrying`; schedule retry after d → retrying |
 | deciding | `.rateLimited(d)`, now+d ≥ deadline | `.failed(.timedOut)` |
-| retrying | retry timer | `requestDecision` again → deciding |
+| retrying | retry timer | the same step's request again → deciding |
 | deciding, retrying | deadline timer | `.failed(.timedOut)` |
 | deciding, retrying | Esc (`onCancel`) | `.cancelled` |
 | deciding | `.failed` | `.failed(.decisionUnavailable)` |
-| deciding | `freeTextProbability` ≥ 0.8 (first check, wins over everything below) | whole item, outer line breaks stripped → delivering ([free-text-target.md](free-text-target.md)) |
-| deciding | `.noneOfThese` or probability < 0.5 | stop clocks; `showNoSuitableMatchOffer`; 8 s offer timer → offeringDirectPaste ([no-suitable-match-offer.md](no-suitable-match-offer.md)) |
-| offeringDirectPaste | `onAccept` (Enter) | `deliver(withoutOuterLineBreaks(item))` → delivering, path `.jev(…, offer: .accepted)` |
-| offeringDirectPaste | `onDismiss` (Esc / click-away), ⌘⇧V, 8 s timer | `.noSuitableMatch`, path `.jev(…, offer: .dismissed / .timedOut)` → idle |
-| deciding | candidate not a verbatim UTF-8 substring of pinned item | `.failed(.invalidResult)` |
-| deciding | ≥ 2 same-type alternatives | stop clocks; `presentChoice` → choosing |
-| deciding | otherwise | stop clocks → delivering |
+| deciding | `.tooLarge` (Jev refused the size) | `.failed(.tooLongForSmartPaste)` |
+| deciding | `.answered`: a pick that is not an offered piece, verbatim, inside the current piece | `.failed(.invalidResult)` |
+| deciding | `.answered`: a piece, or several choices disagree | next step (or follow-up) → `evaluate`, stays deciding; a one-character piece is final without a call |
+| deciding | `.answered`: the current piece unchanged | stop clocks; that piece (the whole copy: outer line breaks stripped) → delivering |
+| deciding | `.answered`: nothing fits, at any step | stop clocks; `showNoSuitableMatchOffer`; 8 s offer timer → offeringDirectPaste ([no-suitable-match-offer.md](no-suitable-match-offer.md)) |
+| offeringDirectPaste | `onAccept` (Enter) | `deliver(withoutOuterLineBreaks(item))` → delivering, path `offer: .accepted` |
+| offeringDirectPaste | `onDismiss` (Esc / click-away), ⌘⇧V, 8 s timer | `.noSuitableMatch`, path `offer: .dismissed / .timedOut` → idle |
+| deciding | `.answered`: ask the user | stop clocks; `presentChoice` with the options Jev weighted, most likely first → choosing |
 | choosing | reply `nil` | `.cancelled` |
-| choosing | reply candidate | validate substring → delivering |
+| choosing | reply candidate | validate like Jev's pick (offered, verbatim; a whole copy stripped) → delivering |
 | delivering | step start | `isStillFocused` false → `.failed(.targetChanged)`, clipboard untouched; else `snapshot`, `write` (mark own), `postPasteKeystroke`, schedule 120 ms |
 | delivering | Esc | ignored |
 | delivering | 120 ms, `changeCount` == own write | `restore` (mark own) → `.inserted` |
@@ -117,7 +112,7 @@ Active Item is never changed by the coordinator; a copy during the attempt reach
 ## Clocks
 - **3 s Wake Wait limit**: starts at ⌘⇧V when the focus is unreadable; ends when it resolves (then the 5 s
   deadline starts) or at the limit. Re-reads every 50 ms; the 150 ms indicator shows "Waking <App>…" meanwhile.
-- **5 s deadline**: starts when the Bound Target is resolved and the pre-checks pass (after any Wake Wait); covers Jev calls and 429 back-off; a retry is
+- **5 s deadline**: starts when the Bound Target is resolved and the pre-checks pass (after any Wake Wait); covers every Narrowing step's call and 429 back-off; a retry is
   scheduled only if it starts before the deadline. Stops at: chooser or No Suitable Match offer opens (both off it),
   delivery starts (delivery is uninterruptible), or any outcome. Not restarted after the chooser.
 - **150 ms indicator**: same start (at ⌘⇧V during a Wake Wait; if "Waking…" was shown, processing replaces it at once); cancelled by any earlier outcome/chooser/delivery.

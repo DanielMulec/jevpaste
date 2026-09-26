@@ -1,5 +1,7 @@
 # Candidate derivation — rules and tests
 
+> **Superseded** by [narrowing.md](narrowing.md) (#50): Candidates are no longer derived; Narrowing cuts pieces by character classes only. Kept as the record of the removed rules.
+
 Slices: [Implement Candidate derivation](https://github.com/DanielMulec/jevpaste/issues/19) and
 [Add multi-line Candidate kinds](https://github.com/DanielMulec/jevpaste/issues/30). Spec:
 [Choose Jev context and excerpt-selection semantics](https://github.com/DanielMulec/jevpaste/issues/7) (resolution
