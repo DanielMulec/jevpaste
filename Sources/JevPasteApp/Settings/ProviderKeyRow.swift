@@ -6,6 +6,7 @@ import SmartPasteCore
 @MainActor
 final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
     private static let fieldWidth = 300.0
+    private static let resultWidth = 180.0
 
     let view: NSStackView
     private let provider: JevProvider
@@ -24,6 +25,7 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
         fields.spacing = 0
         view = NSStackView(views: [fields, eyeButton, testButton, resultField])
         view.spacing = 6
+        view.alignment = .centerY
         super.init()
         for field in [secureField, plainField] {
             field.placeholderString = "\(provider.displayName) API key"
@@ -44,7 +46,10 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
         testButton.action = #selector(runTest)
         testButton.isEnabled = isEnabled
         resultField.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        resultField.preferredMaxLayoutWidth = 180
+        resultField.preferredMaxLayoutWidth = Self.resultWidth
+        resultField.translatesAutoresizingMaskIntoConstraints = false
+        // A fixed slot, so the eye and Test sit beside the field whether or not a result shows.
+        resultField.widthAnchor.constraint(equalToConstant: Self.resultWidth).isActive = true
         refresh()
     }
 

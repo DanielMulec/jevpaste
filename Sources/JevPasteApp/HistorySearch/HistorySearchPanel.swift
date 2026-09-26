@@ -118,8 +118,8 @@ final class HistorySearchPanel: NSObject, HistorySearchSurface, NSSearchFieldDel
         field.translatesAutoresizingMaskIntoConstraints = false
         fieldBox.addSubview(field)
         NSLayoutConstraint.activate([
-            field.leadingAnchor.constraint(equalTo: fieldBox.leadingAnchor, constant: 4),
-            field.trailingAnchor.constraint(equalTo: fieldBox.trailingAnchor, constant: -4),
+            field.leadingAnchor.constraint(equalTo: fieldBox.leadingAnchor, constant: 9),
+            field.trailingAnchor.constraint(equalTo: fieldBox.trailingAnchor, constant: -9),
             field.topAnchor.constraint(equalTo: fieldBox.topAnchor, constant: 3),
             field.bottomAnchor.constraint(equalTo: fieldBox.bottomAnchor, constant: -5),
         ])
