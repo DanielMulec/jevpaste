@@ -43,6 +43,10 @@ _Avoid_: Transformation, rewrite, generated text
 **Candidate**:
 An exact contiguous substring of the Active Item, derived locally, that Jev may choose as the Paste Result.
 
+**Embedded Value**:
+A piece of a line of the Active Item — an email, a phone number, a city, a postal code, a date, a street — that belongs in a field on its own, offered as its own Candidate rather than only inside the line that holds it.
+_Avoid_: Token (reads as an LLM token), entity, fragment
+
 **No Suitable Match**:
 The visible outcome when no Candidate belongs in the Target; nothing is inserted unless the user then presses Enter to paste the whole Active Item as a Direct Paste.
 
