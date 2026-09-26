@@ -1,5 +1,7 @@
 # History UI — select, delete and clear Clipboard History
 
+> **Superseded** by [menu-and-settings.md](menu-and-settings.md) (#53): the panel below is removed; its Core seam stays.
+
 Slice: [Implement the history UI](https://github.com/DanielMulec/jevpaste/issues/27). Decision and prototype:
 [Validate history selection and visible paste feedback](https://github.com/DanielMulec/jevpaste/issues/9).
 
