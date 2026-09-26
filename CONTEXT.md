@@ -25,23 +25,23 @@ The focused editable destination into which a Paste Result is intended to be ins
 Information about the Target and its surroundings that helps establish what text belongs there.
 
 **Smart Paste**:
-An explicitly requested insertion of the Active Item into the Target: either the excerpt that belongs there, chosen by Jev, or a Direct Paste. Insert only; never sends or executes.
+An explicitly requested insertion of the Active Item into the Target: either the excerpt that belongs there, found by Jev through Narrowing, or a Direct Paste. Insert only; never sends or executes.
 _Avoid_: Ordinary paste (which inserts clipboard contents without this safety envelope)
 
 **Direct Paste**:
-The Active Item inserted whole, without Candidates or the Candidate Chooser — verbatim as copied, leading and trailing line breaks stripped so nothing is sent or executed. Three doorways: the Active Item is a single line (no line break inside, ignoring outer whitespace; Jev is not consulted); the Target is a Free-text Target; or the user presses Enter after No Suitable Match. Pre-checks still apply.
-_Avoid_: Plain paste, whole paste, skip-Jev paste
-
-**Free-text Target**:
-A Target that Jev judges to accept any text — a chat or message composer, an editor, a document, a terminal — rather than one specific value. Judged per Paste Attempt from the Target Context, never by a local rule; a Free-text Target receives the whole Active Item as a Direct Paste.
-_Avoid_: Unlabelled target (labels may exist but be unreadable), chat mode
+The whole Active Item inserted because the user pressed Enter after No Suitable Match — the only doorway; never automatic, never a local rule. Verbatim as copied, leading and trailing line breaks stripped so nothing is sent or executed. Pre-checks still apply. When Jev itself keeps the whole Active Item during Narrowing (a chat box or terminal takes everything), that is a Paste Result, not a Direct Paste.
+_Avoid_: Plain paste, whole paste, skip-Jev paste, Free-text Target (retired: Jev no longer judges the place separately; it chooses the whole item like any other piece)
 
 **Paste Result**:
 One exact, contiguous, verbatim excerpt of the Active Item chosen for the Target. Never rewritten, reformatted, combined, or generated.
 _Avoid_: Transformation, rewrite, generated text
 
 **Candidate**:
-An exact contiguous substring of the Active Item, derived locally, that Jev may choose as the Paste Result.
+An exact contiguous substring of the Active Item, cut locally at cut points without judging meaning, that Jev may choose during Narrowing. No Candidate is ever dropped for lack of room; more choices are asked instead.
+
+**Narrowing**:
+How Jev finds the Paste Result: starting from the whole Active Item, Jev repeatedly chooses among the current piece unchanged and the Candidates cut from it. It ends when Jev keeps a piece unchanged (that piece is the Paste Result), chooses "nothing fits" (No Suitable Match), or asks the user (Candidate Chooser). Every step is a choice; no yes/no question and no local rule decides what the piece means.
+_Avoid_: Stage, drill-down, refinement, gate
 
 **Embedded Value**:
 A piece of a line of the Active Item — an email, a phone number, a city, a postal code, a date, a street — that belongs in a field on its own, offered as its own Candidate rather than only inside the line that holds it.
@@ -51,7 +51,7 @@ _Avoid_: Token (reads as an LLM token), entity, fragment
 The visible outcome when no Candidate belongs in the Target; nothing is inserted unless the user then presses Enter to paste the whole Active Item as a Direct Paste.
 
 **Candidate Chooser**:
-The small in-app prompt shown when several excerpts are plausible for the Target; the app never guesses silently.
+The small in-app prompt shown when Jev answers during Narrowing that more than one excerpt could be meant; the app never guesses silently. Opened by Jev's choice, never by a local type rule.
 
 **Rejev-paste**:
 A Smart Paste using an older Clipboard Item selected from Clipboard History, interpreted afresh for its Target.
