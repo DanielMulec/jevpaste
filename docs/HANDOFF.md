@@ -23,7 +23,7 @@ Herdr tabs. Your intercom id: `echo $PI_INTERCOM_SESSION_ID` — it is **not** t
 ## Where things stand (2026-09-26, ~20:45)
 - **Branch `narrowing`** (worktree `~/.pi/worktrees/jevpaste/narrowing`), pushed. Commits: 9e2a6d4 design → d81c604
   code+tests+fixtures → 6958ebd replay 14 cells → b117e47 docs → 568c96d README privacy → 7e4d172/da75606 live log →
-  **1c06af2 fix (A)** → worker 2's handoff commit. `make check` green (442 tests, 3.4 s); `make planning-time` (release)
+  **1c06af2 fix (A)** → c59d368 live log parts 2–3 + worker handoff (tree clean). `make check` green (442 tests, 3.4 s); `make planning-time` (release)
   within ceilings (recorded pastes ≤ 5 ms, 300-line list 32 ms, 3000-line copy 72 ms — worker 2 fixed an O(n²) search
   that had made planning take 83 s).
 - **Gate A approved** (wordings byte-checked by me against FINDINGS; condition 1 "one JSON writer" = `OrderedJSON.rendered`
