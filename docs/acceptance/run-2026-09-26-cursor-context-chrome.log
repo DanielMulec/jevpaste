@@ -1,0 +1,84 @@
+# Read nearby text around the text cursor (51) — deferred Chrome rows (b) and (c), live proof, 2026-09-26.
+# Slice already merged (main 5a44ab7); this log adds evidence only. Same THROWAWAY instrumented build as
+# run-2026-09-26-cursor-context.log: 7c03d9d on cursor-context-probe (worktree at 54c0a3d = + live51/ fixtures; pushed,
+# never merged). One log line in FocusedTargetResolver: `live51 surroundingChars=<n> <MARKER>=<bool>…` for the
+# synthetic JEVPASTE-<MARKER>-51 markers in the resolved Target Context's surroundingText (booleans only).
+# `make app` (signed jevpaste-dev) in ~/.pi/worktrees/jevpaste/chrome-rows-probe; production quit by pid;
+# `open -n build/JevPaste.app --args --accept-signal-trigger` (grant check trusted=true) and a second instance of the
+# same build with `--cursor-probe` (no hotkey; SIGUSR2 = read-only measurement of the focused element, probe6.log).
+# Helpers: live51/live.sh and sig.sh copied to /tmp/jevpaste-cursor-51; the copies' pgrep path changed from
+# /cursor-context/build/ to /chrome-rows-probe/build/ (the worktree's name), nothing else. Both gate on
+# `lsappinfo front` == com.google.Chrome, signal only the test pid (abort if it equals production) and print clipboard
+# digest equality (never contents).
+# Pages: gate-a.html = <textarea> holding long.txt (7218 chars; FARSTART 0, BEFORE 3591, AFTER 3612, FAREND 7200),
+# caret set to 3609 on load. short.html = heading (PAGE marker) + <label> (LABEL marker) + empty <input>, autofocus.
+# Tab gate: Chrome's remote-debugging consent was already granted (chrome-devtools MCP connected without a prompt).
+# Each page opened as its own new tab via the MCP (new_page), then select_page + bringToFront; before the triggers an
+# evaluate_script check returned url == the file:// page, visibilityState=visible, document.activeElement == the
+# field, and the field's length and caret (numbers only). Daniel's own tabs were listed but not touched.
+# Paste fixture: `# JEVPASTE-PASTE-51` only (no secret fixture).
+# Helper output:
+vault saved: items=0 sha256=63991da41c7d
+pgrep before: 87557 ~/Applications/JevPaste.app/Contents/MacOS/JevPaste;
+start 2026-09-26 14:30:13
+production 87557 quit; pgrep: []
+launched: 93767 ~/.pi/worktrees/jevpaste/chrome-rows-probe/build/JevPaste.app/Contents/MacOS/JevPaste --accept-signal-trigger; 93770 ~/.pi/worktrees/jevpaste/chrome-rows-probe/build/JevPaste.app/Contents/MacOS/JevPaste --cursor-probe /tmp/jevpaste-cursor-51/probe6.log;
+(b) gate-a.html: DevTools page selected + front; page check: visibility=visible activeIsTextarea=true len=7218 selection=(3609,3609); BEFORE marker at caret-18, AFTER marker at caret+3
+signal USR2 to probe pid=93770 (production pid=) front=com.google.Chrome at 14:30:32
+(b) re-check before the live trigger: same page selected, visibility=visible activeIsTextarea=true selection=(3609,3609)
+trigger USR1 pid=93767 (production running: []) front=com.google.Chrome at 14:30:45
+clipboardSameBytes=true
+(b) page after: len=7237 (+19 = the fixture), fixture at 3609, count 1, caret 3628
+(c) short.html: DevTools page selected + front; page check: visibility=visible activeIsInput=true len=0 caret=0
+signal USR2 to probe pid=93770 (production pid=) front=com.google.Chrome at 14:31:04
+    (the page check above covered both (c) signals, 3 s apart; live.sh re-gated the frontmost app)
+trigger USR1 pid=93767 (production running: []) front=com.google.Chrome at 14:31:07
+clipboardSameBytes=true
+(c) page after: len=19, fixture at 0, caret 19
+test instances 93767 (--accept-signal-trigger) and 93770 (--cursor-probe) quit; pgrep: []
+clipboard restored from vault (before the relaunch): items=0 sha256=63991da41c7d, sameBytesAsBeforeRun=true
+production relaunched; pgrep after: 94182 ~/Applications/JevPaste.app/Contents/MacOS/JevPaste;
+vault file deleted
+end 2026-09-26 14:31:25
+both test tabs closed via the MCP after re-listing the pages and checking each URL was the file:// page
+# App log (log show --info --predicate 'subsystem == "jevpaste"', 14:30:10–14:31:40):
+2026-09-26 14:30:14.354613+0200 93767 JevPaste: [jevpaste:Launch] launch apiKeyPresent=true
+2026-09-26 14:30:14.378155+0200 93767 JevPaste: [jevpaste:Launch] grant check at launch trusted=true
+2026-09-26 14:30:14.379758+0200 93767 JevPaste: [jevpaste:Launch] acceptance signal trigger on
+2026-09-26 14:30:45.408134+0200 93767 JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-26 14:30:45.423030+0200 93767 JevPaste: [jevpaste:LiveProof51] live51 surroundingChars=2000 OLD=false NEAR=false BEFORE=true AFTER=true FARSTART=false FAREND=false PAGE=false LABEL=false
+2026-09-26 14:30:45.556111+0200 93767 JevPaste: [jevpaste:PasteAttempt] outcome inserted via=directPaste
+2026-09-26 14:31:07.868998+0200 93767 JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-26 14:31:07.874593+0200 93767 JevPaste: [jevpaste:LiveProof51] live51 surroundingChars=122 OLD=false NEAR=false BEFORE=false AFTER=false FARSTART=false FAREND=false PAGE=true LABEL=true
+2026-09-26 14:31:07.997366+0200 93767 JevPaste: [jevpaste:PasteAttempt] outcome inserted via=directPaste
+2026-09-26 14:31:22.906409+0200 94182 JevPaste: [jevpaste:Launch] launch apiKeyPresent=true
+2026-09-26 14:31:22.935635+0200 94182 JevPaste: [jevpaste:Launch] grant check at launch trusted=true
+# Cursor probe log (probe6.log, same build, --cursor-probe, pid 93770):
+2026-09-26T12:30:14Z cursor probe start accessibilityTrusted=true pid=93770
+2026-09-26T12:30:32Z run=1 front=com.google.Chrome role=AXTextArea valueReadable=true ownTextLength=7218 ownTextUTF16=7218 cursorReported=true rangeStatus=0 rangeLocation=3609 rangeLength=0 rangeReadMicros=770 numberOfCharacters=7218 insertionLine=0 visibleStatus=0 visible=0+7218
+2026-09-26T12:30:32Z run=1   marker=JEVPASTE-OLD-51 inValue=false
+2026-09-26T12:30:32Z run=1   marker=JEVPASTE-NEAR-51 inValue=false
+2026-09-26T12:30:32Z run=1   marker=JEVPASTE-BEFORE-51 inValue=true firstFromCursor=-18 lastFromCursor=-18
+2026-09-26T12:30:32Z run=1   marker=JEVPASTE-AFTER-51 inValue=true firstFromCursor=3 lastFromCursor=3
+2026-09-26T12:30:32Z run=1   marker=JEVPASTE-FARSTART-51 inValue=true firstFromCursor=-3609 lastFromCursor=-3609
+2026-09-26T12:30:32Z run=1   marker=JEVPASTE-FAREND-51 inValue=true firstFromCursor=3591 lastFromCursor=3591
+2026-09-26T12:31:04Z run=2 front=com.google.Chrome role=AXTextField valueReadable=true ownTextLength=0 ownTextUTF16=0 cursorReported=true rangeStatus=0 rangeLocation=0 rangeLength=0 rangeReadMicros=69 numberOfCharacters=0 insertionLine=0 visibleStatus=0 visible=0+0
+2026-09-26T12:31:04Z run=2   marker=JEVPASTE-OLD-51 inValue=false
+2026-09-26T12:31:04Z run=2   marker=JEVPASTE-NEAR-51 inValue=false
+2026-09-26T12:31:04Z run=2   marker=JEVPASTE-BEFORE-51 inValue=false
+2026-09-26T12:31:04Z run=2   marker=JEVPASTE-AFTER-51 inValue=false
+2026-09-26T12:31:04Z run=2   marker=JEVPASTE-FARSTART-51 inValue=false
+2026-09-26T12:31:04Z run=2   marker=JEVPASTE-FAREND-51 inValue=false
+# Results:
+# (b) Chrome long <textarea>, caret in the middle: Chrome reports a real caret. AXSelectedTextRange = (3609,0), the
+#     same offset as the page's selectionStart (UTF-16), one call in 770 µs; role AXTextArea, own text 7218. Live:
+#     surroundingChars=2000, BEFORE=true AFTER=true FARSTART=false FAREND=false, as expected (the same as TextEdit (d)).
+#     Direct Paste inserted the fixture at 3609. Clipboard same bytes.
+# (c) Chrome short labelled field (page-walk regression check): the probe reads AXTextField, own text 0, (0,0), so
+#     it is short and gets the page walk. Live: surroundingChars=122 (< 2000), PAGE=true LABEL=true. Direct Paste
+#     inserted the fixture into the field. Clipboard same bytes.
+# Cleanup in the brief's order: test instances quit by pid, clipboard restored from the vault (empty before and
+# after, same bytes) and only then production relaunched (pid 94182, trusted=true), so Launch Adoption adopted
+# nothing from the run. The test instance has the same bundle id, so, as in the earlier run, its history may hold
+# the `# JEVPASTE-PASTE-51` fixture (not checked); there was no secret fixture. Both Chrome test tabs are closed;
+# nothing from this run is left open.
