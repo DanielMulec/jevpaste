@@ -95,3 +95,28 @@ numbers) by `scripts/prototype-contact-sheet.py` into `docs/prototype/menu-setti
 - `sheet-settings.png` — Settings 1/2/3: Jev Provider view after a ✓ Test, and Full History view (6 cells).
 
 Rework rounds go into `round2-…` sheets; old sheets are never renumbered.
+
+## Feel scripts for Daniel (question 1)
+
+Launch (the supervisor): `cd ~/.pi/worktrees/jevpaste/prototype-menu-settings && make prototype` — first build
+≈ 1 min; a ✦ (sparkle) appears next to JevPaste's own icon. Everything is fake: nothing is pasted or stored.
+
+**Menu A — real NSMenu** (the default at launch)
+1. Click ✦. Look at the field: it shows the Active Item's first line in grey. *Why: the placeholder is the Active Item.*
+2. Without clicking the field, type `ex`. Rows appear, the menu grows. Is there a blinking caret? *Why: focus without a click — in A text arrives, but no caret shows.*
+3. Press ↓ twice. The highlight walks down the rows. *Why: arrows in a real menu.*
+4. Now type `a`, then ⌫. Did the field text change, or did the highlight jump? *Why: the prototype found the field goes deaf after an arrow key.*
+5. Press Enter. The menu closes. Click ✦ again: the grey placeholder now shows the item you chose. *Why: Enter makes it the Active Item.*
+6. Type `ma`, then **click** the second row with the mouse. Reopen: did the placeholder change? *Why: a mouse click could not be tested without your hand.*
+7. Type `ex`, press Esc once. *Why: in A one Esc closes everything, even with text typed.*
+8. With a full-screen app in front (menu bar hidden), move the pointer to the top, click ✦, type `ex`, move the pointer down over the rows. Does the menu bar stay visible? Does the menu stay? *Why: your auto-hiding menu bar can't be simulated.*
+
+**Menu B — menu-shaped panel** (✦ → Variant → "Menu B — menu-shaped panel", then click ✦)
+1. Click ✦. Caret blinking in the field, grey placeholder = Active Item. *Why: B can show focus; A can't.*
+2. Type `ex`. Rows appear, the panel grows. *Why: same as A, compare the feel.*
+3. Press ↓ twice, then type `a`, then ⌫. The field keeps editing. *Why: the difference from A step 4.*
+4. Press ↓ then Enter. It closes; reopen: placeholder = chosen item. *Why: Enter chooses.*
+5. Type `ma`, click the second row. *Why: click path.*
+6. Type `ex`, press Esc (clears the text), Esc again (closes). Reopen and click somewhere else on the screen: it closes. *Why: is two-step Esc right, or should one Esc close?*
+7. Same as A step 8 with the full-screen app. Does the menu bar hide while the panel stays open, and does ✦ still close it? *Why: the panel is not a real menu, so macOS may hide the bar under it.*
+8. Compare the look of A and B side by side (colour, corners, row height, highlight). *Why: B is drawn by us and can only imitate a menu.*
