@@ -8,7 +8,7 @@ import Testing
 @MainActor
 struct ContextWalkBoundsTests {
     private func context(of node: FakeNode, reader: TargetContextReader<FakeNode> = .init()) -> TargetContext {
-        reader.context(of: FocusedElement(processIdentifier: 1, bundleIdentifier: "com.example", node: node))
+        reader.context(of: FocusedElement(processIdentifier: 1, node: node))
     }
 
     @Test func climbingTowardsThePageStopsAfterThirtyTwoAncestors() {

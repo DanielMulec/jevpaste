@@ -25,6 +25,9 @@ protocol AccessibilityNode {
     var window: Self? { get }
     /// Whether `AXSelectedTextRange` is settable: the mark of an editable element with a non-text role.
     var isSelectedTextRangeSettable: Bool { get }
+    /// `AXSelectedTextRange` as the app reports it (one read), `nil` when it offers none. Not validated here: apps
+    /// report ranges outside their text, and Ghostty reports `(0,0)` whatever its cursor.
+    var selectedTextRange: SelectedTextRange? { get }
     /// Whether both refer to the same element of the same app.
     func isSameElement(as other: Self) -> Bool
 }
@@ -59,9 +62,8 @@ enum AccessibilityWalkLimits {
 /// The focused element and the process (app) it belongs to.
 struct FocusedElement<Node: AccessibilityNode> {
     let processIdentifier: Int32
-    let bundleIdentifier: String?
     let node: Node
-    /// The app's name as the user sees it; sent to Jev, unlike the bundle identifier.
+    /// The app's name as the user sees it; sent to Jev. No app identity decides behaviour, so none is carried here.
     var applicationName: String?
 }
 

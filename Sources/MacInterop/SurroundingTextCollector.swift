@@ -1,29 +1,33 @@
-/// Collects the bounded window of visible text around a Target for Target Context.
+/// Collects the bounded window of visible text around a Target for Target Context. One rule for every app; no app
+/// identity decides anything here.
 ///
-/// Pages and app windows are walked breadth-first from the nearest page (`AXWebArea`), else the window, and
-/// the text is cut after the first `characterLimit` characters. A terminal exposes its whole window as the
-/// Target's own value, so it gets the last `characterLimit` characters of that value: the lines nearest the
-/// prompt. Secure fields are skipped without reading them. AX does not report visibility; exposed text counts.
+/// A focused field whose own text is longer than `characterLimit` (a terminal exposes its whole window that way, a
+/// long document or textarea too) gives the window of that text around its text cursor (`CursorTextWindow`).
+/// Otherwise the page is walked breadth-first from the nearest page (`AXWebArea`), else the window, and the text is
+/// cut after the first `characterLimit` characters. Secure fields are skipped without reading them. AX does not
+/// report visibility; exposed text counts.
 @MainActor
 struct SurroundingTextCollector<Node: AccessibilityNode> {
-    /// Terminals whose single text area is a scrape of the entire window (probe: Ghostty, one `AXTextArea`).
-    static var terminalBundleIdentifiers: Set<String> {
-        [
-            "com.mitchellh.ghostty", "com.apple.Terminal", "com.googlecode.iterm2", "net.kovidgoyal.kitty",
-            "org.alacritty", "com.github.wez.wezterm", "dev.warp.Warp-Stable",
-        ]
-    }
-
     let characterLimit = 2_000
     let nodeLimit = 600
 
     /// The surrounding text, gathered only until `deadline`.
     func surroundingText(of focused: FocusedElement<Node>, until deadline: ContinuousClock.Instant) -> String {
-        if Self.terminalBundleIdentifiers.contains(focused.bundleIdentifier ?? "") {
-            return String((focused.node.text(of: .value) ?? "").suffix(characterLimit))
+        let target = focused.node
+        if let ownText = longOwnText(of: target) {
+            let cursor = ContinuousClock.now < deadline ? target.selectedTextRange : nil
+            return String(CursorTextWindow(characterLimit: characterLimit).text(of: ownText, cursor: cursor))
         }
-        let scope = scope(of: focused.node, until: deadline)
+        let scope = scope(of: target, until: deadline)
         return String(pageText(from: scope, until: deadline).prefix(characterLimit))
+    }
+
+    /// The Target's own text when it is longer than `characterLimit`; a secure field's is never read.
+    private func longOwnText(of target: Node) -> String? {
+        guard !target.isSecureTextField, let ownText = target.text(of: .value),
+            !ownText.dropFirst(characterLimit).isEmpty
+        else { return nil }
+        return ownText
     }
 
     /// The nearest page above the Target, else its window, else the highest ancestor reached within
