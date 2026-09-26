@@ -1,9 +1,11 @@
 # Candidate Chooser — shell adapter
 
+> **Since Narrowing** ([narrowing.md](narrowing.md), #50): Core opens the chooser when Jev chooses `ask_user`, with the rows Jev then filled it with, in the order found (the chooser fill; live finding F1, Daniel 2026-09-26); the shell adapter below is unchanged.
+
 Slice: [Implement the Candidate Chooser UI](https://github.com/DanielMulec/jevpaste/issues/26).
 Lifecycle: [Choose paste lifecycle, cancellation and clipboard preservation](https://github.com/DanielMulec/jevpaste/issues/8).
-Core is unchanged: Core calls `CandidateChooser.presentChoice(among:for:reply:)` with ≥ 2 same-type alternatives
-(Core decides when), with its clocks already stopped. The adapter replies once — the untouched `Candidate`, or
+Core calls `CandidateChooser.presentChoice(among:for:reply:)` with the rows of Jev's chooser fill — one or more, in
+the order found (Core decides when; see the note above) — with its clocks already stopped. The adapter replies once — the untouched `Candidate`, or
 `nil` for Esc / click-away — after focus is back in the Bound Target's app. Code: `Sources/JevPasteApp/Chooser/`.
 
 ## Placement — below the status item

@@ -3,7 +3,7 @@ enum PasteAttemptPhase: Equatable {
     case idle
     /// The Wake Wait: the focus is not readable yet and is re-read until it is or the limit passes; no Bound Target.
     case wakeWaiting
-    /// A `DecisionService` request is outstanding.
+    /// Narrowing: a `DecisionService` request is outstanding, from the first step to the last.
     case deciding
     /// Jev asked us to wait; a retry is scheduled inside the 5 s clock.
     case waitingToRetry
@@ -21,19 +21,21 @@ struct RunningAttempt {
     let number: Int
     let item: ClipboardItem
     let target: BoundTarget
-    /// What asking Jev needs; `nil` for a Direct Paste, which never asks.
-    let jevConsultation: JevConsultation?
+    /// Narrowing and what it needs.
+    var consultation: JevConsultation
     /// How long the Wake Wait before it lasted; `nil` when the focus was readable at ⌘⇧V.
     let wakeWait: Duration?
-    /// The Smart Paste path so far: set when the attempt starts, refined when Jev's decision arrives.
+    /// The Smart Paste path so far: refined with every request, every step and the offer's end.
     var path: SmartPastePath
 }
 
-/// The part of a Paste Attempt that only the Jev path has.
+/// What consulting Jev needs across the steps of Narrowing.
 struct JevConsultation {
     /// The Target Context as screened at ⌘⇧V: what every request sends, and the note the outcome carries.
     let contextToSend: ScreenedTargetContext
-    let candidates: [Candidate]
-    /// When the 5 s clock runs out.
+    /// When the 5 s clock runs out: it covers every step and every rate-limit wait.
     let deadline: ContinuousClock.Instant
+    var narrowing: Narrowing
+    /// The request outstanding or waiting to be retried after a rate limit.
+    var pendingRequest: NarrowingRequest?
 }

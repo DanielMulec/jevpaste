@@ -101,10 +101,11 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         Self.log.notice("offer shown")
     }
 
-    /// The diagnostic line for an outcome: its kind, the path taken with Jev's free-text probability, the Wake Wait
-    /// in whole milliseconds when the attempt waited, and the note — fixed names and numbers only, no payload.
-    /// `outcome inserted via=directPaste wakeWait=312`, `outcome inserted via=freeTextTarget p=0.93`,
-    /// `outcome refused.targetNotReady wakeWait=3000`, `outcome noSuitableMatch via=jev p=0.12 note=…`.
+    /// The diagnostic line for an outcome: its kind, the Narrowing path, the Wake Wait in whole milliseconds when the
+    /// attempt waited, and the note — fixed names and numbers only, no payload.
+    /// `outcome inserted via=narrowing steps=2 calls=2 p=0.97 questions=1,1 wakeWait=312`,
+    /// `outcome refused.targetNotReady wakeWait=3000`,
+    /// `outcome noSuitableMatch via=narrowing … offer=dismissed note=…`.
     static func outcomeLogLine(
         _ outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath?, wakeWait: Duration? = nil
     ) -> String {

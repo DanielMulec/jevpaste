@@ -9,7 +9,7 @@ struct PasteAttemptCancellationTests {
         harness.hotkey.press()
         harness.clock.advance(by: .milliseconds(150))
         harness.presenter.clickIndicator()
-        harness.jev.choose("ada@example.com")
+        harness.jev.narrow(to: "ada@example.com")
 
         #expect(harness.presenter.outcomes == [.cancelled])
         #expect(harness.log.steps.isEmpty)
@@ -20,7 +20,7 @@ struct PasteAttemptCancellationTests {
 
         harness.hotkey.press()
         harness.clock.advance(by: .milliseconds(150))
-        harness.jev.choose("ada@example.com")
+        harness.jev.narrow(to: "ada@example.com")
         harness.presenter.clickIndicator()
         harness.clock.advance(by: .milliseconds(120))
 

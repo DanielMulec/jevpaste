@@ -47,7 +47,7 @@ struct IndicatorPresenterTests {
 
     @Test func insertedShowsTheCheckmarkForOneSecondThenHides() {
         presenter.showProcessing {}
-        presenter.showOutcome(.inserted, note: nil, path: .jev())
+        presenter.showOutcome(.inserted, note: nil, path: SmartPastePath())
 
         #expect(surface.displayed == OutcomeMessage(.inserted).content)
         clock.step(by: .milliseconds(999))
@@ -66,7 +66,7 @@ struct IndicatorPresenterTests {
     }
 
     @Test func aNotedSuccessShowsItsNoteForTwoAndAHalfSeconds() {
-        presenter.showOutcome(.inserted, note: .surroundingTextWithheld, path: .jev())
+        presenter.showOutcome(.inserted, note: .surroundingTextWithheld, path: SmartPastePath())
 
         clock.step(by: .milliseconds(2499))
         #expect(surface.displayed == OutcomeMessage(.inserted, note: .surroundingTextWithheld).content)
@@ -75,7 +75,7 @@ struct IndicatorPresenterTests {
     }
 
     @Test func aNewAttemptKeepsItsIndicatorWhenTheEarlierOutcomeWouldHaveHidden() {
-        presenter.showOutcome(.inserted, note: nil, path: .jev())
+        presenter.showOutcome(.inserted, note: nil, path: SmartPastePath())
         clock.step(by: .milliseconds(500))
         presenter.showProcessing {}
 
@@ -97,7 +97,7 @@ struct IndicatorPresenterTests {
     @Test func clickingAnOutcomeOrTheHiddenIndicatorDoesNothing() {
         var cancels = 0
         presenter.showProcessing { cancels += 1 }
-        presenter.showOutcome(.failed(.timedOut), note: nil, path: .jev())
+        presenter.showOutcome(.failed(.timedOut), note: nil, path: SmartPastePath())
         surface.click()
         clock.step(by: .seconds(3))
         surface.click()
@@ -113,7 +113,7 @@ struct IndicatorPresenterTests {
 
         #expect(surface.displayed == nil)
         #expect(cancels == 0)
-        presenter.showOutcome(.cancelled, note: nil, path: .jev())
+        presenter.showOutcome(.cancelled, note: nil, path: SmartPastePath())
         #expect(surface.displayed == OutcomeMessage(.cancelled).content)
     }
 
@@ -121,7 +121,7 @@ struct IndicatorPresenterTests {
         presenter.showOutcome(.refused(.noEditableTarget), note: nil, path: nil)
         clock.step(by: .seconds(2))
         presenter.hideWhileChoosing()
-        presenter.showOutcome(.inserted, note: nil, path: .jev())
+        presenter.showOutcome(.inserted, note: nil, path: SmartPastePath())
 
         clock.step(by: .milliseconds(600))
 
@@ -160,28 +160,10 @@ struct IndicatorPresenterTests {
         #expect(surface.displayed == nil)
     }
 
-    @Test func aDirectPasteShowsTheSameCheckmarkAsAJevPaste() {
-        presenter.showOutcome(.inserted, note: nil, path: .directPaste)
+    @Test func aDirectPasteShowsTheSameCheckmarkAsANarrowingPaste() {
+        presenter.showOutcome(.inserted, note: nil, path: SmartPastePath(noSuitableMatchOfferEnd: .accepted))
 
         #expect(surface.displayed == OutcomeMessage(.inserted).content)
-    }
-
-    @Test(arguments: [
-        (
-            PasteAttemptOutcome.inserted, PasteAttemptNote?.none, SmartPastePath.directPaste,
-            "outcome inserted via=directPaste"
-        ),
-        (.insertedWithoutRestore, nil, .directPaste, "outcome insertedWithoutRestore via=directPaste"),
-        (.inserted, nil, .jev(), "outcome inserted via=jev"),
-        (
-            .noSuitableMatch, .surroundingTextWithheld, .jev(),
-            "outcome noSuitableMatch via=jev note=surroundingTextWithheld"
-        ),
-    ])
-    func theOutcomeLogLineNamesThePath(
-        outcome: PasteAttemptOutcome, note: PasteAttemptNote?, path: SmartPastePath, line: String
-    ) {
-        #expect(IndicatorPresenter.outcomeLogLine(outcome, note: note, path: path) == line)
     }
 
     @Test func anOutcomeReachedBeforeAnyPathLogsNoPath() {

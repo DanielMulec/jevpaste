@@ -1,7 +1,7 @@
 import SmartPasteCore
 import os
 
-/// The `CandidateChooser`: offers Core's same-type alternatives in one reused panel in the indicator's place.
+/// The `CandidateChooser`: offers Core's rows (Jev's chooser fill) in one reused panel in the indicator's place.
 /// ↑/↓ move, Enter or a click chooses, Esc or click-away cancels. Either way it closes, hands focus back to the
 /// Bound Target's app, and only then replies — exactly once, with the untouched `Candidate` or `nil`.
 @MainActor

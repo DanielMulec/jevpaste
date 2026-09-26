@@ -1,31 +1,104 @@
 import Foundation
 import SmartPasteCore
 
-/// Records every request; a test answers the latest one with `reply(_:)`.
+/// Records every Narrowing request as sent; a test answers the oldest unanswered one, reading its options the way
+/// Jev would: by id, the excerpt texts from `excerpts` (or the full-text descriptions).
 final class FakeDecisionService: DecisionService {
     private let state = MainActorState()
 
     @MainActor
     private final class MainActorState {
-        var requests: [DecisionRequest] = []
-        var pendingReplies: [@MainActor (DecisionReply) -> Void] = []
+        var requests: [NarrowingRequest] = []
+        var pending: [(request: NarrowingRequest, reply: @MainActor (NarrowingReply) -> Void)] = []
     }
 
-    func requestDecision(_ request: DecisionRequest, reply: @escaping @MainActor @Sendable (DecisionReply) -> Void) {
+    func evaluate(_ request: NarrowingRequest, reply: @escaping @MainActor @Sendable (NarrowingReply) -> Void) {
         MainActor.assumeIsolated {
             state.requests.append(request)
-            state.pendingReplies.append(reply)
+            state.pending.append((request, reply))
         }
     }
 
-    @MainActor var requests: [DecisionRequest] { state.requests }
+    @MainActor var requests: [NarrowingRequest] { state.requests }
 
-    @MainActor func reply(_ reply: DecisionReply) {
-        state.pendingReplies.removeFirst()(reply)
+    @MainActor func reply(_ reply: NarrowingReply) {
+        state.pending.removeFirst().reply(reply)
     }
 
-    @MainActor func choose(_ text: String, probability: Double = 0.9) {
-        reply(.decided(Decision(choice: .candidate(Candidate(text: text)), containsValueProbability: probability)))
+    /// Every question of the oldest unanswered request picks the piece whose text is `text` with `probability`.
+    @MainActor func pick(_ text: String, probability: Double = 0.9) {
+        answer(probability: probability) { question, request in
+            question.pieceOptions(in: request).first { $0.text.utf8.elementsEqual(text.utf8) }?.id ?? "unoffered"
+        }
+    }
+
+    /// Every question keeps its piece unchanged (the whole copy at step 1).
+    @MainActor func keep(probability: Double = 0.95) {
+        answer(probability: probability) { question, _ in question.options[0].id }
+    }
+
+    @MainActor func nothingFits(probability: Double = 0.8) {
+        answer(probability: probability) { _, _ in "nothing_fits" }
+    }
+
+    /// Every question asks the user, giving the listed texts (pieces, or the unchanged piece) their weights.
+    @MainActor func askUser(probability: Double = 0.6, weighting weights: [(text: String, probability: Double)]) {
+        answer(probability: probability, others: weights) { _, _ in "ask_user" }
+    }
+
+    /// Jev fills the Candidate Chooser after asking the user: picks each row in turn, then finds nothing more fits.
+    @MainActor func fillChooser(with rows: [String]) {
+        for row in rows { pick(row) }
+        nothingFits()
+    }
+
+    /// Picks `text`, then keeps it at the next step: a two-step Narrowing to `text`.
+    @MainActor func narrow(to text: String) {
+        pick(text)
+        keep()
+    }
+
+    @MainActor private func answer(
+        probability: Double, others: [(text: String, probability: Double)] = [],
+        choosing option: (ChoiceQuestion, NarrowingRequest) -> String
+    ) {
+        guard let request = state.pending.first?.request else { return }
+        var answers: [String: ChoiceAnswer] = [:]
+        for question in request.questions {
+            let choice = option(question, request)
+            let weighted = others.compactMap { weight in
+                question.optionID(of: weight.text, in: request).map { ($0, weight.probability) }
+            }
+            let probabilities = question.options.map { option in
+                let weight = weighted.first { $0.0 == option.id }?.1 ?? 0
+                return OptionProbability(optionID: option.id, probability: option.id == choice ? probability : weight)
+            }
+            answers[question.id] = ChoiceAnswer(choice: choice, probabilities: probabilities)
+        }
+        reply(.answered(answers))
+    }
+}
+
+extension ChoiceQuestion {
+    /// The piece options with their texts: every option after the unchanged piece but `nothing_fits` and `ask_user`
+    /// (a fill choice has no `ask_user`).
+    func pieceOptions(in request: NarrowingRequest) -> [(id: String, text: String)] {
+        options.dropFirst().filter { $0.id != "nothing_fits" && $0.id != "ask_user" }.compactMap { option in
+            switch option.description {
+            case .excerpt: request.excerpts.first { $0.id == option.id }.map { (option.id, $0.text) }
+            case .text(let text): (option.id, text)
+            case .keptPiece: nil
+            }
+        }
+    }
+
+    /// The option standing for `text`: a piece, or the unchanged current piece.
+    func optionID(of text: String, in request: NarrowingRequest) -> String? {
+        if case .onPiece(let currentPiece, _) = instructions, currentPiece.utf8.elementsEqual(text.utf8) {
+            return options.first?.id
+        }
+        if request.sourceDocument.utf8.elementsEqual(text.utf8) { return options.first?.id }
+        return pieceOptions(in: request).first { $0.text.utf8.elementsEqual(text.utf8) }?.id
     }
 }
 
@@ -238,11 +311,17 @@ final class FakePresenter: PasteOutcomePresenter {
     }
 }
 
+/// Follows the `CandidateChooser` contract: shows one offer and replies once — with an offered Candidate or `nil` —
+/// clearing the visible offer before it replies. `replyAsAMisbehavingAdapter` is the only way to reply with text that
+/// was not offered or to reply again, for the adversarial tests that check Core's own guard.
 @MainActor
 final class FakeChooser: CandidateChooser {
     /// Called when the chooser opens; the harness hides the indicator, as the app's chooser does.
     var onPresent: (@MainActor () -> Void)?
     private var reply: (@MainActor (Candidate?) -> Void)?
+    /// The newest reply callback, kept after it answered — only for `replyAsAMisbehavingAdapter`.
+    private var newestReply: (@MainActor (Candidate?) -> Void)?
+    /// The offer on screen; `nil` when no chooser is open.
     private(set) var offeredCandidates: [Candidate]?
     private(set) var offeredTarget: BoundTarget?
 
@@ -254,42 +333,42 @@ final class FakeChooser: CandidateChooser {
         offeredCandidates = candidates
         offeredTarget = target
         self.reply = reply
+        newestReply = reply
         onPresent?()
     }
 
+    /// The user picks the offered row whose text is `text`, byte for byte; nothing happens if no such row is open.
     func choose(_ text: String) {
-        reply?(Candidate(text: text))
+        guard let offered = offeredCandidates?.first(where: { $0.text.utf8.elementsEqual(text.utf8) }) else { return }
+        answer(offered)
     }
 
+    /// Esc or click-away while the chooser is open.
     func dismiss() {
-        reply?(nil)
-    }
-}
-
-/// Candidate derivation stub: the fixed Candidates found in the item; every Candidate listed in `sameTypeGroup`
-/// shares one type. With a `slowness`, deriving them moves the manual clock on by its duration, like a slow
-/// synchronous derivation on the main actor.
-struct StubCandidateExtraction: CandidateExtraction {
-    var fixedCandidates: [Candidate]
-    var sameTypeGroup: [Candidate] = []
-    var slowness: (clock: ManualClock, duration: Duration)?
-
-    func candidates(in item: ClipboardItem) -> [Candidate] {
-        if let slowness {
-            MainActor.assumeIsolated { slowness.clock.advance(by: slowness.duration) }
-        }
-        return fixedCandidates.filter { item.text.contains($0.text) }
+        guard offeredCandidates != nil else { return }
+        answer(nil)
     }
 
-    func sameTypeAlternatives(to chosen: Candidate, among candidates: [Candidate]) -> [Candidate] {
-        sameTypeGroup.contains(chosen) ? sameTypeGroup.filter(candidates.contains) : [chosen]
+    /// A misbehaving adapter replies with `text`, offered or not, open or not.
+    func replyAsAMisbehavingAdapter(with text: String) {
+        newestReply?(Candidate(text: text))
+    }
+
+    private func answer(_ candidate: Candidate?) {
+        let reply = reply
+        self.reply = nil
+        offeredCandidates = nil
+        offeredTarget = nil
+        reply?(candidate)
     }
 }
 
 /// Pre-check stub: refuses secure fields, and Active Items starting with a stand-in secret prefix; withholds
-/// surrounding text that contains the prefix.
+/// surrounding text that contains the prefix. With a `slowness`, screening moves the manual clock on by its duration,
+/// like slow synchronous work on the main actor after the Bound Target resolved.
 struct StubPreCheck: PreCheck {
     static let secretPrefix = "secret-"
+    var slowness: (clock: ManualClock, duration: Duration)?
 
     func refusal(for item: ClipboardItem, in target: BoundTarget) -> PreCheckRefusal? {
         if target.isSecureField { return .secureField }
@@ -298,6 +377,9 @@ struct StubPreCheck: PreCheck {
     }
 
     func screenedContext(of target: BoundTarget) -> ScreenedTargetContext {
+        if let slowness {
+            MainActor.assumeIsolated { slowness.clock.advance(by: slowness.duration) }
+        }
         guard target.context.surroundingText.contains(Self.secretPrefix) else {
             return ScreenedTargetContext(context: target.context, note: nil)
         }

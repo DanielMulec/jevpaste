@@ -1,4 +1,5 @@
-/// After No Suitable Match, the attempt offers Enter to paste the whole Active Item as a Direct Paste. Never
+/// After No Suitable Match — at any Narrowing step — the attempt offers Enter to paste the whole Active Item as a
+/// Direct Paste. Never
 /// automatic: only Enter inserts; Esc, click-away, ⌘⇧V or the offer's time limit end the attempt with nothing
 /// inserted. The Pre-checks are not re-run — they passed at ⌘⇧V for the same pinned item and Target — and delivery
 /// re-verifies the Bound Target as always.
@@ -17,9 +18,9 @@ extension PasteAttemptCoordinator {
         ports.presenter.showNoSuitableMatchOffer(
             for: attempt.target,
             onAccept: { [weak self] in
-                guard let self, isOffering(inAttempt: number), let path = self.attempt?.path else { return }
-                self.attempt?.path = path.endingOffer(.accepted)
-                deliver(DirectPasteRule.withoutOuterLineBreaks(attempt.item.text))
+                guard let self, isOffering(inAttempt: number) else { return }
+                self.attempt?.path.noSuitableMatchOfferEnd = .accepted
+                deliver(OuterLineBreaks.stripped(from: attempt.item.text))
             },
             onDismiss: { [weak self] in
                 guard let self, isOffering(inAttempt: number) else { return }
@@ -30,8 +31,8 @@ extension PasteAttemptCoordinator {
 
     /// Ends the offer without inserting anything: the attempt's outcome is No Suitable Match.
     func endOffer(_ end: NoSuitableMatchOfferEnd) {
-        guard phase == .offeringDirectPaste, let path = attempt?.path else { return }
-        attempt?.path = path.endingOffer(end)
+        guard phase == .offeringDirectPaste else { return }
+        attempt?.path.noSuitableMatchOfferEnd = end
         finish(.noSuitableMatch)
     }
 

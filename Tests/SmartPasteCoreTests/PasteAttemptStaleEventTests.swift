@@ -10,11 +10,11 @@ struct PasteAttemptStaleEventTests {
         harness.hotkey.press()
         harness.clock.advance(by: .seconds(5))
         harness.hotkey.press()
-        harness.jev.choose("ada@example.com")
+        harness.jev.pick("ada@example.com")
 
         #expect(harness.presenter.outcomes == [.failed(.timedOut)])
         #expect(harness.log.steps.isEmpty)
-        harness.jev.choose("ada@example.com")
+        harness.jev.narrow(to: "ada@example.com")
         harness.clock.advance(by: .milliseconds(120))
         #expect(harness.presenter.outcomes == [.failed(.timedOut), .inserted])
     }
@@ -30,7 +30,7 @@ struct PasteAttemptStaleEventTests {
 
         #expect(harness.presenter.outcomes == [.cancelled])
         #expect(harness.presenter.retryingShownCount == 0)
-        harness.jev.choose("ada@example.com")
+        harness.jev.narrow(to: "ada@example.com")
         harness.clock.advance(by: .milliseconds(120))
         #expect(harness.presenter.outcomes == [.cancelled, .inserted])
     }
@@ -41,7 +41,7 @@ struct PasteAttemptStaleEventTests {
 
         harness.hotkey.press()
         harness.clock.advance(by: .seconds(1))
-        harness.jev.reply(.decided(Decision(choice: .noneOfThese, containsValueProbability: 0.9)))
+        harness.jev.nothingFits()
         harness.presenter.dismissOffer()
         harness.hotkey.press()
         harness.clock.advance(by: .seconds(4))

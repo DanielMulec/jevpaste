@@ -1,16 +1,10 @@
 import SmartPasteCore
 
-/// A Paste Attempt coordinator wired to in-memory fakes, with Ada's contact card copied as the Active Item and
-/// an Email field focused.
+/// A Paste Attempt coordinator wired to in-memory fakes and the real Narrowing policy, with Ada's contact card copied
+/// as the Active Item and an Email field focused.
 @MainActor
 final class PasteAttemptHarness {
     static let sourceText = "Name: Ada Lovelace\nEmail: ada@example.com\nBackup: ada@work.example"
-    static let emailCandidates = [Candidate(text: "ada@example.com"), Candidate(text: "ada@work.example")]
-    static let candidates =
-        [
-            "Name: Ada Lovelace", "Ada Lovelace", "Email: ada@example.com", "ada@example.com",
-            "Backup: ada@work.example", "ada@work.example",
-        ].map(Candidate.init(text:))
     static let emailField = BoundTarget(
         identity: TargetIdentity(processIdentifier: 42, elementToken: 7),
         context: TargetContext(fieldLabel: "Email"),
@@ -32,11 +26,9 @@ final class PasteAttemptHarness {
     let coordinator: PasteAttemptCoordinator
 
     init(
-        candidates: [Candidate] = PasteAttemptHarness.candidates,
-        sameTypeGroup: [Candidate] = [],
         focusedTarget: BoundTarget? = PasteAttemptHarness.emailField,
         unreadableReads: Int = 0,
-        candidateExtractionTakes: Duration = .zero,
+        screeningTakes: Duration = .zero,
         copySource: Bool = true,
         sourceText: String = PasteAttemptHarness.sourceText
     ) {
@@ -52,11 +44,8 @@ final class PasteAttemptHarness {
             decisionService: jev, clock: clock, presenter: presenter, chooser: chooser
         )
         let rules = PasteAttemptRules(
-            candidateExtraction: StubCandidateExtraction(
-                fixedCandidates: candidates, sameTypeGroup: sameTypeGroup,
-                slowness: candidateExtractionTakes == .zero ? nil : (clock, candidateExtractionTakes)
-            ),
-            preCheck: StubPreCheck()
+            narrowingPolicy: .r2b,
+            preCheck: StubPreCheck(slowness: screeningTakes == .zero ? nil : (clock, screeningTakes))
         )
         coordinator = PasteAttemptCoordinator(ports: ports, rules: rules, capture: capture)
         if copySource {
@@ -64,9 +53,9 @@ final class PasteAttemptHarness {
         }
     }
 
-    /// Presses ⌘⇧V and lets Jev choose `text` right away.
+    /// Presses ⌘⇧V and lets Jev narrow to `text` right away: picks it at step 1, keeps it at step 2.
     func pasteChoosing(_ text: String) {
         hotkey.press()
-        jev.choose(text)
+        jev.narrow(to: text)
     }
 }

@@ -7,20 +7,28 @@ import Testing
 /// it waited. Numbers and fixed names only.
 @MainActor
 struct WakeWaitLogLineTests {
+    private nonisolated static let kept = SmartPastePath(
+        narrowing: NarrowingTrace(
+            steps: [.init(questions: 1, followUpSpeculativeQuestions: nil, isSpeculative: false)],
+            decidingProbability: 0.2
+        ),
+        calls: 1
+    )
+
     @Test(arguments: [
         (
-            PasteAttemptOutcome.inserted, SmartPastePath?.some(.directPaste), Duration?.some(.milliseconds(312)),
-            "outcome inserted via=directPaste wakeWait=312"
+            PasteAttemptOutcome.inserted, SmartPastePath?.some(kept), Duration?.some(.milliseconds(312)),
+            "outcome inserted via=narrowing steps=1 calls=1 p=0.20 questions=1 wakeWait=312"
         ),
         (
             .refused(.targetNotReady(applicationName: "ChatGPT")), nil, .seconds(3),
             "outcome refused.targetNotReady wakeWait=3000"
         ),
         (
-            .inserted, .jev(freeTextProbability: 0.2), .microseconds(45_900),
-            "outcome inserted via=jev p=0.20 wakeWait=45"
+            .inserted, kept, .microseconds(45_900),
+            "outcome inserted via=narrowing steps=1 calls=1 p=0.20 questions=1 wakeWait=45"
         ),
-        (.inserted, .directPaste, nil, "outcome inserted via=directPaste"),
+        (.inserted, kept, nil, "outcome inserted via=narrowing steps=1 calls=1 p=0.20 questions=1"),
     ])
     func theOutcomeLineCarriesTheWakeWaitInWholeMillisecondsOnlyWhenTheAttemptWaited(
         outcome: PasteAttemptOutcome, path: SmartPastePath?, wakeWait: Duration?, line: String
@@ -30,9 +38,10 @@ struct WakeWaitLogLineTests {
 
     @Test func theWakeWaitComesBeforeTheNote() {
         let line = IndicatorPresenter.outcomeLogLine(
-            .inserted, note: .surroundingTextWithheld, path: .jev(freeTextProbability: 0.2), wakeWait: .milliseconds(50)
+            .inserted, note: .surroundingTextWithheld, path: Self.kept, wakeWait: .milliseconds(50)
         )
 
-        #expect(line == "outcome inserted via=jev p=0.20 wakeWait=50 note=surroundingTextWithheld")
+        let expected = "outcome inserted via=narrowing steps=1 calls=1 p=0.20 questions=1 wakeWait=50"
+        #expect(line == expected + " note=surroundingTextWithheld")
     }
 }

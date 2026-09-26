@@ -10,7 +10,8 @@ Core ports are unchanged (`docs/design/paste-attempt-state-machine.md`). Everyth
 - It builds and keeps: `SystemClipboard()` (100 ms polling), `CopyCapture(clipboard:history:)`, and
   `PasteAttemptCoordinator` with `GlobalHotkey()`, `AccessibilityTargetResolver()`, `PasteKeystrokeInserter()`,
   `JevGatewayDecisionService()`, `RunLoopPasteAttemptClock`, `IndicatorPresenter` over `IndicatorNoticeSurface`, `PanelCandidateChooser`,
-  plus rules `StructuralCandidateExtraction()` and `LocalPreChecks()` (Core; see `pre-checks.md`).
+  plus rules `PasteAttemptRules(narrowingPolicy: .r2b, preCheck: LocalPreChecks())` (Core; see `narrowing.md`,
+  `pre-checks.md`). Until #50 the rules held `StructuralCandidateExtraction()`, superseded by `narrowing.md`.
 - Merge note (capture ∥ chooser): `hideWhileChoosing()` passes through `IndicatorNoticeSurface`, so a history notice that
   waited during processing appears on the indicator while the chooser is open. Accepted as informational: the chooser is
   its own panel, the notice is short-lived, and the outcome after the choice displays over it as usual.

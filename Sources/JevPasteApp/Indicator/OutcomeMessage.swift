@@ -130,6 +130,7 @@ struct OutcomeMessage: Equatable {
         switch failure {
         case .timedOut: "Jev took longer than 5 s"
         case .decisionUnavailable: "Jev unavailable"
+        case .tooLongForSmartPaste: "Too long for Smart Paste — ⌘V pastes it whole"
         case .invalidResult: "Jev's answer was not an exact excerpt"
         case .targetChanged: "Target changed — nothing pasted"
         }

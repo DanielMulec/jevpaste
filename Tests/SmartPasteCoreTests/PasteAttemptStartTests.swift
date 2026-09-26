@@ -9,7 +9,7 @@ struct PasteAttemptStartTests {
         isSecureField: true
     )
 
-    @Test func hotkeyAsksJevWithThePinnedItemTargetContextAndCandidates() {
+    @Test func hotkeyAsksJevStep1WithThePinnedItemAndTargetContext() {
         let harness = PasteAttemptHarness()
 
         harness.hotkey.press()
@@ -17,7 +17,8 @@ struct PasteAttemptStartTests {
         let request = harness.jev.requests.first
         #expect(request?.sourceDocument == PasteAttemptHarness.sourceText)
         #expect(request?.targetContext == TargetContext(fieldLabel: "Email"))
-        #expect(request?.candidates == PasteAttemptHarness.candidates)
+        #expect(request?.questions.map(\.id) == ["narrow_0"])
+        #expect(request?.questions.first?.options.first?.id == "everything")
     }
 
     @Test func repeatedHotkeyWhileInFlightIsIgnoredWithOneJevCall() {

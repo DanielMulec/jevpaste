@@ -37,7 +37,7 @@ struct ActiveItemSelectionTests {
         harness.hotkey.press()
 
         harness.capture.select(Self.older)
-        harness.jev.choose("ada@example.com")
+        harness.jev.narrow(to: "ada@example.com")
         harness.clock.advance(by: .milliseconds(120))
 
         #expect(harness.presenter.outcomes == [.inserted])

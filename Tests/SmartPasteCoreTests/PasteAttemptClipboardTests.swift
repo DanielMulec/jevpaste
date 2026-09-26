@@ -10,15 +10,34 @@ struct PasteAttemptClipboardTests {
 
         harness.hotkey.press()
         harness.clipboard.simulateForeignCopy(Self.newCopy)
-        harness.jev.choose("ada@example.com")
+        harness.jev.narrow(to: "ada@example.com")
         harness.clipboard.deliverPendingChanges()
         harness.clock.advance(by: .milliseconds(120))
         harness.clipboard.deliverPendingChanges()
 
-        #expect(harness.jev.requests.map(\.sourceDocument) == [PasteAttemptHarness.sourceText])
+        #expect(
+            harness.jev.requests.map(\.sourceDocument) == [
+                PasteAttemptHarness.sourceText, PasteAttemptHarness.sourceText,
+            ])
         #expect(harness.log.steps.first == .write("ada@example.com"))
         #expect(harness.presenter.outcomes == [.inserted])
         #expect(harness.capture.activeItem == ClipboardItem(text: Self.newCopy))
+    }
+
+    /// Stand-in for a Rejev-paste until the history UI can select an older item: the Active Item, not whatever the
+    /// clipboard holds now, is what Narrowing works on and what is pasted; the clipboard is restored afterwards.
+    @Test func theActiveItemIsNarrowedAndPastedWhileTheClipboardHoldsSomethingWithoutText() {
+        let harness = PasteAttemptHarness()
+        harness.clipboard.simulateForeignNonTextCopy()
+        let imageOnClipboard = harness.clipboard.contents
+
+        harness.hotkey.press()
+        harness.jev.narrow(to: "ada@example.com")
+        harness.clock.advance(by: .milliseconds(120))
+
+        #expect(harness.jev.requests.first?.sourceDocument == PasteAttemptHarness.sourceText)
+        #expect(harness.log.steps == [.write("ada@example.com"), .pasteKeystroke, .restore])
+        #expect(harness.clipboard.contents == imageOnClipboard)
     }
 
     @Test func targetMismatchAtDeliveryFailsAsTargetChangedWithPasteboardUntouched() {
@@ -31,7 +50,7 @@ struct PasteAttemptClipboardTests {
             context: TargetContext(fieldLabel: "Name"),
             isSecureField: false
         )
-        harness.jev.choose("ada@example.com")
+        harness.jev.narrow(to: "ada@example.com")
 
         #expect(harness.presenter.outcomes == [.failed(.targetChanged)])
         #expect(harness.log.steps.isEmpty)
