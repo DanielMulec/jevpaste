@@ -3,7 +3,7 @@
 # Exit-code contract of every step: docs/quality-gate.md.
 
 .PHONY: check build-strict format-lint lint duplication test dead-code line-counts hook-test \
-	format acceptance app install
+	format acceptance app install planning-time
 
 # Swift Testing ships in the Command Line Tools, but its interop library is not on the default search
 # path (ADR 0001). The one place these linker flags live besides .periphery.yml.
@@ -35,6 +35,12 @@ duplication:
 
 test:
 	swift test $(TESTING_LINKER_FLAGS)
+
+# Release-build timing of Core's per-step Narrowing work against its ceilings (NarrowingPlanningTimeTests);
+# not part of `check`: a release test build takes minutes.
+planning-time:
+	JEVPASTE_PLANNING_TIME=1 swift test -c release -Xswiftc -enable-testing $(TESTING_LINKER_FLAGS) \
+		--filter NarrowingPlanningTimeTests
 
 dead-code:
 	periphery scan

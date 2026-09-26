@@ -24,8 +24,15 @@ let package = Package(
             name: "JevPasteApp",
             dependencies: ["SmartPasteCore", "JevGateway", "HistoryStore", "MacInterop"]
         ),
-        .testTarget(name: "SmartPasteCoreTests", dependencies: ["SmartPasteCore", testingDependency]),
-        .testTarget(name: "JevGatewayTests", dependencies: ["JevGateway", "SmartPasteCore", testingDependency]),
+        // Fixtures: synthetic spike data for the Narrowing tests (`scripts/extract-narrowing-fixtures.py`).
+        .testTarget(
+            name: "SmartPasteCoreTests", dependencies: ["SmartPasteCore", testingDependency],
+            resources: [.copy("Fixtures")]
+        ),
+        .testTarget(
+            name: "JevGatewayTests", dependencies: ["JevGateway", "SmartPasteCore", testingDependency],
+            resources: [.copy("Fixtures")]
+        ),
         .testTarget(name: "HistoryStoreTests", dependencies: ["HistoryStore", "SmartPasteCore", testingDependency]),
         .testTarget(name: "MacInteropTests", dependencies: ["MacInterop", "SmartPasteCore", testingDependency]),
         .testTarget(

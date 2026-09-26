@@ -17,7 +17,9 @@ struct PasteAttemptContextScreeningTests {
         harness.pasteChoosing("ada@example.com")
         harness.clock.advance(by: .milliseconds(120))
 
-        #expect(harness.jev.requests.map(\.targetContext) == [TargetContext(fieldLabel: "Message")])
+        #expect(
+            harness.jev.requests.map(\.targetContext)
+                == Array(repeating: TargetContext(fieldLabel: "Message"), count: 2))
         #expect(harness.presenter.outcomes == [.inserted])
         #expect(harness.presenter.notes == [.surroundingTextWithheld])
     }
@@ -38,7 +40,7 @@ struct PasteAttemptContextScreeningTests {
         let harness = PasteAttemptHarness(focusedTarget: Self.chatWithSecret)
 
         harness.hotkey.press()
-        harness.jev.reply(.decided(Decision(choice: .noneOfThese, containsValueProbability: 0.1)))
+        harness.jev.nothingFits()
         harness.presenter.dismissOffer()
 
         #expect(harness.presenter.outcomes == [.noSuitableMatch])
@@ -81,20 +83,17 @@ struct PasteAttemptContextScreeningTests {
         }
 
         @MainActor func drive() -> PasteAttemptHarness {
-            let harness = PasteAttemptHarness(
-                sameTypeGroup: self == .chooserCancel ? PasteAttemptHarness.emailCandidates : [],
-                focusedTarget: PasteAttemptContextScreeningTests.chatWithSecret
-            )
+            let harness = PasteAttemptHarness(focusedTarget: PasteAttemptContextScreeningTests.chatWithSecret)
             harness.hotkey.press()
             switch self {
             case .timeout: harness.clock.advance(by: .seconds(5))
             case .decisionUnavailable: harness.jev.reply(.failed)
-            case .invalidResult: harness.jev.choose("not in the item")
+            case .invalidResult: harness.jev.pick("not in the item")
             case .targetChanged:
                 harness.targetResolver.focusedTarget = nil
-                harness.jev.choose("Ada Lovelace")
+                harness.jev.narrow(to: "Ada Lovelace")
             case .chooserCancel:
-                harness.jev.choose("ada@example.com")
+                harness.jev.askUser(weighting: [("ada@example.com", 0.3), ("ada@work.example", 0.3)])
                 harness.chooser.dismiss()
             case .indicatorClick:
                 harness.clock.advance(by: .milliseconds(150))

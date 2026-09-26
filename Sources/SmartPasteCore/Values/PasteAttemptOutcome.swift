@@ -18,7 +18,9 @@ public enum PasteAttemptFailure: Equatable, Sendable {
     case timedOut
     /// Jev could not be reached or answered with an error.
     case decisionUnavailable
-    /// Jev's answer was not a verbatim excerpt of the Active Item.
+    /// Jev refused a request's size: the copy is too long for one call. Ordinary ⌘V still pastes it whole.
+    case tooLongForSmartPaste
+    /// Jev's pick, or the Candidate Chooser's, was not an offered, verbatim excerpt of the Active Item.
     case invalidResult
     /// The Bound Target was no longer focused at delivery.
     case targetChanged

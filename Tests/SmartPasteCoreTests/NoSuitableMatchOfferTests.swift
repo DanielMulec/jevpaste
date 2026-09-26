@@ -1,21 +1,19 @@
 import SmartPasteCore
 import Testing
 
-/// After No Suitable Match the attempt offers Enter to paste the whole Active Item as a Direct Paste. Only Enter
-/// inserts; Esc, click-away, ⌘⇧V or the 8 s offer timeout end the attempt with nothing inserted.
+/// After No Suitable Match — Jev choosing "nothing fits" at any Narrowing step — the attempt offers Enter to paste the
+/// whole Active Item as a Direct Paste. Only Enter inserts; Esc, click-away, ⌘⇧V or the 8 s offer timeout end the
+/// attempt with nothing inserted.
 @MainActor
 struct NoSuitableMatchOfferTests {
-    private static let noneOfThese = DecisionReply.decided(
-        Decision(choice: .noneOfThese, containsValueProbability: 0.9))
-
     private static func harnessOffering(sourceText: String = PasteAttemptHarness.sourceText) -> PasteAttemptHarness {
         let harness = PasteAttemptHarness(sourceText: sourceText)
         harness.hotkey.press()
-        harness.jev.reply(noneOfThese)
+        harness.jev.nothingFits()
         return harness
     }
 
-    @Test func noneOfTheseOffersThePasteForTheBoundTargetWithoutEndingTheAttempt() {
+    @Test func nothingFitsOffersThePasteForTheBoundTargetWithoutEndingTheAttempt() {
         let harness = Self.harnessOffering()
 
         #expect(harness.presenter.offeredTargets == [PasteAttemptHarness.emailField])
@@ -23,14 +21,17 @@ struct NoSuitableMatchOfferTests {
         #expect(harness.log.steps.isEmpty)
     }
 
-    @Test func aProbabilityBelowOneHalfAlsoOffersThePaste() {
+    @Test func nothingFitsAtALaterStepAlsoOffersThePasteOfTheWholeItem() {
         let harness = PasteAttemptHarness()
 
         harness.hotkey.press()
-        harness.jev.choose("ada@example.com", probability: 0.49)
+        harness.jev.pick("Email: ada@example.com")
+        harness.jev.nothingFits()
+        harness.presenter.acceptOffer()
+        harness.clock.advance(by: .milliseconds(120))
 
-        #expect(harness.presenter.offeredTargets == [PasteAttemptHarness.emailField])
-        #expect(harness.presenter.outcomes.isEmpty)
+        #expect(harness.log.steps == [.write(PasteAttemptHarness.sourceText), .pasteKeystroke, .restore])
+        #expect(harness.presenter.paths.map { $0?.noSuitableMatchOfferEnd } == [.accepted])
     }
 
     @Test func theOfferIsOffTheFiveSecondClock() {
@@ -151,14 +152,19 @@ struct NoSuitableMatchOfferTests {
         #expect(harness.presenter.paths.map { $0?.noSuitableMatchOfferEnd } == [.dismissed, nil])
     }
 
-    @Test func jevsFreeTextProbabilityIsKeptWithHowTheOfferEnded() {
+    @Test func theNarrowingTraceIsKeptWithHowTheOfferEnded() {
         let harness = PasteAttemptHarness()
         harness.hotkey.press()
-        harness.jev.reply(
-            .decided(Decision(choice: .noneOfThese, containsValueProbability: 0.9, freeTextProbability: 0.12)))
+        harness.jev.nothingFits(probability: 0.88)
 
         harness.presenter.dismissOffer()
 
-        #expect(harness.presenter.paths == [.jev(freeTextProbability: 0.12, offer: .dismissed)])
+        let trace = NarrowingTrace(
+            steps: [.init(questions: 1, followUpSpeculativeQuestions: nil, isSpeculative: false)],
+            decidingProbability: 0.88
+        )
+        #expect(
+            harness.presenter.paths == [SmartPastePath(narrowing: trace, calls: 1, noSuitableMatchOfferEnd: .dismissed)]
+        )
     }
 }

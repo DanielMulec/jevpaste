@@ -1,49 +1,32 @@
 import Foundation
 import SmartPasteCore
 
-/// The three answers the adapter reads from a `200` evaluation; everything else in the body is ignored.
-struct EvaluateResponse: Decodable {
-    let answers: EvaluateAnswers
-
-    /// Maps Jev's answer onto the Candidates that were offered, by option id.
-    static func decision(from body: Data, offered candidates: [Candidate]) -> Result<Decision, JevGatewayFailure> {
-        guard let answers = try? JSONDecoder().decode(EvaluateResponse.self, from: body).answers else {
-            return .failure(.malformedResponse)
+/// Jev's answers to one `200` evaluation: per question, the chosen option id and every option's probability in the
+/// order Jev listed them. Everything else in the body (confidence, usage, provider metadata) is ignored.
+enum EvaluateResponse {
+    static func answers(
+        from body: Data, to request: NarrowingRequest
+    ) -> Result<[String: ChoiceAnswer], JevGatewayFailure> {
+        guard let answers = OrderedJSONParser.parse(body)?["answers"] else { return .failure(.malformedResponse) }
+        var byQuestion: [String: ChoiceAnswer] = [:]
+        for question in request.questions {
+            guard let answer = answers[question.id], let choice = answer["choice"]?.stringValue,
+                let probabilities = probabilities(in: answer)
+            else { return .failure(.malformedResponse) }
+            guard question.options.contains(where: { $0.id == choice }) else { return .failure(.unknownChoice) }
+            byQuestion[question.id] = ChoiceAnswer(choice: choice, probabilities: probabilities)
         }
-        let containsValue = answers.containsValue.probability
-        let freeText = answers.freeText.probability
-        guard (0...1).contains(containsValue), (0...1).contains(freeText) else { return .failure(.malformedResponse) }
-        guard let choice = choice(forOptionID: answers.paste.choice, among: candidates) else {
-            return .failure(.unknownChoice)
+        return .success(byQuestion)
+    }
+
+    /// `probabilities` as numbers in 0…1, in Jev's order; `nil` when missing or out of range.
+    private static func probabilities(in answer: OrderedJSON) -> [OptionProbability]? {
+        guard let members = answer["probabilities"]?.objectMembers else { return nil }
+        var probabilities: [OptionProbability] = []
+        for member in members {
+            guard case .number(let probability) = member.value, (0...1).contains(probability) else { return nil }
+            probabilities.append(OptionProbability(optionID: member.key, probability: probability))
         }
-        return .success(
-            Decision(choice: choice, containsValueProbability: containsValue, freeTextProbability: freeText)
-        )
+        return probabilities
     }
-
-    private static func choice(forOptionID optionID: String, among candidates: [Candidate]) -> Decision.Choice? {
-        if optionID == EvaluateRequestBody.noneOfTheseOptionID { return .noneOfThese }
-        let index = candidates.indices.first { EvaluateRequestBody.optionID(forCandidateAt: $0) == optionID }
-        return index.map { .candidate(candidates[$0]) }
-    }
-}
-
-struct EvaluateAnswers: Decodable {
-    let paste: ChoiceAnswer
-    let containsValue: BooleanAnswer
-    let freeText: BooleanAnswer
-
-    enum CodingKeys: String, CodingKey {
-        case paste
-        case containsValue = "contains_value"
-        case freeText = "free_text"
-    }
-}
-
-struct ChoiceAnswer: Decodable {
-    let choice: String
-}
-
-struct BooleanAnswer: Decodable {
-    let probability: Double
 }

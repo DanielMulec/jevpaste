@@ -1,47 +1,33 @@
 import Foundation
 import JevGateway
-import SmartPasteCore
 import Testing
 
-/// One real call to Jev, only with `JEVPASTE_LIVE_JEV=1` and a key in `~/.config/jevpaste/env`; otherwise
-/// skipped, so `make check` stays offline. The free tier allows about one call per second account-wide.
+@testable import SmartPasteCore
+
+/// One real Narrowing step through Jev, only with `JEVPASTE_LIVE_JEV=1` and a key in `~/.config/jevpaste/env`;
+/// otherwise skipped, so `make check` stays offline.
 @Suite struct JevGatewayLiveTests {
     private static let isEnabled =
         ProcessInfo.processInfo.environment["JEVPASTE_LIVE_JEV"] == "1" && GatewayCredentials.standard.hasAPIKey
 
     @Test(.enabled(if: isEnabled, "set JEVPASTE_LIVE_JEV=1 and provide ~/.config/jevpaste/env"))
-    func oneRealCallChoosesTheEmailForAnEmailField() async {
-        let email = Candidate(text: "grace@example.test")
-        let request = DecisionRequest(
-            sourceDocument: "Name: Grace Example\nEmail: grace@example.test\nCity: Springfield",
-            targetContext: TargetContext(
-                fieldLabel: "Email address",
-                placeholder: "you@example.com",
-                sectionHeading: "Contact details",
-                siblingFieldLabels: ["Full name", "City"]
-            ),
-            candidates: [Candidate(text: "Grace Example"), email, Candidate(text: "Springfield")]
+    func oneRealStepPicksAPieceHoldingTheEmailForAnEmailField() async throws {
+        let copy = "Name: Grace Example\nEmail: grace@example.test\nCity: Springfield"
+        let context = TargetContext(
+            fieldLabel: "Email address", placeholder: "you@example.com", sectionHeading: "Contact details",
+            siblingFieldLabels: ["Full name", "City"]
         )
+        let request = StepPlanner(copy: copy, context: context, policy: .r2b).stepRequest(on: copy[...]).request
         let started = ContinuousClock.now
-        let decisionReply = await reply(from: JevGatewayDecisionService(), to: request)
+        let narrowingReply = await reply(from: JevGatewayDecisionService(), to: request)
         let latency = ContinuousClock.now - started
+        FileHandle.standardError.write(Data("[live-jev] \(narrowingReply); wall-clock latency \(latency)\n".utf8))
 
-        let outcome: String
-        switch decisionReply {
-        case .decided(let decision):
-            let chose = decision.choice == .candidate(email) ? "the email Candidate" : "another option"
-            outcome = "decided, chose \(chose), containsValueProbability \(decision.containsValueProbability)"
-        case .rateLimited(let retryAfter): outcome = "rate limited, retry after \(retryAfter)"
-        case .failed: outcome = "failed"
-        }
-        let milliseconds = latency.components.seconds * 1000 + latency.components.attoseconds / 1_000_000_000_000_000
-        FileHandle.standardError.write(Data("[live-jev] \(outcome); wall-clock latency \(milliseconds) ms\n".utf8))
-
-        guard case .decided(let decision) = decisionReply else {
-            Issue.record("expected a decision, got \(outcome)")
+        guard case .answered(let answers) = narrowingReply, let answer = answers["narrow_0"] else {
+            Issue.record("expected an answer, got \(narrowingReply)")
             return
         }
-        #expect(decision.choice == .candidate(email))
-        #expect(decision.containsValueProbability >= 0.5)
+        let chosenText = request.excerpts.first { $0.id == answer.choice }?.text ?? ""
+        #expect(chosenText.contains("grace@example.test"))
     }
 }

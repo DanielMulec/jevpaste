@@ -25,6 +25,7 @@ struct OutcomeMessageTests {
         (.cancelled, "Cancelled"),
         (.failed(.timedOut), "Jev took longer than 5 s"),
         (.failed(.decisionUnavailable), "Jev unavailable"),
+        (.failed(.tooLongForSmartPaste), "Too long for Smart Paste — ⌘V pastes it whole"),
         (.failed(.invalidResult), "Jev's answer was not an exact excerpt"),
         (.failed(.targetChanged), "Target changed — nothing pasted"),
     ])
@@ -64,6 +65,7 @@ struct OutcomeMessageTests {
         (.refused(.targetNotReady(applicationName: ".secureField")), "refused.targetNotReady"),
         (.cancelled, "cancelled"),
         (.failed(.timedOut), "failed.timedOut"),
+        (.failed(.tooLongForSmartPaste), "failed.tooLongForSmartPaste"),
     ])
     func logNameIsTheShortOutcomeKind(outcome: PasteAttemptOutcome, logName: String) {
         #expect(OutcomeMessage.logName(for: outcome) == logName)

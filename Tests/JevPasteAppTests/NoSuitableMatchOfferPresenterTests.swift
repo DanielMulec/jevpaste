@@ -80,7 +80,7 @@ struct NoSuitableMatchOfferPresenterTests {
     @Test func aLaterOutcomeWithdrawsTheOfferWithoutCallingBackAndReturnsFocus() {
         offer()
 
-        presenter.showOutcome(.noSuitableMatch, note: nil, path: .jev(offer: .timedOut))
+        presenter.showOutcome(.noSuitableMatch, note: nil, path: SmartPastePath(noSuitableMatchOfferEnd: .timedOut))
         surface.send(.accept)
 
         #expect(surface.displayed == OutcomeMessage(.noSuitableMatch).content)
@@ -95,7 +95,7 @@ struct NoSuitableMatchOfferPresenterTests {
         surface.reportsClickAwayWhenGivingUpKeyFocus = true
         offer()
 
-        presenter.showOutcome(.noSuitableMatch, note: nil, path: .jev(offer: .timedOut))
+        presenter.showOutcome(.noSuitableMatch, note: nil, path: SmartPastePath(noSuitableMatchOfferEnd: .timedOut))
 
         #expect(surface.displayed == OutcomeMessage(.noSuitableMatch).content)
         #expect(activator.activated == [Self.chrome])

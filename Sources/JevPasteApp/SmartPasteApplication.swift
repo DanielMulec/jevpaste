@@ -65,10 +65,7 @@ final class SmartPasteApplication {
                     indicator: presenter
                 )
             ),
-            rules: PasteAttemptRules(
-                candidateExtraction: StructuralCandidateExtraction(),
-                preCheck: LocalPreChecks()
-            ),
+            rules: PasteAttemptRules(narrowingPolicy: .r2b, preCheck: LocalPreChecks()),
             capture: capture
         )
     }

@@ -30,13 +30,13 @@ public struct PasteAttemptPorts {
     }
 }
 
-/// The local rules a Paste Attempt applies before and after asking Jev.
+/// What a Paste Attempt applies besides the adapters: the Narrowing policy and the Pre-checks.
 public struct PasteAttemptRules: Sendable {
-    let candidateExtraction: any CandidateExtraction
+    let narrowingPolicy: NarrowingPolicy
     let preCheck: any PreCheck
 
-    public init(candidateExtraction: any CandidateExtraction, preCheck: any PreCheck) {
-        self.candidateExtraction = candidateExtraction
+    public init(narrowingPolicy: NarrowingPolicy, preCheck: any PreCheck) {
+        self.narrowingPolicy = narrowingPolicy
         self.preCheck = preCheck
     }
 }

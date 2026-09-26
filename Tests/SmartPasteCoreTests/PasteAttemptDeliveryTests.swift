@@ -23,7 +23,7 @@ struct PasteAttemptDeliveryTests {
 
         harness.hotkey.press()
         harness.clock.advance(by: .milliseconds(4950))
-        harness.jev.choose("ada@example.com")
+        harness.jev.narrow(to: "ada@example.com")
         harness.clock.advance(by: .milliseconds(120))
 
         #expect(harness.presenter.outcomes == [.inserted])
@@ -62,7 +62,7 @@ struct PasteAttemptDeliveryTests {
 
         harness.hotkey.press()
         harness.targetResolver.focusedTarget = nil
-        harness.jev.choose("ada@example.com")
+        harness.jev.narrow(to: "ada@example.com")
 
         #expect(harness.presenter.deliveringShownCount == 0)
         #expect(harness.presenter.outcomes == [.failed(.targetChanged)])

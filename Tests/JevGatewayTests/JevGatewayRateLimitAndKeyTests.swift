@@ -6,7 +6,7 @@ import Testing
 
 private let rateLimitBody = #"{"error":{"type":"rate_limit_exceeded"}}"#
 
-private func reply(to429WithHeaders headers: [String: String]) async throws -> DecisionReply {
+private func reply(to429WithHeaders headers: [String: String]) async throws -> NarrowingReply {
     let transport = StubTransport.answering(status: 429, headers: headers, body: rateLimitBody)
     return await reply(from: try Fixture.service(transport: transport))
 }
@@ -40,7 +40,7 @@ private func reply(to429WithHeaders headers: [String: String]) async throws -> D
 }
 
 @Suite struct JevGatewayKeyTests {
-    private let answer = Fixture.evaluateResponse(choice: "c001", containsValue: 0.97)
+    private let answer = Fixture.evaluateResponse(choice: "x0001")
 
     @Test func aMissingKeyFileFailsWithoutACall() async {
         let transport = StubTransport.answering(body: answer)

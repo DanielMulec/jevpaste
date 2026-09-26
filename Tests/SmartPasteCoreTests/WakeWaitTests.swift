@@ -29,15 +29,15 @@ struct WakeWaitTests {
         #expect(harness.jev.requests.first?.sourceDocument == PasteAttemptHarness.sourceText)
     }
 
-    /// A slow synchronous Candidate extraction after the resolution does not extend the clock either.
+    /// Slow synchronous work after the resolution (here the screening) does not extend the clock either.
     @Test(arguments: [Duration.zero, .seconds(1)])
-    func theJevClockStartsWhenTheTargetResolves(candidateExtractionTakes: Duration) {
-        let harness = PasteAttemptHarness(unreadableReads: 1, candidateExtractionTakes: candidateExtractionTakes)
+    func theJevClockStartsWhenTheTargetResolves(screeningTakes: Duration) {
+        let harness = PasteAttemptHarness(unreadableReads: 1, screeningTakes: screeningTakes)
 
         harness.hotkey.press()
         harness.clock.advance(by: .milliseconds(50))
-        #expect(harness.clock.elapsed == .milliseconds(50) + candidateExtractionTakes)
-        harness.clock.advance(by: .milliseconds(4_999) - candidateExtractionTakes)
+        #expect(harness.clock.elapsed == .milliseconds(50) + screeningTakes)
+        harness.clock.advance(by: .milliseconds(4_999) - screeningTakes)
         #expect(harness.presenter.outcomes.isEmpty)
         harness.clock.advance(by: .milliseconds(1))
 
@@ -120,18 +120,18 @@ struct WakeWaitTests {
         #expect(harness.jev.requests.isEmpty)
     }
 
-    @Test func aSingleLineItemIsDirectPastedAfterAWakeWait() {
+    @Test func aSingleLineItemIsNarrowedAfterAWakeWaitLikeAnyOther() {
         let harness = PasteAttemptHarness(unreadableReads: 1, sourceText: "ada@example.com")
 
         harness.hotkey.press()
         harness.clock.advance(by: .milliseconds(50))
+        harness.jev.keep()
         harness.clock.advance(by: .milliseconds(120))
 
         #expect(harness.presenter.outcomes == [.inserted])
-        #expect(harness.presenter.paths == [.directPaste])
         #expect(harness.presenter.wakeWaits == [.milliseconds(50)])
         #expect(harness.log.steps == [.write("ada@example.com"), .pasteKeystroke, .restore])
-        #expect(harness.jev.requests.isEmpty)
+        #expect(harness.jev.requests.count == 1)
     }
 
     @Test func aFocusThatTurnsReadableButNotEditableIsNoEditableTarget() {
@@ -149,7 +149,7 @@ struct WakeWaitTests {
 
         harness.hotkey.press()
         harness.clock.advance(by: .milliseconds(100))
-        harness.jev.choose("ada@example.com")
+        harness.jev.narrow(to: "ada@example.com")
         harness.clock.advance(by: .milliseconds(120))
 
         #expect(harness.presenter.outcomes == [.inserted])

@@ -1,19 +1,11 @@
-extension RunningAttempt {
-    /// Whether `pasteResult` may be delivered: it must be one of the Candidates `offered` to Jev or the Candidate
-    /// Chooser, and one exact, contiguous, verbatim excerpt of the pinned Active Item. Every Paste Result Jev or
-    /// the Candidate Chooser picks passes this check before delivery. Both comparisons are byte for byte in UTF-8:
-    /// Swift's `String` equality treats canonically equivalent encodings as equal, which would let an unoffered
-    /// encoding through.
-    func accepts(_ pasteResult: Candidate, offeredAmong offered: [Candidate]) -> Bool {
-        offered.contains { $0.text.utf8.elementsEqual(pasteResult.text.utf8) }
-            && item.containsVerbatim(pasteResult.text)
-    }
-}
-
 extension ClipboardItem {
-    /// Whether `excerpt` is one exact, contiguous, verbatim excerpt of this item — compared byte for byte in UTF-8,
-    /// so a canonically equivalent but differently encoded answer is rejected. Empty is never a Paste Result.
-    fileprivate func containsVerbatim(_ excerpt: String) -> Bool {
-        !excerpt.isEmpty && text.utf8.firstRange(of: excerpt.utf8) != nil
+    /// Whether `pasteResult` may be used: it must be one of the texts `offered` to Jev or the Candidate Chooser, and
+    /// one exact, contiguous, verbatim excerpt of this item. Every piece Jev picks at every Narrowing step, and every
+    /// Candidate Chooser pick, passes this check. Both comparisons are byte for byte in UTF-8: Swift's `String`
+    /// equality treats canonically equivalent encodings as equal, which would let an unoffered encoding through.
+    /// Empty is never a Paste Result.
+    func acceptsPasteResult(_ pasteResult: Candidate, offeredAmong offered: [Candidate]) -> Bool {
+        offered.contains { $0.text.utf8.elementsEqual(pasteResult.text.utf8) }
+            && !pasteResult.text.isEmpty && text[...].containsExactly(pasteResult.text[...])
     }
 }

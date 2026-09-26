@@ -38,9 +38,8 @@ actor StubTransport: HTTPTransport {
 }
 
 enum Fixture {
-    static let candidates = ["Ada Lovelace", "ada@example.org", "London"].map(Candidate.init(text:))
-
-    static let request = DecisionRequest(
+    /// One step-1 question in the excerpt-id form over Ada's card: everything, three excerpts, nothing, ask.
+    static let request = NarrowingRequest(
         sourceDocument: "Name: Ada Lovelace\nEmail: ada@example.org\nCity: London",
         targetContext: TargetContext(
             fieldLabel: "Email address",
@@ -49,19 +48,29 @@ enum Fixture {
             siblingFieldLabels: ["Full name"],
             surroundingText: "Sign up for the newsletter"
         ),
-        candidates: candidates
+        excerpts: [
+            NarrowingExcerpt(id: "x0000", text: "Ada Lovelace"), NarrowingExcerpt(id: "x0001", text: "ada@example.org"),
+            NarrowingExcerpt(id: "x0002", text: "London"),
+        ],
+        questions: [
+            ChoiceQuestion(
+                id: "narrow_0", instructions: .wholeCopy("Choose."),
+                options: ["everything", "x0000", "x0001", "x0002", "nothing_fits", "ask_user"].map { id in
+                    ChoiceOption(id: id, description: id.hasPrefix("x") ? .excerpt : .text("The \(id) option."))
+                }
+            )
+        ]
     )
 
     static let keyFileText = "AI_GATEWAY_API_KEY=test-key-value\n"
 
-    /// A Jev answer in the shape the spikes recorded, reduced to the fields the adapter reads plus some noise.
-    static func evaluateResponse(choice: String, containsValue: Double, freeText: Double = 0) -> String {
+    /// A Jev answer in the shape the spike recorded (`round2/results/raw.jsonl`), reduced to the fields the adapter
+    /// reads plus some noise; probabilities deliberately not in option order.
+    static func evaluateResponse(choice: String, probability: Double = 0.97) -> String {
         """
-        {"model":"typesafe-ai/jev","answers":{
-          "paste":{"type":"choice","choice":"\(choice)","probabilities":{"\(choice)":1},"confidence":1},
-          "contains_value":{"type":"boolean","probability":\(containsValue)},
-          "free_text":{"type":"boolean","probability":\(freeText)}},
-         "usage":{"inputTokens":800,"outputTokens":200}}
+        {"answers":{"narrow_0":{"type":"choice","choice":"\(choice)",
+          "probabilities":{"x0002":0,"\(choice)":\(probability),"ask_user":0.01},"confidence":0.96}},
+         "model":"typesafe-ai/jev","usage":{"inputTokens":800,"outputTokens":60}}
         """
     }
 
@@ -83,12 +92,12 @@ enum Fixture {
 /// Starts one request through the seam and waits for its single reply.
 func reply(
     from service: JevGatewayDecisionService,
-    to request: DecisionRequest = Fixture.request
-) async -> DecisionReply {
+    to request: NarrowingRequest = Fixture.request
+) async -> NarrowingReply {
     await withCheckedContinuation { continuation in
-        service.requestDecision(request) { decisionReply in
+        service.evaluate(request) { narrowingReply in
             MainActor.assertIsolated()
-            continuation.resume(returning: decisionReply)
+            continuation.resume(returning: narrowingReply)
         }
     }
 }
