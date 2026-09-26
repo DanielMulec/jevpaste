@@ -1,0 +1,279 @@
+A01_vorname                r0  A:HIT  B:HIT  calls=2  1337 ms place=one_part(0.19/0.81/0.00) 'Mira'(115)0.92 > keep(12)1.00 -> 'Mira'
+A02_nachname               r0  A:HIT  B:HIT  calls=2   930 ms place=one_part(0.21/0.79/0.00) 'Holzner'(115)0.90 > keep(30)1.00 -> 'Holzner'
+  503, waiting 2 s
+  503, waiting 2 s
+  503, waiting 4 s
+A03_strasse                r0  A:HIT  B:HIT  calls=2  1045 ms place=one_part(0.43/0.56/0.01) 'Prankergasse'(115)0.39 > keep(76)0.91 -> 'Prankergasse'
+  429, waiting 9 s
+A04_hausnummer             r0  A:HIT  B:HIT  calls=2  1109 ms place=one_part(0.33/0.65/0.02) '77'(115)0.92 > keep(4)0.98 -> '77'
+  503, waiting 2 s
+  429, waiting 56 s
+A05_adresszusatz           r0  A:HIT  B:HIT  calls=2  1798 ms place=one_part(0.13/0.86/0.01) 'Top 11'(115)0.83 > keep(8)0.86 -> 'Top 11'
+A06_plz                    r0  A:HIT  B:HIT  calls=2   975 ms place=one_part(0.19/0.81/0.00) '8020'(115)0.98 > keep(11)1.00 -> '8020'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 8 s
+  503, waiting 16 s
+  429, waiting 24 s
+A07_ort                    r0  A:HIT  B:HIT  calls=2  1508 ms place=one_part(0.13/0.87/0.00) 'Graz'(115)0.97 > keep(12)1.00 -> 'Graz'
+  429, waiting 58 s
+A08_land                   r0  A:HIT  B:HIT  calls=2  1658 ms place=one_part(0.11/0.89/0.00) 'Österreich'(115)0.97 > keep(55)0.96 -> 'Österreich'
+A09_email                  r0  A:HIT  B:HIT  calls=2  1150 ms place=one_part(0.20/0.80/0.00) 'mira.holzner@examp'(115)0.92 > keep(34)1.00 -> 'mira.holzner@example.org'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 8 s
+  503, waiting 16 s
+  503, waiting 32 s
+  429, waiting 60 s
+A10_website                r0  A:HIT  B:HIT  calls=2  1255 ms place=one_part(0.15/0.85/0.00) 'https://www.miraho'(115)0.91 > keep(55)0.94 -> 'https://www.miraholzner.example'
+A11_telefon                r0  A:HIT  B:HIT  calls=2   904 ms place=one_part(0.18/0.82/0.00) '06608405534'(115)0.97 > keep(63)0.94 -> '06608405534'
+A12_strasse_hnr            r0  A:HIT  B:HIT  calls=2  1162 ms place=one_part(0.25/0.75/0.00) 'Prankergasse 77'(115)0.55 > keep(17)0.97 -> 'Prankergasse 77'
+  503, waiting 2 s
+A13_passwort_NEG           r0  A:HIT  B:HIT  calls=1   760 ms place=nothing(0.38/0.04/0.58) nothing_fits(115)0.71 -> 'nothing'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 8 s
+  429, waiting 28 s
+  503, waiting 32 s
+  429, waiting 60 s
+A14_fax_NEG                r0  A:HIT  B:HIT  calls=1   631 ms place=nothing(0.10/0.05/0.85) nothing_fits(115)0.93 -> 'nothing'
+S01_first_name             r0  A:HIT  B:HIT  calls=2  1054 ms place=one_part(0.20/0.80/0.00) 'Jonas'(186)0.95 > keep(17)0.99 -> 'Jonas'
+S02_last_name              r0  A:HIT  B:HIT  calls=2  1145 ms place=one_part(0.17/0.83/0.00) 'Prell'(186)0.90 > keep(16)1.00 -> 'Prell'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 2 s
+S03_job_title              r0  A:HIT  B:HIT  calls=2  1492 ms place=one_part(0.26/0.73/0.01) 'Product Lead'(186)0.87 > keep(14)0.98 -> 'Product Lead'
+  429, waiting 12 s
+  429, waiting 60 s
+  429, waiting 60 s
+S04_phone                  r0  A:HIT  B:HIT  calls=3  2731 ms place=one_part(0.16/0.84/0.00) 'Phone +43 1 234567'(186)0.81 > '+43 1 2345678'(27)0.90 > keep(18)0.99 -> '+43 1 2345678'
+S05_mobile                 r0  A:HIT  B:HIT  calls=2  1193 ms place=one_part(0.14/0.86/0.00) '+43 660 1112233'(186)0.93 > keep(18)0.98 -> '+43 660 1112233'
+S06_email                  r0  A:HIT  B:HIT  calls=2  1536 ms place=one_part(0.35/0.64/0.01) 'jonas.prell@exampl'(186)0.84 > keep(35)1.00 -> 'jonas.prell@example.com'
+  503, waiting 2 s
+  429, waiting 49 s
+S07_website                r0  A:HIT  B:HIT  calls=2  1220 ms place=one_part(0.39/0.60/0.01) 'www.prell.example'(186)0.89 > keep(24)0.97 -> 'www.prell.example'
+  503, waiting 2 s
+  429, waiting 60 s
+  503, waiting 8 s
+S08_iban                   r0  A:HIT  B:HIT  calls=2  1410 ms place=one_part(0.16/0.84/0.00) 'AT61 1904 3002 345'(186)0.64 > keep(23)0.99 -> 'AT61 1904 3002 3457 3201'
+S09_fax_NEG                r0  A:HIT  B:HIT  calls=1   886 ms place=nothing(0.05/0.02/0.93) nothing_fits(186)0.91 -> 'nothing'
+R01_full_name              r0  A:HIT  B:HIT  calls=2  1299 ms place=one_part(0.11/0.89/0.00) 'Anna Reisinger'(6/3)0.95 > keep(16)0.99 -> 'Anna Reisinger'
+  503, waiting 2 s
+  429, waiting 40 s
+  503, waiting 8 s
+  429, waiting 51 s
+  503, waiting 32 s
+R02_birthdate              r0  A:HIT  B:HIT  calls=2  1446 ms place=one_part(0.09/0.91/0.00) '14 March 1991'(53/3)0.89 > keep(12)0.97 -> '14 March 1991'
+R03_birthplace             r0  A:HIT  B:HIT  calls=2  1311 ms place=one_part(0.09/0.91/0.00) 'Linz'(31/3)0.95 > keep(12)0.99 -> 'Linz'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 8 s
+  429, waiting 8 s
+R04_nationality            r0  A:HIT  B:HIT  calls=2  1016 ms place=one_part(0.06/0.94/0.00) 'Austrian'(17/3)0.89 > keep(38)0.96 -> 'Austrian'
+  429, waiting 60 s
+  503, waiting 4 s
+R05_about                  r0  A:HIT  B:HIT  calls=2  1133 ms place=one_part(0.25/0.75/0.00) 'Data engineer with'(65/3)0.55 > keep(255)0.85 -> 'Data engineer with eight years of experience build'
+R06_country                r0  A:HIT  B:HIT  calls=2  1042 ms place=one_part(0.11/0.80/0.09) 'Austria'(39/3)0.86 > keep(30)0.95 -> 'Austria'
+R07_linkedin_NEG           r0  A:HIT  B:HIT  calls=1   745 ms place=nothing(0.11/0.00/0.89) nothing_fits(255/3)0.82 -> 'nothing'
+R08_summary                r0  A:HIT  B:HIT  calls=2  1398 ms place=one_part(0.24/0.76/0.00) 'Data engineer with'(52/3)0.49 > keep(255)0.81 -> 'Data engineer with eight years of experience build'
+  503, waiting 2 s
+  503, waiting 4 s
+  429, waiting 40 s
+  429, waiting 60 s
+  429, waiting 60 s
+R09_biography              r0  A:HIT  B:HIT  calls=2  1853 ms place=one_part(0.22/0.78/0.00) 'Data engineer with'(71/3)0.37 > keep(255)0.66 -> 'Data engineer with eight years of experience build'
+R10_description            r0  A:MISS B:MISS calls=1   668 ms place=one_part(0.50/0.50/0.00) keep(255/3)0.37 -> 'Anna Reisinger\nBorn 14 March 1991 in Linz\nNational'
+O01_email                  r0  A:HIT  B:HIT  calls=2  1081 ms place=one_part(0.12/0.88/0.00) 'wren.castellan@exa'(151)0.95 > keep(34)1.00 -> 'wren.castellan@example.net'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 8 s
+  503, waiting 16 s
+  429, waiting 23 s
+O02_order_number           r0  A:HIT  B:HIT  calls=2   923 ms place=one_part(0.14/0.86/0.00) '4711'(151)0.46 > keep(11)1.00 -> '4711'
+  503, waiting 2 s
+  429, waiting 56 s
+  503, waiting 8 s
+O03_recipient              r0  A:HIT  B:HIT  calls=2  1310 ms place=one_part(0.15/0.85/0.00) 'Lise Adler'(151)0.90 > keep(12)1.00 -> 'Lise Adler'
+O04_street                 r0  A:HIT  B:HIT  calls=2   979 ms place=one_part(0.13/0.87/0.00) 'Hauptstr. 5'(151)0.47 > keep(15)0.92 -> 'Hauptstr. 5'
+  429, waiting 47 s
+O05_postal_code            r0  A:HIT  B:HIT  calls=2  1063 ms place=one_part(0.11/0.88/0.01) '4020'(151)0.90 > keep(11)1.00 -> '4020'
+  429, waiting 60 s
+O06_city                   r0  A:HIT  B:HIT  calls=2  1222 ms place=one_part(0.12/0.88/0.00) 'Linz'(151)0.95 > keep(12)1.00 -> 'Linz'
+O07_amount                 r0  A:HIT  B:HIT  calls=2  1430 ms place=one_part(0.42/0.55/0.03) '129,90'(151)0.50 > keep(11)0.95 -> '129,90'
+O08_tracking               r0  A:HIT  B:HIT  calls=2   970 ms place=one_part(0.10/0.90/0.00) '003404341612345678'(151)0.92 > keep(200)0.88 -> '00340434161234567890'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 8 s
+  429, waiting 39 s
+O09_coupon_NEG             r0  A:HIT  B:HIT  calls=1   538 ms place=nothing(0.08/0.06/0.86) nothing_fits(151)0.67 -> 'nothing'
+  429, waiting 60 s
+  503, waiting 4 s
+B01_handle                 r0  A:HIT  B:HIT  calls=2  1198 ms place=one_part(0.10/0.90/0.00) '@mira_h'(34/2)0.89 > keep(12)0.73 -> '@mira_h'
+B02_city                   r0  A:HIT  B:HIT  calls=2  1439 ms place=one_part(0.12/0.88/0.00) 'Innsbruck'(42/2)0.93 > keep(46)0.99 -> 'Innsbruck'
+B03_bio                    r0  A:HIT  B:HIT  calls=1   591 ms place=everything(0.75/0.25/0.00) keep(255/2)0.52 -> "Hi, I'm Lena Vogt, a ceramicist working out of a s"
+  503, waiting 2 s
+  503, waiting 2 s
+  429, waiting 44 s
+B04_birth_year             r0  A:HIT  B:HIT  calls=2  1142 ms place=one_part(0.22/0.74/0.04) '1994'(53/2)0.90 > keep(11)1.00 -> '1994'
+  429, waiting 60 s
+  503, waiting 4 s
+B05_phone_NEG              r0  A:HIT  B:HIT  calls=1   637 ms place=nothing(0.06/0.05/0.89) nothing_fits(255/2)0.63 -> 'nothing'
+B06_biography              r0  A:MISS B:HIT  calls=2  1153 ms place=everything(0.57/0.42/0.01) nothing_fits(61/2)0.38 -> 'nothing'
+B07_about_me               r0  A:HIT  B:HIT  calls=1   831 ms place=everything(0.83/0.17/0.00) keep(255/2)0.58 -> "Hi, I'm Lena Vogt, a ceramicist working out of a s"
+  503, waiting 2 s
+  503, waiting 4 s
+B08_short_bio              r0  A:HIT  B:HIT  calls=2  1288 ms place=one_part(0.28/0.72/0.00) keep(67/2)0.29 -> "Hi, I'm Lena Vogt, a ceramicist working out of a s"
+  429, waiting 42 s
+T01_email_two_lines        r0  A:HIT  B:HIT  calls=1   509 ms place=one_part(0.41/0.59/0.00) ask_user(84)0.60 -> 'ask'
+  503, waiting 2 s
+  429, waiting 56 s
+  429, waiting 60 s
+C01_cover_letter           r0  A:HIT  B:HIT  calls=1  1404 ms place=everything(0.85/0.15/0.00) keep(255/3)0.65 -> 'Dear Ms Hofer,\n\nI am writing to apply for the Juni'
+C02_motivation             r0  A:HIT  B:HIT  calls=3  2241 ms place=one_part(0.25/0.75/0.00) 'What draws me to G'(73/3)0.67 > keep(255/2)0.69 -> 'What draws me to Grünraum is your work on climate-'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 8 s
+  503, waiting 16 s
+  429, waiting 22 s
+C03_availability           r0  A:MISS B:MISS calls=2  1344 ms place=one_part(0.27/0.72/0.01) 'I can start on 1 D'(62/3)0.39 > keep(154)0.70 -> 'I can start on 1 December 2026 and am available fo'
+  503, waiting 2 s
+  429, waiting 56 s
+  503, waiting 8 s
+C04_name                   r0  A:MISS B:MISS calls=2  1624 ms place=one_part(0.18/0.81/0.01) keep(69/3)0.44 -> 'Dear Ms Hofer,\n\nI am writing to apply for the Juni'
+C05_notes_freetext         r0  A:HIT  B:HIT  calls=1  1006 ms place=everything(0.78/0.18/0.04) keep(255/3)0.54 -> 'Dear Ms Hofer,\n\nI am writing to apply for the Juni'
+W01_chrome_textarea        r0  A:HIT  B:HIT  calls=1   665 ms place=everything(0.76/0.19/0.05) keep(255/2)0.46 -> 'Marlene Oberholzer\nmarlene.oberholzer@example.org\n'
+W02_terminal_prompt        r0  A:HIT  B:HIT  calls=1   629 ms place=everything(0.90/0.02/0.08) keep(255/2)0.76 -> 'Marlene Oberholzer\nmarlene.oberholzer@example.org\n'
+W03_chatgpt_composer       r0  A:HIT  B:HIT  calls=1   736 ms place=everything(0.58/0.42/0.00) keep(255/2)0.43 -> 'Marlene Oberholzer\nmarlene.oberholzer@example.org\n'
+  503, waiting 2 s
+  503, waiting 4 s
+  429, waiting 39 s
+  503, waiting 16 s
+W04_whatsapp_composer      r0  A:HIT  B:HIT  calls=1  1049 ms place=everything(0.82/0.15/0.03) keep(255/2)0.44 -> 'Marlene Oberholzer\nmarlene.oberholzer@example.org\n'
+  429, waiting 42 s
+  503, waiting 4 s
+K01_three_emails           r0  A:HIT  B:HIT  calls=1   683 ms place=one_part(0.11/0.89/0.00) ask_user(255/3)0.91 -> 'ask'
+N01_address_line_ort       r0  A:HIT  B:HIT  calls=2  1214 ms place=one_part(0.10/0.90/0.00) 'Graz'(43)0.98 > keep(12)1.00 -> 'Graz'
+N02_url_chat               r0  A:HIT  B:MISS calls=1   578 ms place=nothing(0.24/0.06/0.70) keep(235)0.45 -> 'https://www.miraholzner.example/portfolio/kiln-ser'
+N03_list_300_lines         r0  A:MISS B:MISS calls=1  1031 ms place=None(0.00/0.00/0.00)  -> 'error'
+  error, retrying the cell once after 60 s: {'status': 400, 'body': "{'error': {'message': 'typesafe returned status 400', 'type': 'AI_APICallError', 'param': {'error': 'typesafe returned status 400', 'statusCode': 400, 'name': 'AI_APICallError
+N03_list_300_lines         r0  A:MISS B:MISS calls=1  1101 ms place=None(0.00/0.00/0.00)  -> 'error'
+N04_too_big                r0  A:HIT  B:HIT  calls=1  1559 ms place=None(0.00/0.00/0.00)  -> 'error'
+  503, waiting 2 s
+  429, waiting 25 s
+H01_flat_full_name         r0  A:HIT  B:HIT  calls=2  1316 ms place=one_part(0.13/0.86/0.01) 'Katrin Lechner'(21/3)0.95 > keep(16)0.98 -> 'Katrin Lechner'
+H02_flat_move_in           r0  A:HIT  B:HIT  calls=2  1197 ms place=one_part(0.12/0.87/0.01) '1 March 2027'(67/3)0.68 > keep(11)0.94 -> '1 March 2027'
+  503, waiting 2 s
+  429, waiting 54 s
+H03_event_city             r0  A:HIT  B:HIT  calls=2  1894 ms place=one_part(0.23/0.74/0.03) 'Villach'(36/2)0.96 > keep(29)0.99 -> 'Villach'
+H04_issue_comment          r0  A:HIT  B:HIT  calls=1   574 ms place=everything(0.82/0.18/0.00) keep(255/2)0.43 -> 'Brunner Holzbau GmbH\noffice@brunner-holzbau.exampl'
+  429, waiting 58 s
+H05_messages_composer      r0  A:HIT  B:HIT  calls=1   849 ms place=everything(0.75/0.25/0.00) keep(255/2)0.23 -> 'Brunner Holzbau GmbH\noffice@brunner-holzbau.exampl'
+H06_company_description    r0  A:HIT  B:HIT  calls=3  1945 ms place=one_part(0.19/0.81/0.00) 'Family carpentry w'(18/2)0.93 > keep(255/4)0.59 -> 'Family carpentry workshop in its third generation,'
+  503, waiting 2 s
+  503, waiting 4 s
+  429, waiting 50 s
+H07_url_slack              r0  A:HIT  B:HIT  calls=1   799 ms place=everything(0.66/0.33/0.01) keep(255/2)0.44 -> 'https://docs.northbeam.example/runbooks/deploy-rol'
+H08_url_teams              r0  A:HIT  B:HIT  calls=1   588 ms place=everything(0.72/0.28/0.00) keep(255/2)0.60 -> 'https://www.kofler-keramik.example/shop/teller-set'
+  503, waiting 2 s
+  503, waiting 4 s
+  503, waiting 8 s
+H09_three_emails_webinar   r0  A:HIT  B:HIT  calls=1   584 ms place=one_part(0.19/0.81/0.00) ask_user(164)0.87 -> 'ask'
+  503, waiting 2 s
+  429, waiting 39 s
+H10_three_emails_folio     r0  A:HIT  B:HIT  calls=1   966 ms place=one_part(0.20/0.80/0.00) ask_user(182)0.86 -> 'ask'
+H11_two_emails_catering    r0  A:HIT  B:HIT  calls=1  1357 ms place=one_part(0.39/0.61/0.00) ask_user(127)0.54 -> 'ask'
+H12_address_line_1         r0  A:HIT  B:HIT  calls=2   997 ms place=one_part(0.25/0.75/0.00) 'Kirchgasse 9'(40)0.50 > keep(14)0.96 -> 'Kirchgasse 9'
+H13_strasse_hausnummer     r0  A:HIT  B:HIT  calls=2  1230 ms place=one_part(0.18/0.82/0.00) 'Leopoldstraße 41'(42)0.60 > keep(18)0.99 -> 'Leopoldstraße 41'
+H14_empfaenger             r0  A:HIT  B:HIT  calls=3  1492 ms place=one_part(0.21/0.79/0.00) 'Rechnung Nr. 2027-'(132)0.36 > 'Brunner Holzbau Gm'(34)0.95 > keep(17)0.99 -> 'Brunner Holzbau GmbH'
+H15_mobile                 r0  A:HIT  B:HIT  calls=2  1004 ms place=one_part(0.12/0.88/0.00) '+43 664 918 2735'(114)0.56 > keep(20)0.92 -> '+43 664 918 2735'
+H16_postcode               r0  A:HIT  B:HIT  calls=2   853 ms place=one_part(0.13/0.87/0.00) '6020'(40)0.98 > keep(11)1.00 -> '6020'
+H17_birthday_NEG           r0  A:HIT  B:HIT  calls=1   487 ms place=nothing(0.06/0.01/0.93) nothing_fits(114)0.92 -> 'nothing'
+H18_phone_NEG              r0  A:HIT  B:HIT  calls=1   832 ms place=nothing(0.03/0.01/0.96) nothing_fits(40)0.95 -> 'nothing'
+billed round 2: 380 (explore 140)
+A01_vorname                r1  A:HIT  B:HIT  calls=2   905 ms place=one_part(0.20/0.80/0.00) 'Mira'(115)0.90 > keep(12)1.00 -> 'Mira'
+A02_nachname               r1  A:HIT  B:HIT  calls=2  1008 ms place=one_part(0.15/0.85/0.00) 'Holzner'(115)0.92 > keep(30)0.99 -> 'Holzner'
+A03_strasse                r1  A:HIT  B:HIT  calls=3  1691 ms place=one_part(0.21/0.79/0.00) 'Prankergasse 77'(115)0.54 > 'Prankergasse'(17)0.72 > keep(76)0.91 -> 'Prankergasse'
+A04_hausnummer             r1  A:HIT  B:HIT  calls=2   921 ms place=one_part(0.16/0.84/0.00) '77'(115)0.94 > keep(4)0.97 -> '77'
+A05_adresszusatz           r1  A:HIT  B:HIT  calls=2  1026 ms place=one_part(0.12/0.87/0.01) 'Top 11'(115)0.83 > keep(8)0.89 -> 'Top 11'
+A06_plz                    r1  A:HIT  B:HIT  calls=2   965 ms place=one_part(0.19/0.81/0.00) '8020'(115)0.98 > keep(11)1.00 -> '8020'
+A07_ort                    r1  A:HIT  B:HIT  calls=2  1216 ms place=one_part(0.14/0.86/0.00) 'Graz'(115)0.97 > keep(12)1.00 -> 'Graz'
+A08_land                   r1  A:HIT  B:HIT  calls=2   884 ms place=one_part(0.13/0.87/0.00) 'Österreich'(115)0.98 > keep(55)0.97 -> 'Österreich'
+A09_email                  r1  A:HIT  B:HIT  calls=2  1702 ms place=one_part(0.18/0.82/0.00) 'mira.holzner@examp'(115)0.90 > keep(34)1.00 -> 'mira.holzner@example.org'
+A10_website                r1  A:HIT  B:HIT  calls=2   967 ms place=one_part(0.16/0.84/0.00) 'https://www.miraho'(115)0.92 > keep(55)0.95 -> 'https://www.miraholzner.example'
+A11_telefon                r1  A:HIT  B:HIT  calls=2  1576 ms place=one_part(0.14/0.86/0.00) '06608405534'(115)0.97 > keep(63)0.91 -> '06608405534'
+A12_strasse_hnr            r1  A:HIT  B:HIT  calls=2  1182 ms place=one_part(0.30/0.70/0.00) 'Prankergasse 77'(115)0.60 > keep(17)0.97 -> 'Prankergasse 77'
+A13_passwort_NEG           r1  A:HIT  B:HIT  calls=1   553 ms place=nothing(0.06/0.01/0.93) nothing_fits(115)0.94 -> 'nothing'
+A14_fax_NEG                r1  A:HIT  B:HIT  calls=1   477 ms place=nothing(0.11/0.04/0.85) nothing_fits(115)0.89 -> 'nothing'
+S01_first_name             r1  A:HIT  B:HIT  calls=2  1298 ms place=one_part(0.25/0.75/0.00) 'Jonas'(186)0.94 > keep(17)1.00 -> 'Jonas'
+S02_last_name              r1  A:HIT  B:HIT  calls=2   996 ms place=one_part(0.16/0.84/0.00) 'Prell'(186)0.87 > keep(16)1.00 -> 'Prell'
+S03_job_title              r1  A:HIT  B:HIT  calls=2   986 ms place=one_part(0.12/0.88/0.00) 'Product Lead'(186)0.89 > keep(14)1.00 -> 'Product Lead'
+S04_phone                  r1  A:HIT  B:HIT  calls=3  1486 ms place=one_part(0.15/0.85/0.00) 'Phone +43 1 234567'(186)0.79 > '+43 1 2345678'(27)0.93 > keep(18)0.99 -> '+43 1 2345678'
+S05_mobile                 r1  A:HIT  B:HIT  calls=2  1008 ms place=one_part(0.17/0.83/0.00) '+43 660 1112233'(186)0.94 > keep(18)0.99 -> '+43 660 1112233'
+S06_email                  r1  A:HIT  B:HIT  calls=2  1089 ms place=one_part(0.16/0.84/0.00) 'jonas.prell@exampl'(186)0.97 > keep(35)1.00 -> 'jonas.prell@example.com'
+S07_website                r1  A:HIT  B:HIT  calls=2  1432 ms place=one_part(0.13/0.87/0.00) 'www.prell.example'(186)0.97 > keep(24)0.99 -> 'www.prell.example'
+S08_iban                   r1  A:HIT  B:HIT  calls=2  1233 ms place=one_part(0.15/0.85/0.00) 'AT61 1904 3002 345'(186)0.75 > keep(23)1.00 -> 'AT61 1904 3002 3457 3201'
+S09_fax_NEG                r1  A:HIT  B:HIT  calls=1   532 ms place=nothing(0.06/0.02/0.92) nothing_fits(186)0.92 -> 'nothing'
+R01_full_name              r1  A:HIT  B:HIT  calls=2  1029 ms place=one_part(0.08/0.92/0.00) 'Anna Reisinger'(6/3)0.94 > keep(16)0.98 -> 'Anna Reisinger'
+R02_birthdate              r1  A:HIT  B:HIT  calls=2  1357 ms place=one_part(0.08/0.91/0.01) '14 March 1991'(50/3)0.88 > keep(12)0.97 -> '14 March 1991'
+R03_birthplace             r1  A:HIT  B:HIT  calls=2  1147 ms place=one_part(0.07/0.93/0.00) 'Linz'(31/3)0.94 > keep(12)0.98 -> 'Linz'
+R04_nationality            r1  A:HIT  B:HIT  calls=2  1217 ms place=one_part(0.06/0.94/0.00) 'Austrian'(12/3)0.81 > keep(38)0.94 -> 'Austrian'
+R05_about                  r1  A:HIT  B:HIT  calls=2  1608 ms place=one_part(0.24/0.76/0.00) 'Data engineer with'(71/3)0.49 > keep(255)0.79 -> 'Data engineer with eight years of experience build'
+R06_country                r1  A:HIT  B:HIT  calls=2  1095 ms place=one_part(0.16/0.75/0.09) 'Austria'(45/3)0.77 > keep(30)0.95 -> 'Austria'
+R07_linkedin_NEG           r1  A:HIT  B:HIT  calls=1   676 ms place=nothing(0.02/0.01/0.97) nothing_fits(255/3)0.86 -> 'nothing'
+R08_summary                r1  A:HIT  B:HIT  calls=2  1705 ms place=one_part(0.24/0.76/0.00) 'Data engineer with'(55/3)0.65 > keep(255)0.87 -> 'Data engineer with eight years of experience build'
+R09_biography              r1  A:HIT  B:HIT  calls=2  1483 ms place=one_part(0.24/0.76/0.00) 'Data engineer with'(69/3)0.29 > keep(255)0.63 -> 'Data engineer with eight years of experience build'
+R10_description            r1  A:MISS B:MISS calls=1   695 ms place=one_part(0.50/0.50/0.00) keep(255/3)0.30 -> 'Anna Reisinger\nBorn 14 March 1991 in Linz\nNational'
+O01_email                  r1  A:HIT  B:HIT  calls=2  1213 ms place=one_part(0.32/0.67/0.01) 'wren.castellan@exa'(151)0.96 > keep(34)1.00 -> 'wren.castellan@example.net'
+O02_order_number           r1  A:HIT  B:HIT  calls=2  1068 ms place=one_part(0.13/0.87/0.00) '4711'(151)0.42 > keep(11)1.00 -> '4711'
+O03_recipient              r1  A:HIT  B:HIT  calls=2   980 ms place=one_part(0.13/0.87/0.00) 'Lise Adler'(151)0.87 > keep(12)1.00 -> 'Lise Adler'
+O04_street                 r1  A:HIT  B:HIT  calls=2   915 ms place=one_part(0.13/0.87/0.00) 'Hauptstr. 5'(151)0.57 > keep(15)0.95 -> 'Hauptstr. 5'
+O05_postal_code            r1  A:HIT  B:HIT  calls=2   976 ms place=one_part(0.11/0.89/0.00) '4020'(151)0.90 > keep(11)1.00 -> '4020'
+O06_city                   r1  A:HIT  B:HIT  calls=2   993 ms place=one_part(0.10/0.90/0.00) 'Linz'(151)0.94 > keep(12)1.00 -> 'Linz'
+O07_amount                 r1  A:HIT  B:HIT  calls=2   935 ms place=one_part(0.11/0.89/0.00) '129,90'(151)0.79 > keep(11)0.97 -> '129,90'
+O08_tracking               r1  A:HIT  B:HIT  calls=2   917 ms place=one_part(0.11/0.89/0.00) '003404341612345678'(151)0.93 > keep(200)0.91 -> '00340434161234567890'
+O09_coupon_NEG             r1  A:HIT  B:HIT  calls=1   483 ms place=nothing(0.09/0.06/0.85) nothing_fits(151)0.69 -> 'nothing'
+B01_handle                 r1  A:HIT  B:HIT  calls=2  1170 ms place=one_part(0.08/0.92/0.00) '@mira_h'(30/2)0.87 > keep(12)0.82 -> '@mira_h'
+B02_city                   r1  A:HIT  B:HIT  calls=2  1251 ms place=one_part(0.10/0.89/0.01) 'Innsbruck'(42/2)0.90 > keep(46)0.99 -> 'Innsbruck'
+B03_bio                    r1  A:HIT  B:HIT  calls=1   605 ms place=everything(0.68/0.32/0.00) keep(255/2)0.53 -> "Hi, I'm Lena Vogt, a ceramicist working out of a s"
+B04_birth_year             r1  A:HIT  B:HIT  calls=2  1076 ms place=one_part(0.09/0.91/0.00) '1994'(45/2)0.91 > keep(11)1.00 -> '1994'
+B05_phone_NEG              r1  A:HIT  B:HIT  calls=1   640 ms place=nothing(0.06/0.04/0.90) nothing_fits(255/2)0.62 -> 'nothing'
+B06_biography              r1  A:MISS B:MISS calls=1   565 ms place=one_part(0.47/0.52/0.01) nothing_fits(255/2)0.22 -> 'nothing'
+B07_about_me               r1  A:HIT  B:HIT  calls=1   560 ms place=everything(0.87/0.13/0.00) keep(255/2)0.60 -> "Hi, I'm Lena Vogt, a ceramicist working out of a s"
+B08_short_bio              r1  A:HIT  B:HIT  calls=2  1291 ms place=one_part(0.35/0.65/0.00) keep(73/2)0.18 -> "Hi, I'm Lena Vogt, a ceramicist working out of a s"
+T01_email_two_lines        r1  A:HIT  B:HIT  calls=1   498 ms place=one_part(0.36/0.64/0.00) ask_user(84)0.66 -> 'ask'
+C01_cover_letter           r1  A:HIT  B:HIT  calls=1   591 ms place=everything(0.85/0.15/0.00) keep(255/3)0.64 -> 'Dear Ms Hofer,\n\nI am writing to apply for the Juni'
+C02_motivation             r1  A:HIT  B:HIT  calls=3  1664 ms place=one_part(0.21/0.79/0.00) 'What draws me to G'(72/3)0.54 > keep(255/2)0.65 -> 'What draws me to Grünraum is your work on climate-'
+C03_availability           r1  A:MISS B:MISS calls=2  1240 ms place=one_part(0.20/0.79/0.01) 'I can start on 1 D'(63/3)0.38 > keep(154)0.69 -> 'I can start on 1 December 2026 and am available fo'
+C04_name                   r1  A:HIT  B:HIT  calls=2  1308 ms place=one_part(0.20/0.78/0.02) 'Theo Brandner'(78/3)0.45 > keep(15)0.97 -> 'Theo Brandner'
+C05_notes_freetext         r1  A:HIT  B:HIT  calls=1   796 ms place=everything(0.74/0.20/0.06) keep(255/3)0.53 -> 'Dear Ms Hofer,\n\nI am writing to apply for the Juni'
+W01_chrome_textarea        r1  A:HIT  B:HIT  calls=1   731 ms place=everything(0.88/0.07/0.05) keep(255/2)0.66 -> 'Marlene Oberholzer\nmarlene.oberholzer@example.org\n'
+W02_terminal_prompt        r1  A:HIT  B:HIT  calls=1   643 ms place=everything(0.92/0.02/0.06) keep(255/2)0.76 -> 'Marlene Oberholzer\nmarlene.oberholzer@example.org\n'
+W03_chatgpt_composer       r1  A:HIT  B:HIT  calls=1   785 ms place=everything(0.56/0.44/0.00) keep(255/2)0.45 -> 'Marlene Oberholzer\nmarlene.oberholzer@example.org\n'
+W04_whatsapp_composer      r1  A:HIT  B:HIT  calls=1   544 ms place=everything(0.70/0.29/0.01) keep(255/2)0.43 -> 'Marlene Oberholzer\nmarlene.oberholzer@example.org\n'
+K01_three_emails           r1  A:HIT  B:HIT  calls=1   783 ms place=one_part(0.20/0.79/0.01) ask_user(255/3)0.90 -> 'ask'
+N01_address_line_ort       r1  A:HIT  B:HIT  calls=2   944 ms place=one_part(0.09/0.91/0.00) 'Graz'(43)0.98 > keep(12)1.00 -> 'Graz'
+N02_url_chat               r1  A:HIT  B:MISS calls=1   592 ms place=nothing(0.33/0.05/0.62) keep(235)0.47 -> 'https://www.miraholzner.example/portfolio/kiln-ser'
+N03_list_300_lines         r1  A:MISS B:MISS calls=1   843 ms place=None(0.00/0.00/0.00)  -> 'error'
+  error, retrying the cell once after 60 s: {'status': 400, 'body': '{\'error\': {\'message\': \'{"error_type":"max_tokens_exceeded"}\', \'type\': \'AI_APICallError\', \'param\': {\'error\': \'{"error_type":"max_tokens_exceeded"}\', \'statusCod
+N03_list_300_lines         r1  A:MISS B:MISS calls=1  1046 ms place=None(0.00/0.00/0.00)  -> 'error'
+N04_too_big                r1  A:HIT  B:HIT  calls=1  1700 ms place=None(0.00/0.00/0.00)  -> 'error'
+H01_flat_full_name         r1  A:HIT  B:HIT  calls=2  1261 ms place=one_part(0.14/0.85/0.01) 'Katrin Lechner'(17/3)0.90 > keep(16)0.98 -> 'Katrin Lechner'
+H02_flat_move_in           r1  A:HIT  B:HIT  calls=2  1356 ms place=one_part(0.12/0.88/0.00) '1 March 2027'(67/3)0.65 > keep(11)0.95 -> '1 March 2027'
+H03_event_city             r1  A:HIT  B:HIT  calls=2  1089 ms place=one_part(0.14/0.86/0.00) 'Villach'(27/2)0.97 > keep(29)0.99 -> 'Villach'
+H04_issue_comment          r1  A:HIT  B:HIT  calls=1   684 ms place=everything(0.83/0.17/0.00) keep(255/2)0.42 -> 'Brunner Holzbau GmbH\noffice@brunner-holzbau.exampl'
+H05_messages_composer      r1  A:HIT  B:HIT  calls=1   891 ms place=everything(0.78/0.22/0.00) keep(255/2)0.22 -> 'Brunner Holzbau GmbH\noffice@brunner-holzbau.exampl'
+H06_company_description    r1  A:HIT  B:HIT  calls=3  2237 ms place=one_part(0.14/0.86/0.00) 'Family carpentry w'(16/2)0.90 > keep(255/4)0.56 -> 'Family carpentry workshop in its third generation,'
+H07_url_slack              r1  A:HIT  B:HIT  calls=1   514 ms place=everything(0.66/0.33/0.01) keep(255/2)0.37 -> 'https://docs.northbeam.example/runbooks/deploy-rol'
+H08_url_teams              r1  A:HIT  B:HIT  calls=1   548 ms place=everything(0.73/0.27/0.00) keep(255/2)0.59 -> 'https://www.kofler-keramik.example/shop/teller-set'
+H09_three_emails_webinar   r1  A:HIT  B:HIT  calls=1   476 ms place=one_part(0.17/0.83/0.00) ask_user(164)0.88 -> 'ask'
+H10_three_emails_folio     r1  A:HIT  B:HIT  calls=1   529 ms place=one_part(0.20/0.80/0.00) ask_user(182)0.85 -> 'ask'
+H11_two_emails_catering    r1  A:HIT  B:HIT  calls=1   736 ms place=one_part(0.15/0.85/0.00) ask_user(127)0.81 -> 'ask'
+H12_address_line_1         r1  A:HIT  B:HIT  calls=2  1030 ms place=one_part(0.23/0.77/0.00) 'Kirchgasse 9'(40)0.51 > keep(14)0.96 -> 'Kirchgasse 9'
+H13_strasse_hausnummer     r1  A:HIT  B:HIT  calls=2  1191 ms place=one_part(0.21/0.79/0.00) 'Leopoldstraße 41'(42)0.48 > keep(18)0.99 -> 'Leopoldstraße 41'
+H14_empfaenger             r1  A:HIT  B:HIT  calls=2  1020 ms place=one_part(0.23/0.77/0.00) 'Brunner Holzbau Gm'(132)0.47 > keep(17)0.99 -> 'Brunner Holzbau GmbH'
+H15_mobile                 r1  A:HIT  B:HIT  calls=2   945 ms place=one_part(0.12/0.88/0.00) '+43 664 918 2735'(114)0.67 > keep(20)0.92 -> '+43 664 918 2735'
+H16_postcode               r1  A:HIT  B:HIT  calls=2   986 ms place=one_part(0.14/0.86/0.00) '6020'(40)0.98 > keep(11)1.00 -> '6020'
+H17_birthday_NEG           r1  A:HIT  B:HIT  calls=1   549 ms place=nothing(0.04/0.01/0.95) nothing_fits(114)0.91 -> 'nothing'
+H18_phone_NEG              r1  A:HIT  B:HIT  calls=1   425 ms place=nothing(0.04/0.01/0.95) nothing_fits(40)0.94 -> 'nothing'
+billed round 2: 518 (explore 140)
+MATRIX DONE

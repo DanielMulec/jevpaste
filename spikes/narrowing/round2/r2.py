@@ -535,7 +535,10 @@ def narrow(cell, run, design, tag):
                 return r
             req = build(design["form"])
             if design["form"] == "ids" and not req.fits():
-                req = build("full")  # the excerpts would overfill the state: options carry their text instead
+                # the excerpts would overfill the state: options carry their text instead, and the choices are
+                # re-split by the full-text size budget (bug fix approved by the supervisor during matrix2)
+                chunks, how = step_chunks(cell, dict(design, form="full"), piece)
+                req = build("full")
             status, payload, rec_call = send(req, {"phase": tag, "cell": cell["id"], "run": run, "step": step_no,
                                                    "sub": "step", "design": design["name"]})
             requests.append({"sub": "step", "form": req.form, "status": status, "latency_ms": rec_call["latency_ms"],

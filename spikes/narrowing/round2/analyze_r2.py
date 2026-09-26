@@ -14,6 +14,7 @@ import r2  # noqa: E402
 
 REPORT = os.path.join(HERE, "results", "report.md")
 PHASE = "matrix2"
+PHASES = ("matrix2", "matrix2-n03fix")  # the N03 re-run after the approved fallback fix supersedes its 400 rows
 
 R1_WHOLE = ["W01_chrome_textarea", "W02_terminal_prompt", "W03_chatgpt_composer", "W04_whatsapp_composer",
             "C05_notes_freetext"]
@@ -62,11 +63,11 @@ def shown(r, policy="A"):
 
 def load():
     rows = r2.rows()
-    pastes = [r for r in rows if r.get("kind") == "paste" and r.get("phase") == PHASE and r["run"] in (0, 1)]
+    pastes = [r for r in rows if r.get("kind") == "paste" and r.get("phase") in PHASES and r["run"] in (0, 1)]
     latest = {}
     for r in pastes:
         latest[(r["cell"], r["run"])] = r  # a retried error row is superseded by the retry
-    calls = [r for r in rows if r.get("kind") == "call" and r.get("phase") == PHASE]
+    calls = [r for r in rows if r.get("kind") == "call" and r.get("phase") in PHASES]
     return rows, [latest[k] for k in sorted(latest, key=lambda k: (ORDER.index(k[0]), k[1]))], calls
 
 
@@ -154,7 +155,7 @@ def report():
     w = out.append
     r1_cells = [c for c in r2.cells.CELLS]
     h_cells = list(r2.heldout.HELDOUT)
-    w("# Round-2 matrix report (design `r2`, frozen at GATE A)\n")
+    w("# Round-2 matrix report (design `r2b`, frozen at GATE A2; N03 after the approved fallback fix)\n")
     w("Pastes: %d (round-1 cells %d, held-out %d). Both runs of every cell.\n" % (
         len(pastes), sum(1 for r in pastes if r["group"] != "heldout"),
         sum(1 for r in pastes if r["group"] == "heldout")))
