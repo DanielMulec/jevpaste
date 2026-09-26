@@ -37,10 +37,11 @@ Byte-exact checks, the follow-up rule and every outcome stay in Core; the adapte
 timeout here: the Paste Attempt drops late replies itself.
 
 ## Error taxonomy (diagnostics only)
-`JevGatewayFailure`: `missingKey(file:)`, `transport`, `httpStatus(Int)`, `malformedResponse`, `unknownChoice`. Each
+`JevGatewayFailure`: `missingKey`, `transport`, `httpStatus(Int)`, `malformedResponse`, `unknownChoice`. Each
 `.failed` logs one line through `os.Logger` (subsystem `jevpaste`, category `JevGateway`); every reply logs the
 status, the question and option counts, the request bytes and the latency. Never logged: the key, source document,
-Target Context, excerpts, request or response body. `missingKey` names the file path, never a value.
+Target Context, excerpts, request or response body, and no filesystem path: `missingKey` carries nothing (review
+finding, 2026-09-26).
 
 ## Seams
 - `JevGatewayDecisionService(credentials:transport:)`, `Sendable` struct. `evaluate` starts one
