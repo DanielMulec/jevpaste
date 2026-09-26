@@ -55,10 +55,10 @@ final class ProtoState {
 
     var items: [ClipItem] = SyntheticHistory.items
     var activeID: Int? = SyntheticHistory.items.first?.id
-    var menuVariant = "A" { didSet { changed() } }
-    var rowStyle = 1 { didSet { changed() } }
+    var menuVariant = "B" { didSet { changed() } }
+    var rowStyle = 2 { didSet { changed() } }
     var settingsVariant = 1 { didSet { changed() } }
-    var fullTake = 1 { didSet { changed() } }
+    var fullTake = 2 { didSet { changed() } }
     var provider: JevProvider = .gateway { didSet { changed() } }
     var keys: [JevProvider: String] = [.gateway: "vck_proto_4f2a9c1e7b0d", .typesafe: ""]
     var testResults: [JevProvider: TestResult] = [:]

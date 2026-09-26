@@ -160,7 +160,8 @@ final class MenuBPanel: NSObject, NSSearchFieldDelegate {
             }
             let full: PanelRow
             if state.fullTake == 2 {
-                full = PanelRow(title: { plain("Full history…", $0) }, trailing: { dim("\(all)", $0) })
+                full = PanelRow(title: { plain("Full history…", $0) }, trailing: { dim("(\(all))", $0) },
+                                trailingInset: PanelRow.titleInset)  // symmetric with the title's left inset
             } else {
                 full = PanelRow(title: {
                     let text = NSMutableAttributedString(attributedString: plain("Full history…", $0))

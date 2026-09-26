@@ -120,3 +120,83 @@ Launch (the supervisor): `cd ~/.pi/worktrees/jevpaste/prototype-menu-settings &&
 6. Type `ex`, press Esc (clears the text), Esc again (closes). Reopen and click somewhere else on the screen: it closes. *Why: is two-step Esc right, or should one Esc close?*
 7. Same as A step 8 with the full-screen app. Does the menu bar hide while the panel stays open, and does ✦ still close it? *Why: the panel is not a real menu, so macOS may hide the bar under it.*
 8. Compare the look of A and B side by side (colour, corners, row height, highlight). *Why: B is drawn by us and can only imitate a menu.*
+
+## Settled (Daniel, 2026-09-26, rounds 1–3)
+
+Sheets: `docs/prototype/menu-settings/round3-menu.png` (menu), `round2-settings.png` (Settings); round-1 sheets
+keep the rejected variants. Prototype defaults are now the settled look: `make prototype` opens Menu B · Rows 2
+· "Full history…" take 2 · Settings 1.
+
+### Menu mechanism: Menu B — a menu-shaped panel, not a real `NSMenu`
+Why (observed, fact table above): inside a real `NSMenu` the field is never in a key window (no caret, no focus
+ring), menu tracking takes ↑/↓, and after one arrow key every later letter and ⌫ goes to NSMenu's type-select
+instead of the field until the menu reopens. The panel owns all keys and shows focus.
+
+### Row look: Rows 2
+- Under the field, a separator, then a dim header "N of M matches" (11 pt semibold, secondary colour).
+- Up to 5 rows, 38 pt each: first line of the Clipboard Item (menu font, truncated tail) over a dim second line
+  "N lines · age" or "N chars · age" (11 pt). The Active Item is marked by an accent dot in the leading slot
+  (14 pt wide); other rows leave the slot empty so titles align.
+- No match → a dim "No matching Clipboard Items" line.
+- Separator, then **one block: "Full history…" · "Settings…" · "Quit"**, all the same menu item style.
+  "Full history…" carries the Clipboard History count right-aligned in parentheses, "(40)", secondary colour; its
+  right inset equals the titles' left inset (symmetric; 25 pt inside the row).
+- Empty field → field, separator, Settings… and Quit (three items); the block shrinks back. The panel keeps its top
+  edge under the status item and grows/shrinks downward.
+- Placeholder = the Active Item's first line; no Active Item → "Search Clipboard History".
+
+### Settings: Settings 1 — standard toolbar tabs (`NSTabViewController`, `.toolbar`)
+- **General**: Open at Login (switch). Nothing else.
+- **Jev Provider**: radio picker "Vercel AI Gateway (default)" / "Typesafe direct" with one line explaining no
+  silent switch; then one key row per provider: secure field · eye button (Show; swaps to a plain field holding the
+  same text) · "Test".
+- **Test result: inline to the right of the Test button**, wrapping to two lines: "✓ Works — Jev answered through
+  <provider>." green, or "✕ <error>" red; "Testing…" while running. Editing the key clears the result.
+- **Full History**: inset table, two lines per item (first line / "N lines · age"), "Active" capsule on the Active
+  Item, ✕ delete per row, footer "N Clipboard Items" + "Clear History…" → sheet alert with a destructive "Clear
+  History" and Cancel.
+- Window height follows the selected tab (top edge fixed); title = tab name.
+- **Refusal entry point**: `open(to: .key(provider))` selects Jev Provider, focuses that provider's key field and,
+  if empty, shows "⚠︎ No key for <provider> — paste it here." in the result slot (round-1 sheet-settings cell 2).
+
+### AppKit facts the build must know
+Menu A (`NSMenuItem.view` with an `NSSearchField` inside a real `NSMenu`), observed on macOS 26.6.2, rejected:
+- The field can be made first responder of the menu's `NSPopupMenuWindow` (in `viewDidMoveToWindow`, or a timer
+  in `.common` mode after `menuWillOpen`); typed characters then reach it. The window is never key → no caret, no
+  focus ring. `RunLoop.perform(inModes: [.eventTracking])` from `menuWillOpen` did not run while tracking began.
+- ↑/↓ are consumed by menu tracking (the field never sees `moveUp:`/`moveDown:`); after the first arrow, letters
+  and ⌫ go to type-select. Enter with no highlight reaches the field as `insertNewline:`; with a highlight NSMenu
+  fires that item's action. Esc is consumed by NSMenu and closes at once (`cancelOperation:` never reaches the
+  field). Inserting/removing items during tracking resizes the menu live.
+- Posted mouse events do not choose NSMenu items (it hit-tests the real pointer).
+
+Menu B (built on the existing `StatusItemPanel` pattern):
+- Panel: `NSPanel` `[.borderless, .nonactivatingPanel]`, `canBecomeKey = true`, `canBecomeMain = false`,
+  `level = .popUpMenu`, `hidesOnDeactivate = false`, `collectionBehavior = [.canJoinAllSpaces,
+  .fullScreenAuxiliary, .ignoresCycle]`, clear background + shadow. **Key focus without activating the app:**
+  `makeKeyAndOrderFront(nil)` + `makeFirstResponder(field)` — no `NSApp.activate()`; the frontmost app stays
+  frontmost (the Target keeps its app).
+- Look: `NSVisualEffectView` `.menu` material, corner radius 10, plus a 45 % black (dark) / 30 % white (light)
+  tint — the panel's `.menu` material renders lighter than a real menu without it. Rows use
+  `selectedContentBackgroundColor` highlight, radius 5, `selectedMenuItemTextColor` text.
+- **Keep the search field mounted**: rebuilding the view tree around it (remove/re-add) drops its field editor
+  after the first character. Rebuild only the rows below it.
+- Keys through the field's delegate `control(_:textView:doCommandBy:)`: `moveDown:`/`moveUp:` move our highlight
+  (↑ from the first row returns to "no highlight"); `insertNewline:` chooses the highlighted row, else the first
+  result row; `cancelOperation:` = Esc (below). Return `true` for handled commands so the field editor does not
+  also act. Typing after arrows keeps editing the field. Put the caret at the end after setting text
+  (`currentEditor()?.selectedRange`), otherwise it is all selected.
+- Mouse: rows take the first click (`acceptsFirstMouse` true, `hitTest` returns the row), highlight on
+  `mouseEntered` (tracking area `.activeAlways`), act on `mouseUp`.
+- Choosing a row: set the Active Item, close. "Full history…" / "Settings…": close, then open Settings on the next
+  run-loop turn (Settings needs `NSApp.activate()` — it is a normal window).
+- Resize: after rebuilding rows, `layoutSubtreeIfNeeded`, frame = content `fittingSize`, origin under the status
+  item (left edge ≈ status item's left, kept 8 pt inside the screen), top edge fixed.
+- Close rules: row chosen · Esc · click outside (`resignKey` → close) · status-item click toggles (the button
+  sends on `.leftMouseDown`, the item has no `menu`).
+- **Open: 1-Esc vs 2-Esc.** Prototype: 1st Esc clears typed text, 2nd closes; empty field → 1st closes. Daniel did
+  not decide. Recommendation: **one Esc closes**, always — it matches every macOS menu and Menu A's behaviour, and
+  the text is cleared on reopen anyway.
+- **Build-time verification (not done in the prototype): the auto-hiding menu bar.** The panel is not menu
+  tracking, so macOS may hide the bar (and the status item) while the panel stays open; check by hand with the bar
+  set to auto-hide, and decide whether the panel closes with the bar or stays.

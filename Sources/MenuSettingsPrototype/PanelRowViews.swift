@@ -37,20 +37,23 @@ final class PanelRow: NSView {
     }
 
     init(title: @escaping (Bool) -> NSAttributedString,
-         trailing: @escaping (Bool) -> NSAttributedString? = { _ in nil }) {
+         trailing: @escaping (Bool) -> NSAttributedString? = { _ in nil }, trailingInset: Double = 9) {
         clipID = nil
         makeTitle = title
         makeLeading = { _ in nil }
         makeTag = { _ in nil }
         makeTrailing = trailing
         super.init(frame: .zero)
-        build(height: 22)
+        build(height: 22, trailingInset: trailingInset)
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { nil }
 
-    private func build(height: Double) {
+    /// Title's leading inset inside the row: 6 + 14 (leading slot) + 5.
+    static let titleInset = 25.0
+
+    private func build(height: Double, trailingInset: Double = 9) {
         wantsLayer = true
         layer?.cornerRadius = 5
         titleField.maximumNumberOfLines = 2
@@ -68,7 +71,7 @@ final class PanelRow: NSView {
             leading.centerYAnchor.constraint(equalTo: centerYAnchor),
             titleField.leadingAnchor.constraint(equalTo: leading.trailingAnchor, constant: 5),
             titleField.centerYAnchor.constraint(equalTo: centerYAnchor),
-            trailing.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -9),
+            trailing.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -trailingInset),
             trailing.centerYAnchor.constraint(equalTo: centerYAnchor),
             tagView.trailingAnchor.constraint(equalTo: trailing.leadingAnchor, constant: -6),
             tagView.centerYAnchor.constraint(equalTo: centerYAnchor),

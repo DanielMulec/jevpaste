@@ -22,3 +22,6 @@ python3 $C $O/round2-menu.png "Round 2 — Menu B · Rows 2: “Full history…�
 python3 $C $O/round2-settings.png "Round 2 — Settings 1 (toolbar tabs)" \
  $D/r2-settings-1.png "General — Open at Login" $D/r2-settings-2.png "Jev Provider — after Test ✓" \
  $D/r2-settings-3.png "Full History"
+# Round 3 (Daniel: take 2, count "(40)" right-aligned, right inset = title's left inset; now the default).
+python3 $C $O/round3-menu.png "Round 3 — Menu B · Rows 2 · “Full history… (40)” with symmetric inset" \
+ $D/r3-menu-1.png "Typed “ex”" $D/r3-menu-2.png "Empty field"
