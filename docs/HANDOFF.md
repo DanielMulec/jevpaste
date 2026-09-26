@@ -33,7 +33,8 @@ Workers: fresh `anthropic/claude-opus-5-5:high` Pi instances in Herdr tabs. Get 
   pastes, before any held-out cell ran.
 - **Daniel answered (2026-09-26, in the TUI):** (1) **no place choice** ("I trust you"); (2) **"Availability" = hit**
   ("not 100 % happy"); (3) **build now as a beta / WIP**, known misses accepted, but **Narrowing must be improved
-  later** ("not really happy forward momentum, but better than stuck in perfectionism"). He asked whether to plan the
+  later** ("not really happy forward momentum, but better than stuck in perfectionism"). **Order (Daniel): that
+  improvement round comes after the current timeline: after the Narrowing build and after the UI/UX adjustments.** He asked whether to plan the
   improvement with Fable (`claude-fable-5-1`) and how much refactoring it needs; answer given: it's a new spike round
   with real misses and fresh held-out cells, and if the build keeps every wording and tunable in one policy value, the
   code change is small. Any model outside the map Notes (Fable) is his call: ask, and add it to the Notes if he
@@ -69,8 +70,10 @@ Workers: fresh `anthropic/claude-opus-5-5:high` Pi instances in Herdr tabs. Get 
    review → merge (`make check` before push) → `make install` → resolution comment, close, map gist (call it the
    Narrowing **beta**).
 6. Then the frontier: [Decide how JevPaste switches Jev providers from the Vercel AI Gateway to Typesafe direct](https://github.com/DanielMulec/jevpaste/issues/45)
-   (the paid tier removed the 429 motive; re-ask Daniel whether the switch still matters) and the map fog
-   "Narrowing accuracy after the beta" once real misses exist.
+   (the paid tier removed the 429 motive; re-ask Daniel whether the switch still matters), then the UI/UX adjustments
+   ([Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37)).
+   The map fog "Narrowing accuracy after the beta" (round 3) comes **only after** those, post-timeline; don't
+   start it earlier.
 
 ## Orchestrator latitude (Daniel, 2026-09-26; also in the map Notes)
 Daniel: "I gave you the blessing to do tasks relevant for proper orchestration just yourself without asking me."
