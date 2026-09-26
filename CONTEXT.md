@@ -74,3 +74,13 @@ The brief interval after insertion during which the clipboard temporarily holds 
 
 **Signing Identity**:
 The self-signed code-signing certificate `jevpaste-dev` (dedicated keychain) that every installed build is signed with. macOS Accessibility trust keys on it, not on the build's hash, so rebuilds keep the grant; ad-hoc builds are never installed and changing the identity is a migration event.
+
+**Jev Provider**:
+The service through which JevPaste reaches Jev: the Vercel AI Gateway or Typesafe direct. The user picks one in Settings, with one API key per provider; every request of a Paste Attempt goes through the provider chosen when it started, and a provider without a key is a visible refusal, never a silent switch to the other.
+_Avoid_: Route, Backend, "provider" for the Gateway's upstreams (say "upstream")
+
+**History Search**:
+The search field at the top of the status-item menu. Typing filters Clipboard History and lists up to five matching Clipboard Items as rows; choosing a row makes it the Active Item, nothing is pasted. Its empty placeholder shows the Active Item's first line.
+
+**Full History**:
+The complete Clipboard History as a tab of the Settings window: the list, per-item deletion and the guarded Clear History. Reached from "Full history…" under the History Search rows. Replaces the former Clipboard History panel.
