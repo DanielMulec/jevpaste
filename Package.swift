@@ -24,6 +24,8 @@ let package = Package(
             name: "JevPasteApp",
             dependencies: ["SmartPasteCore", "JevGateway", "HistoryStore", "MacInterop"]
         ),
+        // PROTOTYPE — menu-settings, never merged (issue #37): `make prototype`.
+        .executableTarget(name: "MenuSettingsPrototype", swiftSettings: [.swiftLanguageMode(.v5)]),
         // Fixtures: synthetic spike data for the Narrowing tests (`scripts/extract-narrowing-fixtures.py`).
         .testTarget(
             name: "SmartPasteCoreTests", dependencies: ["SmartPasteCore", testingDependency],

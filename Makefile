@@ -79,3 +79,7 @@ install: app
 	@# Re-register the installed copy so it carries the fresh icon.
 	"$(LSREGISTER)" -f "$(INSTALLED_APP)"
 	@echo "installed: $(INSTALLED_APP)"
+
+# PROTOTYPE — menu-settings, never merged (issue #37).
+prototype:
+	swift run MenuSettingsPrototype
