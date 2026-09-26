@@ -1,4 +1,5 @@
 import SmartPasteCore
+import os
 
 /// The rules of the `TargetResolver` over any `FocusSource`: which focus is an editable Target, whether it is
 /// secure, its Target Context, and the element token that lets the Bound Target be re-verified.
@@ -22,10 +23,12 @@ final class FocusedTargetResolver<Source: FocusSource> {
         lastMintedToken += 1
         boundElement = (lastMintedToken, focused.node)
         let isSecureField = focused.node.isSecureTextField || source.isSecureEventInputEnabled
+        let context = isSecureField ? TargetContext() : contextReader.context(of: focused)
+        LiveProofLog.markers(in: context.surroundingText)
         return .resolved(
             BoundTarget(
                 identity: TargetIdentity(processIdentifier: focused.processIdentifier, elementToken: lastMintedToken),
-                context: isSecureField ? TargetContext() : contextReader.context(of: focused),
+                context: context,
                 isSecureField: isSecureField
             )
         )
@@ -49,5 +52,17 @@ final class FocusedTargetResolver<Source: FocusSource> {
             source.wakeAccessibility(in: application.processIdentifier)
         }
         return .focusUnreadable(applicationName: application.name)
+    }
+}
+
+/// THROWAWAY (cursor-context-probe, never merged): live proof of 51. Logs the surrounding text's length and which
+/// synthetic JEVPASTE-…-51 markers it contains — booleans only, never text.
+enum LiveProofLog {
+    private static let log = Logger(subsystem: "jevpaste", category: "LiveProof51")
+    private static let markers = ["OLD", "NEAR", "BEFORE", "AFTER", "FARSTART", "FAREND", "PAGE", "LABEL"]
+
+    static func markers(in text: String) {
+        let found = markers.map { "\($0)=\(text.contains("JEVPASTE-\($0)-51"))" }.joined(separator: " ")
+        log.notice("live51 surroundingChars=\(text.count, privacy: .public) \(found, privacy: .public)")
     }
 }
