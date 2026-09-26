@@ -91,7 +91,7 @@ final class CursorProbe: NSObject, NSApplicationDelegate {
             while ContinuousClock.now - started < .seconds(3) {
                 try? await Task.sleep(for: .milliseconds(50))
                 if let element = self.focusedElement() {
-                    let waited = (ContinuousClock.now - started).components.attoseconds / 1_000_000_000_000_000
+                    let waited = Int((ContinuousClock.now - started) / .milliseconds(1))
                     self.log.write("run=\(run) readable after ms=\(waited)")
                     self.measure(element, front: app.bundleIdentifier ?? "none", placeCaretInMiddle: placeCaretInMiddle)
                     return
@@ -108,7 +108,7 @@ final class CursorProbe: NSObject, NSApplicationDelegate {
         if placeCaretInMiddle { placeCaret(in: element, at: utf16Length / 2) }
         let started = ContinuousClock.now
         let (rangeStatus, range) = selectedRange(element)
-        let rangeMicros = (ContinuousClock.now - started).components.attoseconds / 1_000_000_000_000
+        let rangeMicros = Int((ContinuousClock.now - started) / .microseconds(1))
         let numberOfCharacters = number(element, kAXNumberOfCharactersAttribute)
         let insertionLine = number(element, kAXInsertionPointLineNumberAttribute)
         let (visibleStatus, visible) = rangeValue(element, kAXVisibleCharacterRangeAttribute)
