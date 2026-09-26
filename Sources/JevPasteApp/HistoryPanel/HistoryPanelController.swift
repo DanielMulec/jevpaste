@@ -111,7 +111,7 @@ final class HistoryPanelController {
     }
 
     private func askToClearAll() {
-        let count = history.items().count
+        let count = history.entries().map(\.item).count
         guard count > 0 else { return }
         openPanel?.isAskingToClearAll = true
         surface.askToConfirmClearAll(itemCount: count)
@@ -169,7 +169,7 @@ final class HistoryPanelController {
 
     private func refreshedContent(highlighting row: Int) -> HistoryPanelContent {
         let query = openPanel?.query ?? ""
-        let matches = HistoryPanelContent.items(in: history.items(), matching: query)
+        let matches = HistoryPanelContent.items(in: history.entries().map(\.item), matching: query)
         openPanel?.matches = matches
         openPanel?.highlighted = matches.isEmpty ? nil : min(row, matches.count - 1)
         return HistoryPanelContent(matches: matches, activeItem: capture.activeItem, query: query)

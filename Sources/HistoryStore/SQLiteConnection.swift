@@ -4,6 +4,7 @@ import SQLite3
 /// A value bound to a `?NNN` parameter of a statement.
 enum SQLiteValue {
     case integer(Int)
+    case real(Double)
     case text(String)
     case blob(Data)
 }
@@ -42,21 +43,25 @@ final class SQLiteConnection {
         return Int(sqlite3_changes(handle))
     }
 
-    /// Runs one query and returns the text of its first column for every row; rows that are not valid UTF-8 (only
-    /// possible if the file was edited outside this module) are skipped.
-    func texts(_ sql: String, _ values: SQLiteValue..., operation: String) throws(HistoryStoreFailure) -> [String] {
+    /// Runs one query and returns, for every row, the text of its first column and the number in its second
+    /// (`nil` when NULL); rows whose text is not valid UTF-8 (only possible if the file was edited outside this
+    /// module) are skipped.
+    func textsAndNumbers(
+        _ sql: String, _ values: SQLiteValue..., operation: String
+    ) throws(HistoryStoreFailure) -> [(text: String, number: Double?)] {
         let statement = try prepare(sql, values, operation: operation)
         defer { sqlite3_finalize(statement) }
-        var texts: [String] = []
+        var rows: [(text: String, number: Double?)] = []
         var resultCode = sqlite3_step(statement)
         while resultCode == SQLITE_ROW {
             if let text = Self.text(inFirstColumnOf: statement) {
-                texts.append(text)
+                let isNull = sqlite3_column_type(statement, 1) == SQLITE_NULL
+                rows.append((text, isNull ? nil : sqlite3_column_double(statement, 1)))
             }
             resultCode = sqlite3_step(statement)
         }
         guard resultCode == SQLITE_DONE else { throw .sqlite(operation: operation, resultCode: resultCode) }
-        return texts
+        return rows
     }
 
     /// Runs one query that yields a single integer, such as `PRAGMA user_version`.
@@ -114,6 +119,8 @@ final class SQLiteConnection {
         switch value {
         case .integer(let integer):
             return sqlite3_bind_int64(statement, index, Int64(integer))
+        case .real(let real):
+            return sqlite3_bind_double(statement, index, real)
         case .text(let text):
             let bytes = Array(text.utf8)
             return sqlite3_bind_text64(

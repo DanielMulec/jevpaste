@@ -1,3 +1,4 @@
+import Foundation
 import SmartPasteCore
 import Testing
 
@@ -84,5 +85,22 @@ struct LaunchAdoptionTests {
 
         #expect(capture.activeItem == ClipboardItem(text: "Wren Castellan"))
         #expect(history.recordedItems == [ClipboardItem(text: "Wren Castellan")])
+    }
+
+    /// The copy time behind "12 min ago" comes from the clock Copy Capture is given: the launch contents at launch,
+    /// each live copy when it is observed.
+    @Test func theLaunchContentsAndEachLiveCopyAreRecordedWithTheClocksTime() {
+        let launch = Date(timeIntervalSince1970: 1_790_000_000)
+        var now = launch
+        let capture = CopyCapture(
+            clipboard: clipboard, history: history, contentsAtLaunch: { ClipboardItem(text: "Tamsin Vorlage") },
+            now: { now }
+        )
+        now = launch.addingTimeInterval(90)
+
+        clipboard.simulateForeignCopy("Wren Castellan")
+
+        #expect(history.entries().map(\.copiedAt) == [launch.addingTimeInterval(90), launch])
+        #expect(capture.activeItem == ClipboardItem(text: "Wren Castellan"))
     }
 }

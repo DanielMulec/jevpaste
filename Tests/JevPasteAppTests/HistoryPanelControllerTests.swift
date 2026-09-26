@@ -86,7 +86,7 @@ final class HistoryPanelControllerTests {
         surface.send(.moveDown, .moveDown, .chooseHighlighted)
 
         #expect(capture.activeItem == Self.one)
-        #expect(history.items() == [Self.three, Self.two, Self.one])
+        #expect(history.entries().map(\.item) == [Self.three, Self.two, Self.one])
         #expect(surface.shown == nil)
         #expect(activator.activated == [Self.chrome])
         #expect(indicator.displayed == IndicatorContent(symbolName: "pin.fill", text: "Active: JEVPASTE-HIST-ONE"))
@@ -132,7 +132,7 @@ final class HistoryPanelControllerTests {
         surface.send(.deleteHighlighted)
         #expect(surface.rowTitles == ["JEVPASTE-HIST-THREE"])
         #expect(surface.highlighted == 0)
-        #expect(history.items() == [Self.three])
+        #expect(history.entries().map(\.item) == [Self.three])
     }
 
     @Test func deletingTheActiveItemsRowKeepsItPinnedAndActive() {
@@ -152,11 +152,11 @@ final class HistoryPanelControllerTests {
 
         surface.send(.clearAllRequested)
         #expect(surface.clearAllQuestion == 3)
-        #expect(history.items().count == 3)
+        #expect(history.entries().map(\.item).count == 3)
 
         surface.send(.clearAllCancelled)
         #expect(surface.clearAllQuestion == nil)
-        #expect(history.items().count == 3)
+        #expect(history.entries().map(\.item).count == 3)
     }
 
     @Test func confirmedClearAllEmptiesHistoryButKeepsTheActiveItem() {
@@ -164,7 +164,7 @@ final class HistoryPanelControllerTests {
 
         surface.send(.clearAllRequested, .clearAllConfirmed)
 
-        #expect(history.items().isEmpty)
+        #expect(history.entries().map(\.item).isEmpty)
         #expect(surface.rowTitles == [])
         #expect(surface.shown?.emptyMessage == "No History Yet")
         #expect(surface.clearAllQuestion == nil)
@@ -176,7 +176,7 @@ final class HistoryPanelControllerTests {
 
         surface.send(.clearAllConfirmed)
 
-        #expect(history.items().count == 3)
+        #expect(history.entries().map(\.item).count == 3)
     }
 
     @Test func escapeWhileAskingOnlyEndsTheQuestion() {
@@ -186,7 +186,7 @@ final class HistoryPanelControllerTests {
 
         #expect(surface.clearAllQuestion == nil)
         #expect(surface.shown != nil)
-        #expect(history.items().count == 3)
+        #expect(history.entries().map(\.item).count == 3)
     }
 
     @Test func enterWhileAskingToClearAllIsIgnored() {
@@ -197,7 +197,7 @@ final class HistoryPanelControllerTests {
         #expect(surface.shown != nil)
         #expect(surface.clearAllQuestion == 3)
         #expect(capture.activeItem == Self.three)
-        #expect(history.items().count == 3)
+        #expect(history.entries().map(\.item).count == 3)
     }
 
     @Test func aCopyWhileOpenKeepsTheHighlightOnTheSameItem() {
@@ -230,7 +230,7 @@ final class HistoryPanelControllerTests {
 
         #expect(surface.shown == nil)
         #expect(capture.activeItem == ClipboardItem(text: "JEVPASTE-HIST-FOUR"))
-        #expect(history.items().count == 4)
+        #expect(history.entries().map(\.item).count == 4)
     }
 
     @Test func openingWhileOpenKeepsTheOpenPanelAsItIs() {

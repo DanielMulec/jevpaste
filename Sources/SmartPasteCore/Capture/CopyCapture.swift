@@ -1,3 +1,5 @@
+import Foundation
+
 /// Turns clipboard changes into Clipboard Items: the newest foreign copy becomes the Active Item and is recorded
 /// in Clipboard History unless it is concealed. Changes produced by our own pasteboard writes are invisible.
 /// An explicit selection from Clipboard History also makes an item Active, until the next copy or selection.
@@ -5,6 +7,8 @@
 public final class CopyCapture {
     public private(set) var activeItem: ClipboardItem?
     private let history: any HistoryRepository
+    /// The wall-clock time a copy is recorded with; it only describes the entry ("12 min ago").
+    private let now: @MainActor () -> Date
     private var onActiveItemChange: (@MainActor (ActiveItemChange) -> Void)?
     /// Change counts produced by the Paste Attempt's own writes that have not been observed yet.
     private var ownChangeCounts: Set<Int> = []
@@ -14,12 +18,15 @@ public final class CopyCapture {
     ///   the Active Item and is recorded unless concealed. It is called once, *after* observation has started, so
     ///   a copy landing in between is adopted at launch rather than lost; the observer may report that copy once more,
     ///   which history treats as a re-copy of the same item.
+    /// - Parameter now: The time each copy — the launch contents included — is recorded with.
     public init(
         clipboard: any Clipboard,
         history: any HistoryRepository,
-        contentsAtLaunch: @MainActor () -> ClipboardItem? = { nil }
+        contentsAtLaunch: @MainActor () -> ClipboardItem? = { nil },
+        now: @escaping @MainActor () -> Date = { Date() }
     ) {
         self.history = history
+        self.now = now
         clipboard.startObservingChanges { [weak self] change in
             self?.clipboardChanged(change)
         }
@@ -55,7 +62,7 @@ public final class CopyCapture {
     /// concealed, enters Clipboard History.
     private func adopt(_ item: ClipboardItem) {
         if !item.isConcealed {
-            history.record(item)
+            history.record(item, copiedAt: now())
         }
         activate(item, cause: .copied)
     }
