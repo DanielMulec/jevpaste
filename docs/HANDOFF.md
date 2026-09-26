@@ -42,8 +42,9 @@ merged), its worktree removed. **Repo is PUBLIC since 2026-09-26 (Daniel), no li
 
 ## Next session
 **Ticket:** [Spike: can Jev extract the excerpt for any field, or does it need an LLM?](https://github.com/DanielMulec/jevpaste/issues/46)
-— task, worker-driven (Opus 5.5; ask Daniel whether workers move to **high** — research already did, he hinted
-project-wide). Write `docs/briefs/any-field-extraction-spike-brief.md` from the ticket + its comment + the
+— task, **in flight**: worker on Opus 5.5 high in Herdr tab `any-field`, worktree `~/.pi/worktrees/jevpaste/any-field`,
+branch `spike/any-field-extraction` (fixtures/spans/runner committed at 6a887b0; a medium worker was replaced after step 1).
+If you inherit it mid-run: `intercom list-cwd` for its id, ask for status; do not restart it. Write `docs/briefs/any-field-extraction-spike-brief.md` from the ticket + its comment + the
 resolution of 31; branch `spike/any-field-extraction` (kept, never merged); synthetic fixtures only; Gateway
 key exists but has **no credits** — expect rate limits; fallbacks: DeepSeek direct (Daniel provides key),
 Luna via Daniel's Codex login through `codex app-server` (research §5). Deliverable = one comparison table in
@@ -63,7 +64,7 @@ on Flash was stopped and redone this session — don't repeat.
 - New worker/reviewer panes go into **new Herdr tabs** (`herdr tab create --cwd … --label … --no-focus`), not splits.
 
 ## Models and the review chain (map Notes; unchanged)
-- Workers/prototypes: `anthropic/claude-opus-5-5:medium` as **separate Pi instances in Herdr panes** (never subagents); research `:high`. Daniel fears medium is no longer enough project-wide — ask before the next worker.
+- Workers/prototypes/research: `anthropic/claude-opus-5-5:high` as **separate Pi instances in Herdr panes** (never subagents). Daniel moved workers from medium to high on 2026-09-26 after reading a medium worker's reasoning mid-spike ("a bit distrusting").
 - Reviewer: **one** fresh `openai-codex/gpt-6-sol:medium` per branch, own pane/tab, detached worktree at the
   branch head, `REVIEW-BRIEF.md` written into that worktree (VERDICT / BLOCKING / NON-BLOCKING / DUPLICATION /
   GAPS / METHOD). Delta re-review = "Delta re-review request" appended to the same file, **fresh** instance
