@@ -47,11 +47,32 @@ final class CursorProbe: NSObject, NSApplicationDelegate {
         run += 1
         let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "none"
         guard let element = focusedElement() else {
-            log.write("run=\(run) front=\(front) focus=unreadable")
+            log.write("run=\(run) front=\(front) focus=unreadable \(unreadableDiagnosis())")
             wakeAndMeasure(placeCaretInMiddle: placeCaretInMiddle)
             return
         }
         measure(element, front: front, placeCaretInMiddle: placeCaretInMiddle)
+    }
+
+    /// AX status codes and roles only: why the system-wide focus read failed.
+    private func unreadableDiagnosis() -> String {
+        let systemStatus = copy(systemWide, kAXFocusedUIElementAttribute).status.rawValue
+        guard let app = NSWorkspace.shared.frontmostApplication else { return "systemStatus=\(systemStatus)" }
+        let appElement = AXUIElementCreateApplication(app.processIdentifier)
+        let (focusStatus, _) = copy(appElement, kAXFocusedUIElementAttribute)
+        let (windowStatus, window) = copy(appElement, kAXFocusedWindowAttribute)
+        let (windowsStatus, windows) = copy(appElement, kAXWindowsAttribute)
+        var windowRole = "none"
+        if let window, CFGetTypeID(window) == AXUIElementGetTypeID() {
+            let element = unsafeDowncast(window, to: AXUIElement.self)
+            windowRole =
+                (string(element, kAXRoleAttribute) ?? "none") + "/" + (string(element, kAXSubroleAttribute) ?? "none")
+        }
+        let enhanced = copy(appElement, "AXEnhancedUserInterface").value as? Bool
+        return "systemStatus=\(systemStatus) appFocusStatus=\(focusStatus.rawValue) "
+            + "focusedWindowStatus=\(windowStatus.rawValue) focusedWindowRole=\(windowRole) "
+            + "windowsStatus=\(windowsStatus.rawValue) windows=\((windows as? [AXUIElement])?.count ?? -1) "
+            + "enhancedUI=\(enhanced.map { "\($0)" } ?? "none")"
     }
 
     /// Wake Wait, as production does it: set `AXEnhancedUserInterface` once per process, re-read every 50 ms, ≤ 3 s.
