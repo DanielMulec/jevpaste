@@ -17,6 +17,7 @@ final class CursorProbe: NSObject, NSApplicationDelegate {
     private let systemWide = AXUIElementCreateSystemWide()
     private var sources: [any DispatchSourceSignal] = []
     private var run = 0
+    private var wokenProcesses: Set<Int32> = []
 
     init(logPath: String) {
         log = ProbeLog(path: logPath)
@@ -47,8 +48,39 @@ final class CursorProbe: NSObject, NSApplicationDelegate {
         let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "none"
         guard let element = focusedElement() else {
             log.write("run=\(run) front=\(front) focus=unreadable")
+            wakeAndMeasure(placeCaretInMiddle: placeCaretInMiddle)
             return
         }
+        measure(element, front: front, placeCaretInMiddle: placeCaretInMiddle)
+    }
+
+    /// Wake Wait, as production does it: set `AXEnhancedUserInterface` once per process, re-read every 50 ms, ≤ 3 s.
+    private func wakeAndMeasure(placeCaretInMiddle: Bool) {
+        guard let app = NSWorkspace.shared.frontmostApplication else { return }
+        let appElement = AXUIElementCreateApplication(app.processIdentifier)
+        let before = copy(appElement, "AXEnhancedUserInterface").value as? Bool
+        if !wokenProcesses.contains(app.processIdentifier), before != true {
+            let status = AXUIElementSetAttributeValue(appElement, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue)
+            wokenProcesses.insert(app.processIdentifier)
+            log.write("run=\(run) enhancedUIBefore=\(before.map { "\($0)" } ?? "none") set=\(status.rawValue)")
+        }
+        let run = run
+        Task { @MainActor in
+            let started = ContinuousClock.now
+            while ContinuousClock.now - started < .seconds(3) {
+                try? await Task.sleep(for: .milliseconds(50))
+                if let element = self.focusedElement() {
+                    let waited = (ContinuousClock.now - started).components.attoseconds / 1_000_000_000_000_000
+                    self.log.write("run=\(run) readable after ms=\(waited)")
+                    self.measure(element, front: app.bundleIdentifier ?? "none", placeCaretInMiddle: placeCaretInMiddle)
+                    return
+                }
+            }
+            self.log.write("run=\(run) still unreadable after 3 s: unmeasured without a click")
+        }
+    }
+
+    private func measure(_ element: AXUIElement, front: String, placeCaretInMiddle: Bool) {
         let role = string(element, kAXRoleAttribute) ?? "none"
         let value = string(element, kAXValueAttribute)
         let utf16Length = value?.utf16.count ?? 0
