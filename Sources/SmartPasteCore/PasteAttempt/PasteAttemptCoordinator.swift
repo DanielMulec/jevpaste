@@ -35,8 +35,17 @@ public final class PasteAttemptCoordinator {
         if phase == .offeringDirectPaste { return endOffer(.dismissed) }
         guard phase == .idle else { return }
         guard let item = capture.activeItem else { return refuse(.noActiveItem) }
-        attemptCount += 1
-        bindFocusedTarget(AttemptStart(number: attemptCount, item: item, pressedAt: ports.clock.now))
+        switch ports.jevProvider.openForPasteAttempt() {
+        case .noKey(let provider):
+            refuse(.noProviderKey(provider))
+        case .ready(let decisionService):
+            attemptCount += 1
+            bindFocusedTarget(
+                AttemptStart(
+                    number: attemptCount, item: item, pressedAt: ports.clock.now, decisionService: decisionService
+                )
+            )
+        }
     }
 
     /// Continues an attempt once its Bound Target resolved, at ⌘⇧V or at the end of a Wake Wait: the Pre-checks, then
@@ -54,7 +63,8 @@ public final class PasteAttemptCoordinator {
             return ports.presenter.showOutcome(.noSuitableMatch, note: nil, path: nil, wakeWait: start.wakeWait)
         }
         let consultation = JevConsultation(
-            contextToSend: contextToSend, deadline: resolvedAt + Self.attemptTimeLimit, narrowing: narrowing
+            decisionService: start.decisionService, contextToSend: contextToSend,
+            deadline: resolvedAt + Self.attemptTimeLimit, narrowing: narrowing
         )
         attempt = RunningAttempt(
             number: start.number, item: start.item, target: target, consultation: consultation,

@@ -17,11 +17,11 @@ extension PasteAttemptCoordinator {
 
     /// Sends `request` — a new step's, or the same one again after a rate limit.
     private func send(_ request: NarrowingRequest) {
-        guard let number = attempt?.number else { return }
+        guard let number = attempt?.number, let decisionService = attempt?.consultation.decisionService else { return }
         phase = .deciding
         attempt?.consultation.pendingRequest = request
         attempt?.path.calls += 1
-        ports.decisionService.evaluate(request) { [weak self] reply in
+        decisionService.evaluate(request) { [weak self] reply in
             guard let self, self.attempt?.number == number, phase == .deciding else { return }
             receive(reply)
         }

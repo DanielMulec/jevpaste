@@ -41,6 +41,7 @@ struct PasteAttemptStartTests {
             case .targetNotReady: preconditionFailure("not a Pre-check: the Wake Wait's limit, see WakeWaitTests")
             case .secureField: PasteAttemptHarness(focusedTarget: Self.passwordField)
             case .suspectedSecret: PasteAttemptHarness(sourceText: StubPreCheck.secretPrefix + "4f9a1c")
+            case .noProviderKey: preconditionFailure("not a Pre-check: the Jev Provider, see JevProviderAccessTests")
             }
 
         harness.hotkey.press()

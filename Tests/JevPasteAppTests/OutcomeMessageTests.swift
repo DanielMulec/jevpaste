@@ -63,11 +63,24 @@ struct OutcomeMessageTests {
         (.refused(.targetNotReady(applicationName: "ChatGPT")), "refused.targetNotReady"),
         (.refused(.targetNotReady(applicationName: "Notes (Beta)")), "refused.targetNotReady"),
         (.refused(.targetNotReady(applicationName: ".secureField")), "refused.targetNotReady"),
+        (.refused(.noProviderKey(.vercelAIGateway)), "refused.noProviderKey"),
         (.cancelled, "cancelled"),
         (.failed(.timedOut), "failed.timedOut"),
         (.failed(.tooLongForSmartPaste), "failed.tooLongForSmartPaste"),
     ])
     func logNameIsTheShortOutcomeKind(outcome: PasteAttemptOutcome, logName: String) {
         #expect(OutcomeMessage.logName(for: outcome) == logName)
+    }
+
+    /// Settings is one click away: the refusal names the provider and stays long enough to be clicked.
+    @Test(arguments: [
+        (JevProvider.vercelAIGateway, "No key for Vercel AI Gateway — open Settings"),
+        (.typesafeDirect, "No key for Typesafe direct — open Settings"),
+    ])
+    func aMissingProviderKeyNamesTheProviderForFiveSeconds(provider: JevProvider, reason: String) {
+        let message = OutcomeMessage(.refused(.noProviderKey(provider)))
+
+        #expect(message.content == IndicatorContent(symbolName: "key", text: reason))
+        #expect(message.displayDuration == .seconds(5))
     }
 }

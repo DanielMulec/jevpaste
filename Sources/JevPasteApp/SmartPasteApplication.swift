@@ -56,7 +56,7 @@ final class SmartPasteApplication {
                 clipboard: clipboard,
                 targetResolver: AccessibilityTargetResolver(),
                 inserter: PasteKeystrokeInserter(),
-                decisionService: JevGatewayDecisionService(),
+                jevProvider: JevGatewayAccess(credentials: GatewayCredentials.standard, chosenProvider: { .standard }),
                 clock: clock,
                 presenter: presenter,
                 chooser: PanelCandidateChooser(

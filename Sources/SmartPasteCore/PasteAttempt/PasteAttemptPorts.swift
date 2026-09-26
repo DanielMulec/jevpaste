@@ -4,7 +4,7 @@ public struct PasteAttemptPorts {
     let clipboard: any Clipboard
     let targetResolver: any TargetResolver
     let inserter: any Inserter
-    let decisionService: any DecisionService
+    let jevProvider: any JevProviderAccess
     let clock: any PasteAttemptClock
     let presenter: any PasteOutcomePresenter
     let chooser: any CandidateChooser
@@ -14,7 +14,7 @@ public struct PasteAttemptPorts {
         clipboard: any Clipboard,
         targetResolver: any TargetResolver,
         inserter: any Inserter,
-        decisionService: any DecisionService,
+        jevProvider: any JevProviderAccess,
         clock: any PasteAttemptClock,
         presenter: any PasteOutcomePresenter,
         chooser: any CandidateChooser
@@ -23,7 +23,7 @@ public struct PasteAttemptPorts {
         self.clipboard = clipboard
         self.targetResolver = targetResolver
         self.inserter = inserter
-        self.decisionService = decisionService
+        self.jevProvider = jevProvider
         self.clock = clock
         self.presenter = presenter
         self.chooser = chooser

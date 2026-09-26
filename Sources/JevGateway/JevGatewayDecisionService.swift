@@ -3,7 +3,8 @@ import SmartPasteCore
 import os
 
 /// The `DecisionService` adapter that asks Jev through the Vercel AI Gateway: one `POST /v1/evaluate` per Narrowing
-/// request, with all of its choice questions, answered once on the main actor.
+/// request, with all of its choice questions, answered once on the main actor. It holds the key read when the Paste
+/// Attempt opened the Jev Provider (`JevGatewayAccess`).
 ///
 /// No retry, no timeout and no size limit of its own — the Paste Attempt owns the first two, Jev enforces the third.
 /// Diagnostics carry status, counts, bytes and latency only; never the key, the source document, the Target Context
@@ -17,11 +18,11 @@ public struct JevGatewayDecisionService: DecisionService {
     }()
     private static let log = Logger(subsystem: "jevpaste", category: "JevGateway")
 
-    private let credentials: GatewayCredentials
+    private let apiKey: String
     private let transport: any HTTPTransport
 
-    public init(credentials: GatewayCredentials = .standard, transport: any HTTPTransport = URLSessionTransport()) {
-        self.credentials = credentials
+    public init(apiKey: String, transport: any HTTPTransport = URLSessionTransport()) {
+        self.apiKey = apiKey
         self.transport = transport
     }
 
@@ -37,9 +38,6 @@ public struct JevGatewayDecisionService: DecisionService {
 
     /// The reply and the HTTP status it came from (`nil` when no response arrived).
     private func exchange(_ request: NarrowingRequest, body: Data) async -> (NarrowingReply, Int?) {
-        guard let apiKey = credentials.apiKey() else {
-            return (Self.failed(.missingKey), nil)
-        }
         guard let (responseBody, response) = try? await transport.send(Self.urlRequest(body: body, apiKey: apiKey))
         else { return (Self.failed(.transport), nil) }
         let status = response.statusCode
