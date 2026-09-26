@@ -199,3 +199,110 @@ relaunch: pid 28777, no trigger flag
 #   full run 2: ask_user 0.90 → A 0.81 → B 0.87 → nothing_fits 0.61 → chooser [A, B]
 #   Request bytes per call: ids 5691 / 5336 / 3596 / 2210; full 4431 / 4076 / 2840 / 1944. fill=3 fillEnd=nothingFits
 #   in 6/6. Wall clock: 3 ids pastes (12 calls) in 6.9 s, 3 full-text pastes in 7.9 s (test process, cold first call).
+#
+# ---------------------------------------------------------------------------------------------------------------------
+# Part 5 — installed build of ece835a (fix A 1c06af2 + the chooser fill 0a23a9b), 2026-09-26 21:32–21:43, after Gate B2.
+# Automated (c1) and (a3) on the trigger instance, then Daniel's block on the normal production app. Same procedure as
+# parts 1–2: vault saved, production quit by pid, `make install`, relaunch with --accept-signal-trigger, press.sh (gate on
+# `lsappinfo front` == Chrome and our tab active, SIGUSR1 to that one pid), test instance quit, vault restored BEFORE the
+# normal relaunch. For Daniel the worker staged every copy (pbcopy, then compared the digest of the newest clipboard_item
+# row in history.sqlite, read-only). Fixtures: c1 21596/301 8c5a92fa1dc11b94; a2 106/5 eacb9bca476f8fba; f1 90/4
+# 928e7e5633c39120; g1 75/3 22cf02c436ecf50f (marker + two short lines, no trailing newline).
+# Helper output:
+start 2026-09-26 21:32:22
+vault saved items=1 sha256=678291b1f7b11311b72346cf008366f2c1e223ab3e596b6bb61313fc388f7d3d
+production pid 28777 quit; pgrep: none running
+57208 ~/Applications/JevPaste.app/Contents/MacOS/JevPaste --accept-signal-trigger
+launched 21:32:45
+(c1) checkout page, gift field focused, length 0
+trigger USR1 pid=57208 at 21:33:39.064 front=com.google.Chrome
+clipboardSameBytes=true
+(c1) after: giftIsExpectedCode=true giftLength=14 lengths=[14,0,0,0,0,0,0] (a first check compared against a mistyped expected literal and said false; re-checked against the fixture's target: true)
+(a3) form page, Kommentar focused, all lengths 0; copy a2 (106 B, eacb9bca476f8fba)
+trigger USR1 pid=57208 at 21:34:39.439 front=com.google.Chrome
+clipboardSameBytes=true
+(a3) after: kommentarIsWholeCopyWithoutOuterLineBreaks=true endsWithNewline=false lengths=[0,0,0,0,0,105]
+test instance 57208 quit; pgrep: none running
+restored items=1 sha256=678291b1f7b11311b72346cf008366f2c1e223ab3e596b6bb61313fc388f7d3d matches=true
+changeCount=1413 items=1 sha256=678291b1f7b11311b72346cf008366f2c1e223ab3e596b6bb61313fc388f7d3d
+58217 ~/Applications/JevPaste.app/Contents/MacOS/JevPaste
+production relaunched (no trigger flag) 21:35:28
+f1 staged: fixture 928e7e5633c39120 newestHistoryRow 928e7e5633c39120
+Daniel's block staged: production pid 58217 (ece835a, no trigger flag); f1 on the clipboard and newest history row (928e7e5633c39120);
+form tab front, E-Mail emptied and focused, Kommentar still holds the a3 paste (105) as in part 3; our copy-source tab holds g1
+(75 B, 3 lines, 22cf02c436ecf50f) in a read-only textarea; checkout tab closed after re-listing.
+re-press staged 21:39:13: fixture 928e7e5633c39120 clipboard 928e7e5633c39120 newestHistoryRow 928e7e5633c39120
+(f) press 1 (Daniel, 21:37:19): Narrowing miss for the beta — two exact candidates, Jev picked the first (address A) outright at
+    step 1 (no ask_user, no fill, no chooser); step 2 kept it, deciding p=0.77; step 1's p is not logged. E-Mail = address A (24).
+(f) press 2 (Daniel, 21:39:41): ask_user at step 1 (deciding p=0.42) → 3 fill calls (options 90, 54, 19) → chooser opened with 2
+    alternatives 1.46 s after the processing indicator; Daniel chose index 1 (second row); E-Mail = address B (32) byte-exact,
+    lengths [0,0,0,32,0,105]. via=narrowing steps=1 calls=4 p=0.42 questions=1 fill=3 fillEnd=nothingFits.
+g1 staged 21:40:29: fixture 22cf02c436ecf50f (75 B, 3 lines, no trailing newline) clipboard 22cf02c436ecf50f newestHistoryRow 22cf02c436ecf50f
+restored items=1 sha256=678291b1f7b11311b72346cf008366f2c1e223ab3e596b6bb61313fc388f7d3d matches=true
+# App log, automated part (log show --info --predicate 'subsystem == "jevpaste"', 21:32:40–21:35:30):
+2026-09-26 21:32:43.059320+0200 0 JevPaste: [jevpaste:Launch] launch apiKeyPresent=true
+2026-09-26 21:32:43.088558+0200 0 JevPaste: [jevpaste:Launch] grant check at launch trusted=true
+2026-09-26 21:32:43.091211+0200 0 JevPaste: [jevpaste:Launch] acceptance signal trigger on
+2026-09-26 21:33:39.043442+0200 0 JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-26 21:33:39.242037+0200 0 JevPaste: [jevpaste:PasteAttempt] processing indicator shown
+2026-09-26 21:33:40.050250+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=2 options=309 bytes=71595 in 0.91930075 seconds
+2026-09-26 21:33:40.623379+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=1 options=17 bytes=36260 in 0.471705459 seconds
+2026-09-26 21:33:41.175842+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=2 options=327 bytes=43983 in 0.537069667 seconds
+2026-09-26 21:33:42.012438+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=3 options=177 bytes=33737 in 0.824156917 seconds
+2026-09-26 21:33:42.025086+0200 0 JevPaste: [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-26 21:33:42.156733+0200 0 JevPaste: [jevpaste:PasteAttempt] outcome inserted via=narrowing steps=3 calls=4 p=0.92 questions=2+f0,2+f2,s full=1
+2026-09-26 21:34:39.418207+0200 0 JevPaste: [jevpaste:Launch] acceptance trigger (SIGUSR1)
+2026-09-26 21:34:39.589134+0200 0 JevPaste: [jevpaste:PasteAttempt] processing indicator shown
+2026-09-26 21:34:40.245422+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=1 options=84 bytes=5638 in 0.809434 seconds
+2026-09-26 21:34:40.249781+0200 0 JevPaste: [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-26 21:34:40.373003+0200 0 JevPaste: [jevpaste:PasteAttempt] outcome inserted via=narrowing steps=1 calls=1 p=0.61 questions=1
+2026-09-26 21:35:25.085564+0200 0 JevPaste: [jevpaste:Launch] launch apiKeyPresent=true
+2026-09-26 21:35:25.109846+0200 0 JevPaste: [jevpaste:Launch] grant check at launch trusted=true
+# App log, Daniel's block (21:35:20–21:42:00; the first two lines repeat the relaunch):
+2026-09-26 21:35:25.085564+0200 0 JevPaste: [jevpaste:Launch] launch apiKeyPresent=true
+2026-09-26 21:35:25.109846+0200 0 JevPaste: [jevpaste:Launch] grant check at launch trusted=true
+2026-09-26 21:37:19.485463+0200 0 JevPaste: [jevpaste:PasteAttempt] processing indicator shown
+2026-09-26 21:37:20.336230+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=1 options=91 bytes=5785 in 1.017549916 seconds
+2026-09-26 21:37:20.735729+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=1 options=34 bytes=3309 in 0.397881916 seconds
+2026-09-26 21:37:20.745069+0200 0 JevPaste: [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-26 21:37:20.878146+0200 0 JevPaste: [jevpaste:PasteAttempt] outcome inserted via=narrowing steps=2 calls=2 p=0.77 questions=1,1
+2026-09-26 21:39:41.299463+0200 0 JevPaste: [jevpaste:PasteAttempt] processing indicator shown
+2026-09-26 21:39:41.590419+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=1 options=91 bytes=5785 in 0.444076792 seconds
+2026-09-26 21:39:41.998251+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=1 options=90 bytes=5430 in 0.407282125 seconds
+2026-09-26 21:39:42.359694+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=1 options=54 bytes=3690 in 0.360867833 seconds
+2026-09-26 21:39:42.726701+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=1 options=19 bytes=2304 in 0.366685209 seconds
+2026-09-26 21:39:42.727459+0200 0 JevPaste: [jevpaste:PasteAttempt] processing indicator hidden while choosing
+2026-09-26 21:39:42.756057+0200 0 JevPaste: [jevpaste:CandidateChooser] chooser opened with 2 alternatives
+2026-09-26 21:39:46.424575+0200 0 JevPaste: [jevpaste:CandidateChooser] chose index 1
+2026-09-26 21:39:46.439586+0200 0 JevPaste: [jevpaste:CandidateChooser] target app reactivated in 0 ms
+2026-09-26 21:39:46.564439+0200 0 JevPaste: [jevpaste:PasteAttempt] outcome inserted via=narrowing steps=1 calls=4 p=0.42 questions=1 fill=3 fillEnd=nothingFits
+2026-09-26 21:41:15.881722+0200 0 JevPaste: [jevpaste:PasteAttempt] processing indicator shown
+2026-09-26 21:41:16.647779+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=1 options=48 bytes=7556 in 0.918265292 seconds
+2026-09-26 21:41:16.653581+0200 0 JevPaste: [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-26 21:41:16.776628+0200 0 JevPaste: [jevpaste:PasteAttempt] outcome inserted via=narrowing steps=1 calls=1 p=0.81 questions=1
+2026-09-26 21:41:37.910079+0200 0 JevPaste: [jevpaste:PasteAttempt] processing indicator shown
+2026-09-26 21:41:38.208702+0200 0 JevPaste: [jevpaste:JevGateway] Jev answered status=200 questions=1 options=48 bytes=5599 in 0.450645417 seconds
+2026-09-26 21:41:38.212943+0200 0 JevPaste: [jevpaste:PasteAttempt] delivering indicator shown
+2026-09-26 21:41:38.336443+0200 0 JevPaste: [jevpaste:PasteAttempt] outcome inserted via=narrowing steps=1 calls=1 p=0.69 questions=1
+# Results, part 5:
+# (c1) PASS (was FAIL in part 2): gift field ← marker + 300-line list with trailing newline → exactly the expected
+#      14-character code. via=narrowing steps=3 calls=4 p=0.92 questions=2+f0,2+f2,s full=1; ⌘⇧V → outcome 3.11 s
+#      (Jev 0.47–0.92 s per call). Fix A removed the duplicate keep piece, so the follow-up fit again.
+# (a3) PASS: Kommentar ← a2 → the whole copy, outer line break stripped (105). steps=1 p=0.61 (part 2: 0.56 with
+#      85 options, now 84), 0.95 s.
+# (f)  Daniel, two addresses → E-Mail:
+#      press 1: MISS for the beta. Jev picked address A outright at step 1 (2 requests: 91 options, then 34 on A's
+#        children), kept it at step 2 (deciding p=0.77); no ask_user, no fill, no chooser. Step 1's own p is not logged.
+#      press 2: PASS. ask_user at step 1 (p=0.42) → fill 90 / 54 / 19 options → nothing_fits → "chooser opened with 2
+#        alternatives" 1.46 s after the processing indicator; Daniel chose index 1 → E-Mail = address B (32), byte-exact.
+#        via=narrowing steps=1 calls=4 p=0.42 questions=1 fill=3 fillEnd=nothingFits.
+# (g)  Daniel, g1 → WhatsApp message box (21:41:15) and ChatGPT composer (21:41:37): both steps=1 calls=1, Jev kept
+#      the whole copy (p=0.81 / 0.69, 48 options each); ≈1.05 s / ≈0.58 s from ⌘⇧V (indicator at +150 ms). Daniel
+#      reported all three lines inserted in both and nothing sent (the app never sends Enter; the log shows no offer).
+# (e)  Timing, parts 1–5: every paste under 5 s (0.52–3.11 s ⌘⇧V → outcome; the chooser opened within 1.6 s).
+# 350-line finding (supervisor; scratch probe, live Jev, not committed): step 1 for the logList generator with field
+#   label "Code": 300 lines → full text, fitsJev=true, 2 questions / 311 options / 78630 B; 350 → full text,
+#   fitsJev=false, 2 questions / 358 options / 64906 B, sent anyway; 400 → full text, fitsJev=true, 2 / 408 / 73826 B.
+#   Jev answered all three with status 200 (both choices picked a piece). The size model over-counts; no local refusal.
+# Cleanup: clipboard restored from the vault (items=1 …678291b1f7b1, matches=true); both of our data: tabs closed after
+#   re-listing the pages and checking each URL was ours; production app running normally (pid 58217, no trigger flag).
