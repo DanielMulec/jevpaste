@@ -20,6 +20,9 @@ enum MenuBarApplication {
         if let flag = arguments.firstIndex(of: "--probe"), arguments.indices.contains(flag + 1) {
             return AdapterProbe(logPath: arguments[flag + 1])
         }
+        if let flag = arguments.firstIndex(of: "--cursor-probe"), arguments.indices.contains(flag + 1) {
+            return CursorProbe(logPath: arguments[flag + 1])
+        }
         return MenuBarDelegate(options: LaunchOptions(arguments: arguments))
     }
 }
