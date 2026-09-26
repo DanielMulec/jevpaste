@@ -13,7 +13,7 @@ sys.path.insert(0, HERE)
 import r2  # noqa: E402
 
 REPORT = os.path.join(HERE, "results", "report.md")
-PHASE = "matrix"
+PHASE = "matrix2"
 
 R1_WHOLE = ["W01_chrome_textarea", "W02_terminal_prompt", "W03_chatgpt_composer", "W04_whatsapp_composer",
             "C05_notes_freetext"]
