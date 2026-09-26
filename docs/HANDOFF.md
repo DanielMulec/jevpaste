@@ -1,4 +1,4 @@
-# Handoff — jevpaste supervisor (v1 shipped; v1.x backlog, next: spike 46 any-field extraction)
+# Handoff — jevpaste supervisor (v1 shipped; v1.x backlog, next: grill 47 — choice-only J)
 
 Written for a fresh supervisor session that has never seen the previous one. Repo:
 `/Users/danielmulec/Projekte/experiments/jevpaste` (private, `DanielMulec/jevpaste`, `main` clean and pushed).
@@ -15,40 +15,39 @@ GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues
   that worked on 2026-09-25). Review brief pattern: see "Models and the review chain" below.
 - **Per-branch worker handoffs are retired**: workers fold everything into their ticket **report comment**.
 
-## Where things stand (2026-09-26 — any-field extraction charted; ChatGPT sign-in researched)
-`main` = bd95978 (glossary **Embedded Value** + research brief), pushed. Installed app unchanged (**main 42b37b3**,
-running, trusted). 456 tests / 81 suites. No worker in flight; `research/chatgpt-signin` kept on origin (never
-merged), its worktree removed. **Repo is PUBLIC since 2026-09-26 (Daniel), no licence yet.** Resolved this session:
+## Where things stand (2026-09-26 afternoon — spike done; supervisor switching to Opus 5.5 xhigh)
+`main` clean and pushed. Installed app unchanged (main 42b37b3). 456 tests / 81 suites. No worker in flight; spike
+branch `spike/any-field-extraction` (f850dc5) kept on origin, worktree removed. **Repo PUBLIC, no licence.**
+**Supervisor model from now: `anthropic/claude-opus-5-5:xhigh`** (Daniel's Claude Max weekly for the previous
+supervisor is nearly exhausted). Workers: Opus 5.5 **medium or high by the complexity of each brief — Daniel's
+call per brief, ask him**; research high; reviewer GPT-6-Sol unchanged.
+
+Resolved this session (all gisted on the map):
 - [Choose how JevPaste finds the excerpt for any field, not only whole lines](https://github.com/DanielMulec/jevpaste/issues/31#issuecomment-5844214504)
-  (was "Extract typed tokens…") — Daniel wants Smart Paste into **any** field (Vorname, Straße, PLZ, Ort, Land,
-  Birthdate, About, IBAN…); a four-type scanner was rejected as too small. Two engines to be compared by a spike:
-  **J** Jev two-stage (stage 1 choice + "contains more?" gate; stage 2 choice over byte-exact spans of that line)
-  vs **L** LLM extractor (DeepSeek V4.1 Flash, GPT-6-Luna; result verified byte-exact by Core). Daniel strongly
-  prefers **J** (one provider, no rename); the spike runs J in full first, L only on the cells J misses. Single-line Direct Paste, chooser rule, cap unchanged. Rename deferred.
 - [Establish how official ChatGPT sign-in works for a third-party macOS app](https://github.com/DanielMulec/jevpaste/issues/48#issuecomment-5844320546)
-  — official sign-in is identity-only; the real route is Codex login via `codex app-server` (subprocess from
-  Swift, full agent turn per call); permission = OpenAI-staff posts (own account in OSS client fine; closed
-  product "talk to us"; cloud relay no); Luna reachable via Codex login / API key / Gateway; unlicensed ≠ OSS.
-  Daniel's ChatGPT-generated analysis was checked claim by claim (§5.6).
+- [Spike: can Jev extract the excerpt for any field, or does it need an LLM?](https://github.com/DanielMulec/jevpaste/issues/46#issuecomment-5845373145)
+  — **the one to read**: Jev choice 52/52 when the piece was offered; the yes/no gate failed (17/100, unstable);
+  Free-text override hijacked long-form fields; stage 3 char-level works; LLM rescue 7 s median. Recommended:
+  **choice-only J**.
 
 ## Open tickets (all children of the map — one per session, Daniel's order)
 | ticket | type | note |
 |---|---|---|
-| [Spike: can Jev extract the excerpt for any field, or does it need an LLM?](https://github.com/DanielMulec/jevpaste/issues/46) | task | **next**; read its comment (fixture + Luna access additions) |
-| [Decide the extraction engine for any-field Smart Paste](https://github.com/DanielMulec/jevpaste/issues/47) | grilling | blocked by 46 |
+| [Decide the extraction engine for any-field Smart Paste](https://github.com/DanielMulec/jevpaste/issues/47) | grilling | **next** — read ALL its comments (scope note + 12-item inventory) |
 | [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37) | prototype | Daniel: "get the app complete first" |
 | [Decide what the secure-field pre-check uses when the OS secure-input flag is absent](https://github.com/DanielMulec/jevpaste/issues/38) | grilling | post-timeline |
 | [Decide how JevPaste switches Jev providers from the Vercel AI Gateway to Typesafe direct](https://github.com/DanielMulec/jevpaste/issues/45) | grilling | blocked by 37, 38 |
 
 ## Next session
-**Ticket:** [Spike: can Jev extract the excerpt for any field, or does it need an LLM?](https://github.com/DanielMulec/jevpaste/issues/46)
-— task, **in flight**: worker on Opus 5.5 high in Herdr tab `any-field`, worktree `~/.pi/worktrees/jevpaste/any-field`,
-branch `spike/any-field-extraction` (fixtures/spans/runner committed at 6a887b0; a medium worker was replaced after step 1).
-If you inherit it mid-run: `intercom list-cwd` for its id, ask for status; do not restart it. Write `docs/briefs/any-field-extraction-spike-brief.md` from the ticket + its comment + the
-resolution of 31; branch `spike/any-field-extraction` (kept, never merged); synthetic fixtures only; Gateway
-key exists but has **no credits** — expect rate limits; fallbacks: DeepSeek direct (Daniel provides key),
-Luna via Daniel's Codex login through `codex app-server` (research §5). Deliverable = one comparison table in
-the report comment. Gate the worker's model calls: no real clipboard data, no sign-ups.
+**Ticket:** [Decide the extraction engine for any-field Smart Paste](https://github.com/DanielMulec/jevpaste/issues/47) — grilling, HITL.
+Read: map body, this file, `CONTEXT.md`, the spike resolution + report, the 47 comments (Daniel's "willing to drop
+Direct Paste"; the 12-item inventory of local gates/classifiers/caps). Claim it. Grill with `grilling` +
+`domain-modeling`: **Daniel's standing position — everything that can be a Jev choice must be a Jev choice; no
+yes/no gates, no local classifiers, no field vocabulary.** Go through the 12 inventory items one by one
+(keep / replace with choice / drop), then the build shape: choice-only J (line → spans+whole → substrings+token),
+what happens to `contains_value`, `free_text`, same-type chooser trigger, 12-token cap, 254 drop order, Direct
+Paste. Outcome → one or more task tickets for the build (design doc at Gate A first, as usual), likely a bigger
+refactor of `PasteAttempt` + `JevGateway` + Candidates. Rename question stays deferred (Jev remains the only decider).
 
 ## Model rule change (2026-09-25)
 Research now runs on **`anthropic/claude-opus-5-5:high` as a Herdr worker** (high since 2026-09-26) (own tab + Pi instance, brief in
@@ -233,3 +232,18 @@ on Flash was stopped and redone this session — don't repeat.
   worked (Codex SDK angle, ChatGPT-generated claims to verify). Verify claims he pastes from ChatGPT — treat as a
   claim list, never as a source.
 - Gateway `/v1/models` is a cheap fact check (390 models; Flash + Luna both routed) — look up, don't ask.
+
+## Wave-11 lessons (2026-09-26, any-field spike)
+- **Daniel's core rule, learned the hard way: never put a yes/no in front of Jev when a choice can do it.** The
+  supervisor added a "contains more?" boolean gate to save a call; it was wrong 17/100 and unstable, and cost the
+  spike its pass. Choice was 52/52. He was angry ("why do I need to fight for things like this") — treat any new
+  local gate, classifier or cap as a decision to justify to him, not a default.
+- He reads "token" as LLM token → **Embedded Value**; "negatives" confused him → say "trap cells where the right
+  answer is nothing"; "cutting" → "scissors cut at every point and hand Jev all pieces; Jev is the only reader".
+- Gate prompt examples must never name field types (v6 withdrawn mid-run for "postcode, email…"); he checks.
+- Opus 5.5 high worker: reviewed the medium worker's files critically and found real fixes; mid-run supervisor
+  additions via `intercom send` worked; it wrote a resumable runner on its own. Killing a background `python3 -u
+  run.py matrix` needs `pkill -9` (plain pkill hit the bash wrapper only).
+- Laptop lid / train tunnels kill both worker and supervisor turns; state on disk survived every time — prompt
+  the worker to "resume where you were" with the row count.
+- Gateway has no credits (403 on non-Jev models); Codex CLI rejects `gpt-6-luna`; gpt-5.6-luna via Codex ≈ 7 s/call.
