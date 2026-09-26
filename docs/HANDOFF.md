@@ -1,4 +1,4 @@
-# Handoff — jevpaste supervisor (v1 shipped; v1.x backlog, next: grill 31 typed tokens)
+# Handoff — jevpaste supervisor (v1 shipped; v1.x backlog, next: spike 46 any-field extraction)
 
 Written for a fresh supervisor session that has never seen the previous one. Repo:
 `/Users/danielmulec/Projekte/experiments/jevpaste` (private, `DanielMulec/jevpaste`, `main` clean and pushed).
@@ -15,41 +15,42 @@ GraphQL `addSubIssue` / `addBlockedBy` with header `GraphQL-Features: sub_issues
   that worked on 2026-09-25). Review brief pattern: see "Models and the review chain" below.
 - **Per-branch worker handoffs are retired**: workers fold everything into their ticket **report comment**.
 
-## Where things stand (2026-09-25 late — Wake Wait merged; Typesafe research done)
-`main` = 42b37b3 (merge of `wake-wait` + one glossary sentence), pushed. Installed `~/Applications/JevPaste.app`
-= **main 42b37b3**, running plain, Open-at-Login on, `trusted=true`. **456 tests / 81 suites.** No worker in flight;
-worktrees are research spikes only. Resolved this session:
-- [Implement the Wake Wait](https://github.com/DanielMulec/jevpaste/issues/43#issuecomment-5839365433) — phase
-  `wakeWaiting`, 50 ms re-reads up to 3 s on the Core clock, 5 s Jev clock + 150 ms indicator count from the
-  resolution instant; "Waking <App>… click to cancel" (click only — Esc never reaches a non-key indicator; glossary
-  corrected); after the limit `refused.targetNotReady` "<App> isn't ready — press ⌘⇧V again"; log `wakeWait=<ms>`.
-  Any unreadable focus waits; per-pid 5 s window + 300-node Chrome wake walk removed. Gate A: fresh Chrome tab readable
-  by re-reading alone at 41–48 ms. Live: Chrome `wakeWait=92/55/111`, Herdr no wait, **ChatGPT cold start one press
-  `wakeWait=2129 via=freeTextTarget p=0.81`**. No surface on this Mac stays unreadable 3 s. Two GPT-6-Sol passes
-  (first: loose fake presenter, duplicate test, deadline computed after sync work → all fixed).
-- [Establish Typesafe's direct Jev API versus the Vercel AI Gateway](https://github.com/DanielMulec/jevpaste/issues/44#issuecomment-5839522535)
-  — research, branch `research/typesafe-direct` (kept, never merged). Direct = `POST api.typesafe.ai/v1/systemone`;
-  yes/no questions are `noul` (type + answer field), model pinned `jev-1.13.0`, 422/529, `retry-after` optional;
-  same price, prepaid credits; us-west-2 cold TLS ~0.6 s vs ~0.08 s to fra1. **Gateway now also routes Jev via
-  DigitalOcean (ZDR-ineligible); which provider serves us is unknown** — Daniel informed, left in queue order.
+## Where things stand (2026-09-26 — any-field extraction charted; ChatGPT sign-in researched)
+`main` = bd95978 (glossary **Embedded Value** + research brief), pushed. Installed app unchanged (**main 42b37b3**,
+running, trusted). 456 tests / 81 suites. No worker in flight; `research/chatgpt-signin` kept on origin (never
+merged), its worktree removed. **Repo is PUBLIC since 2026-09-26 (Daniel), no licence yet.** Resolved this session:
+- [Choose how JevPaste finds the excerpt for any field, not only whole lines](https://github.com/DanielMulec/jevpaste/issues/31#issuecomment-5844214504)
+  (was "Extract typed tokens…") — Daniel wants Smart Paste into **any** field (Vorname, Straße, PLZ, Ort, Land,
+  Birthdate, About, IBAN…); a four-type scanner was rejected as too small. Two engines to be compared by a spike:
+  **J** Jev two-stage (stage 1 choice + "contains more?" gate; stage 2 choice over byte-exact spans of that line)
+  vs **L** LLM extractor (DeepSeek V4.1 Flash, GPT-6-Luna; result verified byte-exact by Core). Preference
+  J → L → J+L fallback, by numbers. Single-line Direct Paste, chooser rule, cap unchanged. Rename deferred.
+- [Establish how official ChatGPT sign-in works for a third-party macOS app](https://github.com/DanielMulec/jevpaste/issues/48#issuecomment-5844320546)
+  — official sign-in is identity-only; the real route is Codex login via `codex app-server` (subprocess from
+  Swift, full agent turn per call); permission = OpenAI-staff posts (own account in OSS client fine; closed
+  product "talk to us"; cloud relay no); Luna reachable via Codex login / API key / Gateway; unlicensed ≠ OSS.
+  Daniel's ChatGPT-generated analysis was checked claim by claim (§5.6).
 
 ## Open tickets (all children of the map — one per session, Daniel's order)
 | ticket | type | note |
 |---|---|---|
-| [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31) | grilling | **next** |
+| [Spike: can Jev extract the excerpt for any field, or does it need an LLM?](https://github.com/DanielMulec/jevpaste/issues/46) | task | **next**; read its comment (fixture + Luna access additions) |
+| [Decide the extraction engine for any-field Smart Paste](https://github.com/DanielMulec/jevpaste/issues/47) | grilling | blocked by 46 |
 | [Make the history panel visually coherent with the status-item menu](https://github.com/DanielMulec/jevpaste/issues/37) | prototype | Daniel: "get the app complete first" |
 | [Decide what the secure-field pre-check uses when the OS secure-input flag is absent](https://github.com/DanielMulec/jevpaste/issues/38) | grilling | post-timeline |
-| [Decide how JevPaste switches Jev providers from the Vercel AI Gateway to Typesafe direct](https://github.com/DanielMulec/jevpaste/issues/45) | grilling | **blocked by 31, 37, 38** (Daniel: "after all current tickets"); research facts ready |
+| [Decide how JevPaste switches Jev providers from the Vercel AI Gateway to Typesafe direct](https://github.com/DanielMulec/jevpaste/issues/45) | grilling | blocked by 37, 38 |
 
 ## Next session
-**Ticket:** [Extract typed tokens embedded in lines as Candidates](https://github.com/DanielMulec/jevpaste/issues/31)
-— grilling, HITL. Read the map body, this file, `CONTEXT.md` (Candidate kinds), `docs/design/candidate-derivation.md`,
-then the ticket body. `intercom status` → your id. Claim (`gh issue edit 31 --add-assignee @me`). Grill Daniel with
-`grilling` + `domain-modeling`: short numbered questions with a recommended answer; keep independent rules
-independent. Resolution → possibly a task ticket for the build.
+**Ticket:** [Spike: can Jev extract the excerpt for any field, or does it need an LLM?](https://github.com/DanielMulec/jevpaste/issues/46)
+— task, worker-driven (Opus 5.5; ask Daniel whether workers move to **high** — research already did, he hinted
+project-wide). Write `docs/briefs/any-field-extraction-spike-brief.md` from the ticket + its comment + the
+resolution of 31; branch `spike/any-field-extraction` (kept, never merged); synthetic fixtures only; Gateway
+key exists but has **no credits** — expect rate limits; fallbacks: DeepSeek direct (Daniel provides key),
+Luna via Daniel's Codex login through `codex app-server` (research §5). Deliverable = one comparison table in
+the report comment. Gate the worker's model calls: no real clipboard data, no sign-ups.
 
 ## Model rule change (2026-09-25)
-Research now runs on **`anthropic/claude-opus-5-5:medium` as a Herdr worker** (own tab + Pi instance, brief in
+Research now runs on **`anthropic/claude-opus-5-5:high` as a Herdr worker** (high since 2026-09-26) (own tab + Pi instance, brief in
 `docs/briefs/`, e.g. `typesafe-direct-research-brief.md`), not a subagent and not DeepSeek Flash. Daniel did not
 recognise the Flash line; it was a cost choice from before Opus 5.5 existed. Map Notes updated. A `subagent` launch
 on Flash was stopped and redone this session — don't repeat.
@@ -62,7 +63,7 @@ on Flash was stopped and redone this session — don't repeat.
 - New worker/reviewer panes go into **new Herdr tabs** (`herdr tab create --cwd … --label … --no-focus`), not splits.
 
 ## Models and the review chain (map Notes; unchanged)
-- Workers/prototypes: `anthropic/claude-opus-5-5:medium` as **separate Pi instances in Herdr panes** (never subagents).
+- Workers/prototypes: `anthropic/claude-opus-5-5:medium` as **separate Pi instances in Herdr panes** (never subagents); research `:high`. Daniel fears medium is no longer enough project-wide — ask before the next worker.
 - Reviewer: **one** fresh `openai-codex/gpt-6-sol:medium` per branch, own pane/tab, detached worktree at the
   branch head, `REVIEW-BRIEF.md` written into that worktree (VERDICT / BLOCKING / NON-BLOCKING / DUPLICATION /
   GAPS / METHOD). Delta re-review = "Delta re-review request" appended to the same file, **fresh** instance
@@ -149,7 +150,7 @@ on Flash was stopped and redone this session — don't repeat.
 - Wayfinder governs; refer to tickets by linked title.
 
 ## Suggested skills
-- `wayfinder` (every session), `grilling` + `domain-modeling` (ticket 35 now; 36, 31, 38 later), `prototype` (37),
+- `wayfinder` (every session), `grilling` + `domain-modeling` (47, 38, 45), `prototype` (37),
   `pi-intercom` + herdr CLI (workers/reviewers), `tdd` + `codebase-design` (worker briefs), `telegram-bridge` +
   `telegram_attach` (Daniel is on his phone; contact sheets and screenshots go to Telegram),
   `resolving-merge-conflicts` (multi-worker waves), `writing-for-agents` (briefs and this file).
@@ -220,3 +221,14 @@ on Flash was stopped and redone this session — don't repeat.
   verify with `git worktree list` / `git ls-remote` rather than re-running blindly.
 - Daniel wants to be asked before any model that isn't in the map Notes; and if a Notes line surprises him, explain
   where it came from before acting.
+
+## Wave-10 lessons (2026-09-26, grilling 31 + research 48)
+- **Daniel pushes back hard on scope-shrinking recommendations** ("13 isn't an answer, 13 is me pushing back because
+  you're clashing too hard"). When he says he wants *anything*, reframe the ticket to his goal and offer engines to
+  compare — don't re-argue the small version. A spike with numbers is the answer he accepts.
+- He reads "token" as an LLM token — glossary now says **Embedded Value**. Explain Jev as "a chooser, not a writer:
+  it can only pick what we hand it" — that one sentence unlocked the whole J design for him.
+- Research on Opus 5.5 high finished in ~16 min with citations; mid-run supervisor additions via `intercom send`
+  worked (Codex SDK angle, ChatGPT-generated claims to verify). Verify claims he pastes from ChatGPT — treat as a
+  claim list, never as a source.
+- Gateway `/v1/models` is a cheap fact check (390 models; Flash + Luna both routed) — look up, don't ask.
