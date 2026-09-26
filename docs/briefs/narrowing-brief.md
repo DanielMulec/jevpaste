@@ -1,8 +1,9 @@
 # Brief — Implement Narrowing (issue #50)
 
-> **DRAFT — not launched.** Every block marked `⟦PORT⟧` is filled verbatim from `spikes/narrowing/round2/FINDINGS.md`
-> (branch `spike/narrowing`) once [Spike: does choice-only Narrowing pass the any-field matrix?](https://github.com/DanielMulec/jevpaste/issues/49)
-> reports a pass. The supervisor removes this banner at launch.
+> **READY, not launched — waits for Daniel's three answers on the round-2 result** ([report](https://github.com/DanielMulec/jevpaste/issues/49#issuecomment-5847452658)):
+> (1) ship the place choice? (2) "Availability" expectation; (3) accept the two misses and build? The design and wordings
+> below were checked against `spikes/narrowing/round2/FINDINGS.md` @ ba32886 on 2026-09-26. At launch the supervisor
+> fills `⟦SUPERVISOR-ID⟧`, applies Daniel's answer to the "Place choice" section, and removes this banner.
 
 You are a fresh Pi session (`anthropic/claude-opus-5-5:high`) in worktree `~/.pi/worktrees/jevpaste/narrowing`,
 branch `narrowing` (forked from `main`). This is a **production slice**: TDD, review chain, merged when done. Your
@@ -30,6 +31,9 @@ Communication protocol:
    Port the **design** and **every wording verbatim** (the section below repeats them; the FINDINGS win on any
    difference — say so). Python modules there (`cuts.py`, `run.py`, `round2/*.py`) are the reference behaviour
    for cutting, grouping, the follow-up choice and the size model; they are not to be copied line by line.
+   Known misses the spike left (accepted or not by Daniel — see the #49 resolution): "Description" on a freelance
+   listing gets the whole résumé; "Name" from a cover letter gets the whole letter in about half the runs. Don't tune
+   for them in Swift; report them if the live runs show them.
 4. `CONTEXT.md` (**Narrowing**, **Candidate**, **Candidate Chooser**, **No Suitable Match**, **Direct Paste**,
    **Paste Result**, **Embedded Value**), `docs/quality-gate.md`, `docs/design/paste-attempt-state-machine.md`,
    `docs/design/jev-gateway.md`, `docs/design/candidate-derivation.md`, `docs/design/direct-paste.md`,
@@ -75,7 +79,7 @@ Communication protocol:
    If the link fails with an undefined-symbol mangling mismatch after adding files, `swift package clean` first.
 
 ## The design you port (design `r2b`: `r2` frozen at round 2's Gate A, plus the Gate A2 keep-form change, 2026-09-26)
-⟦Supervisor: confirm every line against round-2 `FINDINGS.md` "Design (as run)" before launch; FINDINGS wins.⟧
+Source: `spikes/narrowing/round2/FINDINGS.md` "Design `r2b`" (branch `spike/narrowing` @ ba32886); FINDINGS wins on any difference.
 
 **Cutting** — character classes only, no meaning rules (round 1 `cuts.py`, round 2 `r2.py: children2`):
 - Line breaks → lines. A *line piece* is a run of consecutive non-blank lines (inner blank lines kept; starts and
@@ -133,11 +137,13 @@ other non-space character, +12 per option, +250 per question; +4 per excerpt id 
 32k for state + the largest single question, 92 % of 64k for the whole request. The estimate over-counts Jev's
 real `inputTokens` by ≈ 1.4× (safe side). Jev refuses over the limit with HTTP 400 `max_tokens_exceeded`.
 
-**Expected calls and time** (offline ideal over 82 cells: 1 call × 28, 2 × 51, 4 × 3; explore observed mean 1.65
-calls, median ≈ 1.05 s, one 8.2 s outlier). ⟦Supervisor: replace with the matrix numbers from FINDINGS.⟧
+**Measured calls and time** (round-2 `r2b` matrix, 164 pastes, paid Gateway tier from 17:18 on): 1.74 calls per paste
+(1 × 57, 2 × 99, 3 × 8, 4 × 2); per paste median 1028 ms, p90 1564 ms, max 3421 ms (the 300-line list, 4 calls); per
+call warm median 581 ms, p90 834 ms; cold 0.5–1.4 s. Speculative fan-out saved a call 33 times. 279 requests used
+the ids form, 8 the full-text fallback. On the paid tier the Gateway returned no 429 (it did on the free tier).
 
 ## Wordings (verbatim — do not edit a character; frozen at round 2's Gate A)
-⟦Supervisor: diff against round-2 `FINDINGS.md` "Wordings (verbatim)" before launch.⟧
+Checked against round-2 `FINDINGS.md` "Every wording, verbatim" @ ba32886: identical.
 
 **Step 1 `instructions`** (a string), ids form:
 > The user copied `source_document` and pressed paste. `target_context` describes the place where the text cursor is, and what surrounds that place. One option is everything that was copied, as it is. Every other excerpt option is the id of an exact excerpt cut from `source_document`; `excerpts` gives the text of each id, character for character. Choose what will be pasted at the text cursor. If that place asks for one particular thing, choose the option that is exactly that thing, with nothing missing and nothing extra; only if no option is exactly that, choose the option that contains all of it with the least extra text. If that place does not ask for one particular thing, choose everything that was copied. If two or more different excerpts are each exactly the thing that place asks for and nothing says which one is meant, choose `ask_user` instead of one of them.
@@ -168,7 +174,8 @@ is `choice` everywhere; there is no `boolean`/`noul` question anywhere in the ap
 
 Test every wording by exact string equality against the encoded request body; any change is an `ask`.
 
-## Place choice  ⟦Supervisor: keep this section only if Daniel decided it ships; else delete it⟧
+## Place choice  ⟦Supervisor: delete this section if Daniel said no (the supervisor's recommendation: it fixed nothing
+and broke the lone URL into a chat box); keep and complete it only if he said it ships⟧
 ⟦Daniel's decision, the glossary term he chose, the policy (B: everything → whole copy; nothing → No Suitable
 Match; one part → Narrowing's result), and the verbatim wording from FINDINGS (P3): instructions "The user copied
 `source_document` and pressed paste. `target_context` describes the place where the text cursor is, and what
