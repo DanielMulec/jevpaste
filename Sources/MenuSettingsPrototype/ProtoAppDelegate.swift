@@ -28,6 +28,7 @@ final class ProtoAppDelegate: NSObject, NSApplicationDelegate, ProtoActions {
         let environment = ProcessInfo.processInfo.environment
         if let menu = environment["PROTO_MENU"] { state.menuVariant = menu }
         if let rows = environment["PROTO_ROWS"].flatMap(Int.init) { state.rowStyle = rows }
+        if let take = environment["PROTO_FULL"].flatMap(Int.init) { state.fullTake = take }
         if let layout = environment["PROTO_SETTINGS"].flatMap(Int.init) { state.settingsVariant = layout }
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(systemSymbolName: "sparkle", accessibilityDescription: "JevPaste prototype")
@@ -107,6 +108,10 @@ final class ProtoAppDelegate: NSObject, NSApplicationDelegate, ProtoActions {
         menu.addItem(.separator())
         for (style, name) in [(1, "plain line + ✓"), (2, "two lines + dot"), (3, "symbol + Active tag")] {
             add("Rows \(style) — \(name)", state.rowStyle == style) { self.state.rowStyle = style }
+        }
+        menu.addItem(.separator())
+        for (take, name) in [(1, "own block"), (2, "in Settings/Quit block")] {
+            add("Full history take \(take) — \(name)", state.fullTake == take) { self.state.fullTake = take }
         }
         menu.addItem(.separator())
         for (layout, name) in [(1, "toolbar tabs"), (2, "sidebar"), (3, "one page")] {

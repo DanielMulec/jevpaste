@@ -36,12 +36,13 @@ final class PanelRow: NSView {
         build(height: look.rowHeight)
     }
 
-    init(title: @escaping (Bool) -> NSAttributedString) {
+    init(title: @escaping (Bool) -> NSAttributedString,
+         trailing: @escaping (Bool) -> NSAttributedString? = { _ in nil }) {
         clipID = nil
         makeTitle = title
         makeLeading = { _ in nil }
         makeTag = { _ in nil }
-        makeTrailing = { _ in nil }
+        makeTrailing = trailing
         super.init(frame: .zero)
         build(height: 22)
     }

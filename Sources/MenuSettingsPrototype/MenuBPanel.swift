@@ -142,14 +142,38 @@ final class MenuBPanel: NSObject, NSSearchFieldDelegate {
                 row.onClick = { [weak self] in self?.choose(clip.id) }
                 addRow(row)
             }
-            let full = PanelRow(title: { look.fullHistoryTitle(total: total, all: self.state.items.count,
-                                                               highlighted: $0) })
+            // Round 2: "Full history…" as a menu item, not a result row. Take 1 = its own block between separators,
+            // count inline; take 2 = first item of the Settings…/Quit block, count right-aligned like a shortcut.
+            add(MenuSeparator())
+            let all = state.items.count
+            let plain: (String, Bool) -> NSAttributedString = { text, highlighted in
+                NSAttributedString(string: text, attributes: [
+                    .font: NSFont.menuFont(ofSize: 0),
+                    .foregroundColor: highlighted ? NSColor.selectedMenuItemTextColor : NSColor.labelColor,
+                ])
+            }
+            let dim: (String, Bool) -> NSAttributedString = { text, highlighted in
+                NSAttributedString(string: text, attributes: [
+                    .font: NSFont.menuFont(ofSize: 0),
+                    .foregroundColor: highlighted ? NSColor.selectedMenuItemTextColor : NSColor.secondaryLabelColor,
+                ])
+            }
+            let full: PanelRow
+            if state.fullTake == 2 {
+                full = PanelRow(title: { plain("Full history…", $0) }, trailing: { dim("\(all)", $0) })
+            } else {
+                full = PanelRow(title: {
+                    let text = NSMutableAttributedString(attributedString: plain("Full history…", $0))
+                    text.append(dim("  (\(all))", $0))
+                    return text
+                })
+            }
             full.onClick = { [weak self] in
                 self?.close(reason: "Full history…")
                 self?.actions.openSettings(.fullHistory)
             }
             addRow(full)
-            add(MenuSeparator())
+            if state.fullTake != 2 { add(MenuSeparator()) }
         }
         for (title, action) in [("Settings…", { self.actions.openSettings(.general) }),
                                 ("Quit", { NSApp.terminate(nil) })] {

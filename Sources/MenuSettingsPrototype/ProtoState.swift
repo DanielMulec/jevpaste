@@ -58,6 +58,7 @@ final class ProtoState {
     var menuVariant = "A" { didSet { changed() } }
     var rowStyle = 1 { didSet { changed() } }
     var settingsVariant = 1 { didSet { changed() } }
+    var fullTake = 1 { didSet { changed() } }
     var provider: JevProvider = .gateway { didSet { changed() } }
     var keys: [JevProvider: String] = [.gateway: "vck_proto_4f2a9c1e7b0d", .typesafe: ""]
     var testResults: [JevProvider: TestResult] = [:]
@@ -124,7 +125,7 @@ final class ProtoState {
 
     var label: String {
         let active = activeItem.map { "\"\($0.firstLine.prefix(28))\"" } ?? "none"
-        return "PROTOTYPE · Menu \(menuVariant) · Rows \(rowStyle) · Settings \(settingsVariant)\n"
+        return "PROTOTYPE · Menu \(menuVariant) · Rows \(rowStyle) · Full history \(fullTake) · Settings \(settingsVariant)\n"
             + "Active Item: \(active)\nJev Provider: \(provider.rawValue) · Open at Login: "
             + (openAtLogin ? "on" : "off") + "\nlast: \(lastEvent.prefix(60))"
     }

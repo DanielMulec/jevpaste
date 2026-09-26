@@ -15,3 +15,10 @@ python3 $C $O/sheet-settings.png "Q3 — Settings layouts (row 1: tabs · row 2:
  $D/settings-7.png "S2 … Test on empty key" $D/settings-8.png "S2 Full History" \
  $D/settings-9.png "S3 Jev Provider, Test ✓" $D/settings-10.png "S3 refusal → Typesafe key" \
  $D/settings-11.png "S3 … Test on empty key" $D/settings-12.png "S3 Full History"
+# Round 2 (Daniel: Menu B, Rows 2, Settings 1; "Full history…" as its own item; General tab).
+python3 $C $O/round2-menu.png "Round 2 — Menu B · Rows 2: “Full history…” as a menu item" \
+ $D/r2-menu-1.png "Take 1 — own block, count inline" $D/r2-menu-2.png "Take 2 — first of Settings/Quit, count right" \
+ $D/r2-menu-3.png "Empty field (three items)"
+python3 $C $O/round2-settings.png "Round 2 — Settings 1 (toolbar tabs)" \
+ $D/r2-settings-1.png "General — Open at Login" $D/r2-settings-2.png "Jev Provider — after Test ✓" \
+ $D/r2-settings-3.png "Full History"
