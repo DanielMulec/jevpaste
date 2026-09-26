@@ -27,12 +27,20 @@ public struct JevGatewayDecisionService: DecisionService {
     }
 
     public func evaluate(_ request: NarrowingRequest, reply: @escaping @MainActor @Sendable (NarrowingReply) -> Void) {
+        evaluateReportingStatus(request) { narrowingReply, _ in reply(narrowingReply) }
+    }
+
+    /// `evaluate`, also passing on the HTTP status the reply came from (`nil` when no response arrived) — what
+    /// Settings' connection test tells the user.
+    func evaluateReportingStatus(
+        _ request: NarrowingRequest, reply: @escaping @MainActor @Sendable (NarrowingReply, Int?) -> Void
+    ) {
         Task {
             let started = ContinuousClock.now
             let body = EvaluateRequestBody.data(for: request)
             let (narrowingReply, status) = await exchange(request, body: body)
             Self.logReply(narrowingReply, status: status, request: request, bytes: body.count, after: .now - started)
-            await reply(narrowingReply)
+            await reply(narrowingReply, status)
         }
     }
 

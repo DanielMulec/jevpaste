@@ -25,11 +25,17 @@ public struct JevGatewayAccess: JevProviderAccess {
 
     public func openForPasteAttempt() -> JevProviderOpening {
         let provider = chosenProvider()
+        guard let service = decisionService(for: provider) else { return .noKey(provider) }
+        return .ready(service)
+    }
+
+    /// The provider's decision service holding its key as saved now, or `nil` when it has none or is not built.
+    func decisionService(for provider: JevProvider) -> JevGatewayDecisionService? {
         guard Self.builtProviders.contains(provider) else {
             Self.log.error("provider \(provider.rawValue, privacy: .public) is not built yet")
-            return .noKey(provider)
+            return nil
         }
-        guard let apiKey = credentials.apiKey(for: provider), !apiKey.isEmpty else { return .noKey(provider) }
-        return .ready(JevGatewayDecisionService(apiKey: apiKey, transport: transport))
+        guard let apiKey = credentials.apiKey(for: provider), !apiKey.isEmpty else { return nil }
+        return JevGatewayDecisionService(apiKey: apiKey, transport: transport)
     }
 }
