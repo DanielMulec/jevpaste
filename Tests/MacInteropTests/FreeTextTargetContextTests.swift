@@ -17,8 +17,7 @@ struct FreeTextTargetContextTests {
     }
 
     @Test func theAppNameAndTheWindowTitleOfTheFocusedElementAreRead() {
-        source.focus(
-            composer(inWindowTitled: "New chat"), applicationName: "ChatGPT", bundleIdentifier: "com.openai.codex")
+        source.focus(composer(inWindowTitled: "New chat"), applicationName: "ChatGPT")
 
         let context = resolver.resolveFocusedTarget().boundTarget?.context
 
@@ -37,8 +36,9 @@ struct FreeTextTargetContextTests {
         #expect(resolver.resolveFocusedTarget().boundTarget?.context.windowTitle == nil)
     }
 
-    @Test func anAppWithoutALocalizedNameHasNoAppNameAndNeverFallsBackToItsBundleIdentifier() {
-        source.focus(composer(inWindowTitled: "Inbox"), applicationName: nil, bundleIdentifier: "com.openai.codex")
+    /// The focused element carries no bundle identifier at all, so there is nothing to fall back to.
+    @Test func anAppWithoutALocalizedNameHasNoAppName() {
+        source.focus(composer(inWindowTitled: "Inbox"), applicationName: nil)
 
         #expect(resolver.resolveFocusedTarget().boundTarget?.context.appName == nil)
     }

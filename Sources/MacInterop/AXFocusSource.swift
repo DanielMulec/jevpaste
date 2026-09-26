@@ -30,9 +30,7 @@ final class AXFocusSource: FocusSource {
         guard AXUIElementGetPid(node.element, &processIdentifier) == .success else { return nil }
         let application = NSRunningApplication(processIdentifier: processIdentifier)
         return FocusedElement(
-            processIdentifier: processIdentifier, bundleIdentifier: application?.bundleIdentifier, node: node,
-            applicationName: application?.localizedName
-        )
+            processIdentifier: processIdentifier, node: node, applicationName: application?.localizedName)
     }
 
     private func focusedNode() -> AXElementNode? {

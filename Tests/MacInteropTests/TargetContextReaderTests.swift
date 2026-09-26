@@ -7,8 +7,8 @@ import Testing
 struct TargetContextReaderTests {
     private let reader = TargetContextReader<FakeNode>()
 
-    private func context(of node: FakeNode, bundleIdentifier: String = "com.google.Chrome") -> TargetContext {
-        reader.context(of: FocusedElement(processIdentifier: 1, bundleIdentifier: bundleIdentifier, node: node))
+    private func context(of node: FakeNode) -> TargetContext {
+        reader.context(of: FocusedElement(processIdentifier: 1, node: node))
     }
 
     @Test func fieldLabelIsTheTitle() {
