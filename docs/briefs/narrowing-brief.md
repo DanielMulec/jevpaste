@@ -1,19 +1,15 @@
 # Brief — Implement Narrowing (issue #50)
 
-> **READY, not launched.** Daniel answered the round-2 questions on 2026-09-26: (1) no place choice; (2) "Availability"
-> counts as a hit; (3) build now as a **beta**, accepting the known misses, with a later round to improve Narrowing.
-> At launch the supervisor fills `⟦SUPERVISOR-ID⟧` and removes this banner.
-
 You are a fresh Pi session (`anthropic/claude-opus-5-5:high`) in worktree `~/.pi/worktrees/jevpaste/narrowing`,
 branch `narrowing` (forked from `main`). This is a **production slice**: TDD, review chain, merged when done. Your
-supervisor is the Pi session with intercom id **`⟦SUPERVISOR-ID⟧`** (cwd `/Users/danielmulec/Projekte/experiments/jevpaste`).
+supervisor is the Pi session with intercom id **`01a0de5c-66a4-73bd-9ff8-6ee5f9f81836`** (cwd `/Users/danielmulec/Projekte/experiments/jevpaste`).
 Use exactly that id; ignore any other pi in that cwd. Daniel (owner) speaks **only through the supervisor** — every
 live step where Daniel acts is an `intercom ask`, and you wait. You are the only worker; the installed app is
 shared with Daniel's daily use — `make install` only when a gate reply says go.
 
 Communication protocol:
-- `intercom send ⟦SUPERVISOR-ID⟧` one line after every numbered step: `[narrowing] step N done — <fact>`.
-- `intercom ask ⟦SUPERVISOR-ID⟧` (blocking) at each **GATE** and for every live action; prefix with `[narrowing]`.
+- `intercom send 01a0de5c-66a4-73bd-9ff8-6ee5f9f81836` one line after every numbered step: `[narrowing] step N done — <fact>`.
+- `intercom ask 01a0de5c-66a4-73bd-9ff8-6ee5f9f81836` (blocking) at each **GATE** and for every live action; prefix with `[narrowing]`.
 - Anything unexpected → `ask` first. Answer asks you receive with `intercom reply`, never `send`.
 - Never block in a long sleep. Never print the contents of `~/.config/jevpaste/env`. Never log or print item
   text, field labels or window titles; refer only to `JEVPASTE-…` synthetic payloads.
@@ -26,7 +22,7 @@ Communication protocol:
    (`gh issue view 1`) is absolute: no yes/no question, no local rule that decides meaning, no field or place
    vocabulary in any wording, no app names in behaviour. A new local gate, cap or classifier is not yours to add.
 3. The proof you port: `spikes/narrowing/round2/FINDINGS.md` and the round-1 `spikes/narrowing/FINDINGS.md`
-   (`git show spike/narrowing:<path>`, or read the worktree `~/.pi/worktrees/jevpaste/narrowing-spike` read-only).
+   (`git show spike/narrowing:<path>`; the spike worktree is gone, the branch stays).
    Port the **design** and **every wording verbatim** (the section below repeats them; the FINDINGS win on any
    difference — say so). Python modules there (`cuts.py`, `run.py`, `round2/*.py`) are the reference behaviour
    for cutting, grouping, the follow-up choice and the size model; they are not to be copied line by line.
