@@ -31,7 +31,7 @@ Everything else (`confidence`, `usage`, `providerMetadata`) is ignored.
 | 429 without a finite, non-negative `retry-after` | `.rateLimited(retryAfter: .seconds(1))` |
 | 400 carrying `{"error_type":"max_tokens_exceeded"}` — as `error.message` / `error.param.error`, or inside any `providerAttempts[].error` (the Gateway's "typesafe returned status 400" form) | `.tooLarge` |
 | any other status (other 400s included), transport error | `.failed` |
-| key file missing/unreadable, or no non-empty `AI_GATEWAY_API_KEY=` line | `.failed`, no call |
+| no key for the chosen provider (since #53: decided in `JevGatewayAccess`, before a service exists) | Core refusal, no call |
 
 Byte-exact checks, the follow-up rule and every outcome stay in Core; the adapter only reports. No retry and no
 timeout here: the Paste Attempt drops late replies itself.
@@ -49,14 +49,20 @@ finding, 2026-09-26).
 - `HTTPTransport: Sendable { func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) }`;
   production `URLSessionTransport` (`URLSession.shared`). Unit tests inject a stub that records the request
   and returns canned status/headers/body — no network.
-- `GatewayCredentials(envFile: URL)` reads the key at each call (a later Keychain slice replaces it); tests
+- **Since #53** the key comes from the Keychain through `JevCredentials`: `JevGatewayAccess` reads the chosen Jev
+  Provider and its key once per Paste Attempt and hands out `JevGatewayDecisionService(apiKey:)`; no key → Core's
+  refusal, no call (`missingKey` is gone). Settings' Test = `JevGatewayAccess.testConnection(of:)` through the same
+  exchange ([menu-and-settings.md](menu-and-settings.md)). The env file below is only the one-time import source.
+- `GatewayCredentials(envFile: URL)` read the key at each call until #53; tests
   point it at a temporary file. Default: `~/.config/jevpaste/env`. Accepts an optional `export ` prefix and
   surrounding quotes. `hasAPIKey` tells the live test (and later the shell) whether a key exists.
 - Files: `JevGatewayDecisionService.swift` (orchestration), `EvaluateRequestBody.swift` (encoding),
   `EvaluateResponse.swift` (decoding + mapping), `GatewayCredentials.swift`, `HTTPTransport.swift`,
   `JevGatewayFailure.swift`, `JevRefusal.swift` (the 400 size refusal), `OrderedJSONParser.swift` (+`Lookup`),
   `RateLimit.swift` (`retry-after`). Tests: `NarrowingRequestEncodingTests`, `NarrowingReplyTests`,
-  `NarrowingReplayTests`, `JevGatewayRateLimitAndKeyTests` (`JevGatewayRateLimitTests`, `JevGatewayKeyTests`).
+  `NarrowingReplayTests`, `JevGatewayRateLimitAndKeyTests` (`JevGatewayRateLimitTests`, `GatewayEnvFileTests`),
+  `JevGatewayAccessTests`, `JevConnectionTestTests`; `JevCredentials.swift`, `JevGatewayAccess.swift`,
+  `JevConnectionTest.swift` since #53.
 
 ## Live test
 `JEVPASTE_LIVE_JEV=1` and a readable key → one real step-1 request with a synthetic document (name/email/city lines,

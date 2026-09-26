@@ -6,7 +6,8 @@ Core ports are unchanged (`docs/design/paste-attempt-state-machine.md`). Everyth
 
 ## Composition root — `SmartPasteApplication`
 - `@MainActor final class`, created by `MenuBarDelegate.applicationDidFinishLaunching` after the status item is
-  set up. `MenuBarDelegate` owns the status item and its menu ("Clipboard History…", "Open at Login", "Quit"; history panel: `history-ui.md`). `--probe` stays as it is.
+  set up. `MenuBarDelegate` owns the status item; since #53 it has no menu: a click toggles the History Search panel,
+  which leads to Settings and Quit ([menu-and-settings.md](menu-and-settings.md)). `--probe` stays as it is.
 - It builds and keeps: `SystemClipboard()` (100 ms polling), `CopyCapture(clipboard:history:)`, and
   `PasteAttemptCoordinator` with `GlobalHotkey()`, `AccessibilityTargetResolver()`, `PasteKeystrokeInserter()`,
   `JevGatewayDecisionService()`, `RunLoopPasteAttemptClock`, `IndicatorPresenter` over `IndicatorNoticeSurface`, `PanelCandidateChooser`,
@@ -15,7 +16,8 @@ Core ports are unchanged (`docs/design/paste-attempt-state-machine.md`). Everyth
 - Merge note (capture ∥ chooser): `hideWhileChoosing()` passes through `IndicatorNoticeSurface`, so a history notice that
   waited during processing appears on the indicator while the chooser is open. Accepted as informational: the chooser is
   its own panel, the notice is short-lived, and the outcome after the choice displays over it as usual.
-- At launch it logs `GatewayCredentials.standard.hasAPIKey` (boolean only); `AccessibilityGrantCheck` logs
+- At launch it runs the one-time key import and logs `launch provider=… apiKeyPresent=…` (enum + boolean;
+  [menu-and-settings.md](menu-and-settings.md)); `AccessibilityGrantCheck` logs
   `grant check at launch trusted=…` and ⌘⇧V passes through `GrantCheckingHotkey` (see `hardening.md`).
 - Active Item = the text on the clipboard at launch, then each newer copy; history is persistent — see
   `docs/design/capture-and-history.md` (capture+history slice).

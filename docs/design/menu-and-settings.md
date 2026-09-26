@@ -17,12 +17,13 @@ Supersedes [history-ui.md](history-ui.md) (panel removed; its Core seam `select(
   editor after one character; only the rows below it are rebuilt. Caret put at the end after setting text.
 - Keys via the field delegate `control(_:textView:doCommandBy:)`, returning `true` when handled: ↓/↑ move the highlight
   over rows and menu items (↑ on the first → none); `insertNewline:` chooses the highlighted item, else the first row;
-  `cancelOperation:` closes (**one Esc**). Rows take the first click (`acceptsFirstMouse`, `hitTest` → row), highlight
-  on hover (`.activeAlways` tracking area), act on mouse-up. ⌘X/C/V/A/Z edit the field (no Edit menu in an accessory app).
+  `cancelOperation:` closes (**one Esc**). Lines (`MenuLineView`, a `FirstClickView`) take the first click and act on
+  it, highlight on hover (`.activeAlways` tracking area). ⌘X/C/V/A/Z edit the field (`EditingShortcuts`: no Edit menu).
 - Content (pure `HistorySearchContent`): placeholder = Active Item's first line, else "Search Clipboard History".
   Blank query → field · Settings… · Quit. Else dim "N of M matches", ≤ 5 rows 38 pt (first line; dim "N lines · age" or
   "N chars · age"; accent dot = Active Item), "No matching Clipboard Items" when none, then **Full history… (count)** ·
   Settings… · Quit (count right-aligned, right inset = titles' left inset, 25 pt).
+- Logic `HistorySearchController` over `HistorySearchSurface` (AppKit: `HistorySearchPanel`); rows = `HistoryEntryRow`.
 - Row → `CopyCapture.select`, close, focus back to the app frontmost at open (`TargetAppFocusReturn`), note "Active: …".
   Esc → close + focus return; click-away (resign key) → close only; Full history…/Settings… → close, then Settings
   (activates the app); Quit → terminate. Nothing is ever pasted from the panel.
@@ -30,8 +31,8 @@ Supersedes [history-ui.md](history-ui.md) (panel removed; its Core seam `select(
 ## History Search seam — app-side filtering over one snapshot (Core `HistorySearch`)
 - `HistoryRepository.items()` becomes `entries() -> [HistoryEntry]` (`item`, `copiedAt: Date?`): the age needs a copy
   time the store does not keep. Schema **v2**: `ALTER TABLE clipboard_item ADD COLUMN copied_at REAL` (Unix seconds;
-  NULL for rows from v1 → detail without age). `record` stamps it through an injected `now`.
-- `HistorySearch.results(for: query, in: entries, limit: 5)` → newest ≤ 5 matches, match count, history count.
+  NULL for rows from v1 → detail without age). `record(_:copiedAt:)`: Copy Capture stamps it from its injected `now`.
+- `HistorySearch.results(for:in:)` → newest ≤ 5 (`rowLimit`) matches, match count, history count; `nil` when blank.
   Query trimmed of whitespace and newlines in Swift; match = case- and diacritic-insensitive substring of the whole
   text (Foundation), as the old panel did. The panel reads `entries()` once when it opens and again on an Active Item
   change while open, then filters in memory per keystroke.
@@ -46,8 +47,8 @@ Supersedes [history-ui.md](history-ui.md) (panel removed; its Core seam `select(
   yet"); the service is pinned in the attempt and serves every step (decision 9). `.noKey` → refusal, no Target read.
 - JevGateway: `JevCredentials { apiKey(for: JevProvider) -> String? }`; `JevGatewayAccess(credentials:choice:transport:)`
   reads the choice and its key once and returns `JevGatewayDecisionService(apiKey:transport:)`. `missingKey` and the
-  env-file read leave the request path. Test: `JevConnectionTest` sends one step-shaped request (one choice question,
-  one option) through the same exchange → `.works` | `.failed(reason)` (key rejected, rate limited, offline, HTTP n).
+  env-file read leave the request path. Test: `JevGatewayAccess.testConnection(of:)` sends one step-shaped request (one
+  choice question, one option) with the saved key through the same exchange → `.works` | `.failed(reason)`.
 - Choice persisted in UserDefaults (`jevProvider`, raw value); unknown or not-yet-built values read as the default.
   Typesafe direct is listed, disabled (radio + key row) until [Add Typesafe direct as a Jev Provider](https://github.com/DanielMulec/jevpaste/issues/54).
 - Keychain (`KeychainJevKeyStore`, Security framework, app layer): generic password, service `com.jevpaste.JevPaste.jev-provider-key`,
@@ -58,9 +59,9 @@ Supersedes [history-ui.md](history-ui.md) (panel removed; its Core seam `select(
   set flag on success (`imported`), leave unset on failure (`failed`, retried next launch); else set flag (`noEnvKey`).
   The env file is never deleted. Log: `key import <result>`, `launch provider=… apiKeyPresent=…` (booleans/enums).
 
-**Refusal "No key for <provider> — open Settings"**: Core outcome `refused(.noProviderKey(JevProvider))`, log `outcome refused.noProviderKey`. Shown 5 s; while shown, a
-click on the indicator opens Settings on Jev Provider with that key field focused and "⚠︎ No key for <provider> —
-paste it here." in its result slot (presenter gets an `openSettingsToKey` closure; other outcomes stay click-inert).
+**Refusal "No key for <provider> — open Settings"**: `refused(.noProviderKey(JevProvider))`, log `outcome
+refused.noProviderKey`, shown 5 s; while shown a click opens Settings on Jev Provider, key field focused, "⚠︎ No key for
+<provider> — paste it here." (`IndicatorPresenter.opensSettingsToKey`; every other outcome stays click-inert).
 
 ## Settings window (`JevPasteApp/Settings/`)
 `NSTabViewController` `.toolbar`: **General** (Open at Login switch over `LoginItemToggle`, state read on appear;
@@ -76,13 +77,13 @@ observer, listeners = notice, panel, Full History.
 Core: `HistorySearchTests` (≤ 5 newest, counts, case/diacritic, blank, trimmed query) · `JevProviderAccessTests`
 (noKey refusal before Target/Jev; one open per attempt; a changed choice mid-attempt ignored, next attempt uses it).
 HistoryStore: `copied_at` stamped/read, v1 → v2 keeping rows (NULL age), v3 refused. JevGateway: access ready/noKey,
-key sent as Bearer, connection test mapping per status. App: content mapping + age formatting, controller over a fake surface (keys, Enter fallback, one Esc, click-away no focus return, choose selects,
-Settings/Full history/Quit routing, refresh on copy), import (four branches, env never read after flag), Settings models
-(choice store, edit clears result, test states, Full History delete/clear/active tag), refusal text/log/click → key. Live only: AppKit rendering, Keychain calls, hover, auto-hiding bar.
+key sent as Bearer, connection test per status. App: `HistorySearchContentTests`, `HistorySearchControllerTests`
+(keys, Enter fallback, one Esc, click-away, routing, refresh on copy), `JevKeyImportTests`, `JevProviderChoiceTests`,
+`ProviderKeySettingsTests`, `FullHistoryListTests`, `NoProviderKeyRefusalTests`. Live only: AppKit, Keychain, bar.
 
 ## Live run (after the install gate; synthetic `JEVPASTE-MENU-53` rows only)
-0. Two `make install`s before Daniel: the second build reads the Keychain item without a prompt (probe first with
-   `kSecUseAuthenticationUIFail` in a throwaway signed binary: partition list of an item made by a jevpaste-dev app).
+0. Probe (done): an item made by a jevpaste-dev-signed app has `partition_id cdhash:<creator>`, yet a rebuilt app
+   (new cdhash) read and deleted it with `kSecUseAuthenticationUIFail`. Two `make install`s before Daniel prove it.
 a. Panel: placeholder, type, ↓ then a letter keeps editing, click row, reopen shows it. b. ⌘⇧V in a Chrome `data:`
 field pastes the staged value. c. Settings key present, Test ✓. d. Clear key → ⌘⇧V refusal → click → Settings on the
 key; restore by clearing the import flag and relaunching (the app re-imports from the env file; key never shown).

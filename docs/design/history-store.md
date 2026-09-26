@@ -5,6 +5,10 @@ Slice: [Implement the SQLite history repository](https://github.com/DanielMulec/
 (storage resolution). Starting point: the `record`-only seam from
 [Implement the Paste Attempt state machine over the seams](https://github.com/DanielMulec/jevpaste/issues/18).
 
+> **Since #53** ([menu-and-settings.md](menu-and-settings.md)): `record(_:copiedAt:)` (Copy Capture stamps the copy
+> time from its injected clock) and `entries() -> [HistoryEntry]` (item + `copiedAt: Date?`) replace `record(_:)` and
+> `items()`; schema **v2** adds `copied_at REAL` (NULL for rows kept from v1; v1 → v2 in one transaction), v3+ refused.
+
 ## Seam extension (Core, `Seams/HistoryRepository.swift`)
 ```swift
 public protocol HistoryRepository: Sendable {
