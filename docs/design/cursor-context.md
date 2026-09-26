@@ -44,6 +44,19 @@ from this (`AXInsertionPointLineNumber` is unsupported in Ghostty, and a second 
 of the rule: a real caret at the very start of a text longer than 2 000 characters (TextEdit right after opening a
 long file) gets the text's end instead of its start — rare, and still text of the same field.
 
+Options weighed for a reported cursor that cannot be trusted (app-neutral; per measured row):
+| option | Ghostty/Herdr `(0,0)` | Terminal `(20137,0)` | TextEdit opened `(0,0)` | TextEdit `(3609,0)` | ChatGPT (0 chars) |
+|---|---|---|---|---|---|
+| **1 `(0,0)` = no cursor → last 2 000** (chosen) | tail: NEAR in | 2 000 before the prompt | end of the file (FAREND in, FARSTART out) | around the caret | page walk |
+| 2 `(0,0)` → 1 000 from the start + 1 000 from the end | two joined pieces; half the budget on the window's top rows | same as 1 | start and end | same as 1 | page walk |
+| 3 another attribute tells real from fake | `AXVisibleCharacterRange` = `0+13266` and `AXNumberOfCharacters` = length in Ghostty *and* TextEdit: no signal. Only `AXInsertionPointLineNumber` differs (Ghostty unsupported, TextEdit 0), but ChatGPT reports garbage there, Chrome is unmeasured, and it is a second call | | | | |
+
+Option 2 halves the useful text in the one measured target that needs the rule and sends a seam between unrelated
+text; option 3 has no measured single-call signal. Ghostty with option 1: the last 2 000 characters **contain NEAR
+(518 UTF-16 units before the end) = true**; **OLD = excluded (true)** — trivially: Herdr's scrollback never reaches
+Ghostty's AX text. Ghostty's text is the whole window across every Herdr pane, so the bottom rows of other panes
+reach Jev as well (as with today's suffix branch); Core's secret screening of surrounding text still applies.
+
 ## Seam change
 - `AccessibilityNode` gains `var selectedTextRange: SelectedTextRange? { get }` — the reported range as is (UTF-16
   `location`, `length`), `nil` when the element offers none. Judging it (bounds, `(0,0)`) is the collector's rule, not the node's.
