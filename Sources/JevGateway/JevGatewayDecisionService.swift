@@ -38,7 +38,7 @@ public struct JevGatewayDecisionService: DecisionService {
     /// The reply and the HTTP status it came from (`nil` when no response arrived).
     private func exchange(_ request: NarrowingRequest, body: Data) async -> (NarrowingReply, Int?) {
         guard let apiKey = credentials.apiKey() else {
-            return (Self.failed(.missingKey(file: credentials.envFile.path(percentEncoded: false))), nil)
+            return (Self.failed(.missingKey), nil)
         }
         guard let (responseBody, response) = try? await transport.send(Self.urlRequest(body: body, apiKey: apiKey))
         else { return (Self.failed(.transport), nil) }

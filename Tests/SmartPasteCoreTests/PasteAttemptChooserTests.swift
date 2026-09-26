@@ -77,9 +77,20 @@ struct PasteAttemptChooserTests {
     @Test func chooserReplyThatIsNotAnOfferedAlternativeFailsAsInvalidResult() {
         let harness = Self.harnessWithChooserOpen()
 
-        harness.chooser.choose("Ada Lovelace")
+        harness.chooser.replyAsAMisbehavingAdapter(with: "Ada Lovelace")
 
         #expect(harness.presenter.outcomes == [.failed(.invalidResult)])
+        #expect(harness.log.steps.isEmpty)
+    }
+
+    @Test func aSecondReplyAfterTheChooserAnsweredIsIgnored() {
+        let harness = Self.harnessWithChooserOpen()
+        harness.chooser.dismiss()
+
+        harness.chooser.replyAsAMisbehavingAdapter(with: "ada@work.example")
+        harness.clock.advance(by: .milliseconds(120))
+
+        #expect(harness.presenter.outcomes == [.cancelled])
         #expect(harness.log.steps.isEmpty)
     }
 
@@ -89,7 +100,7 @@ struct PasteAttemptChooserTests {
         harness.jev.askUser(weighting: [])
         harness.jev.fillChooser(with: ["Z\u{FC}rich", "Bern"])
 
-        harness.chooser.choose("Zu\u{308}rich")
+        harness.chooser.replyAsAMisbehavingAdapter(with: "Zu\u{308}rich")
 
         #expect(harness.presenter.outcomes == [.failed(.invalidResult)])
         #expect(harness.log.steps.isEmpty)

@@ -1,6 +1,6 @@
 # Candidate derivation — rules and tests
 
-> **Superseded** by [narrowing.md](narrowing.md) (#50): Candidates are no longer derived; Narrowing cuts pieces by character classes only. Kept as the record of the removed rules.
+> **Superseded — historical record only.** Since [narrowing.md](narrowing.md) (#50) nothing on this page describes the app: no Candidate derivation, no type rules, no 254 cap, no `CandidateExtraction` port. Narrowing cuts pieces by character classes only.
 
 Slices: [Implement Candidate derivation](https://github.com/DanielMulec/jevpaste/issues/19) and
 [Add multi-line Candidate kinds](https://github.com/DanielMulec/jevpaste/issues/30). Spec:

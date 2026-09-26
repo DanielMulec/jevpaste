@@ -311,11 +311,17 @@ final class FakePresenter: PasteOutcomePresenter {
     }
 }
 
+/// Follows the `CandidateChooser` contract: shows one offer and replies once — with an offered Candidate or `nil` —
+/// clearing the visible offer before it replies. `replyAsAMisbehavingAdapter` is the only way to reply with text that
+/// was not offered or to reply again, for the adversarial tests that check Core's own guard.
 @MainActor
 final class FakeChooser: CandidateChooser {
     /// Called when the chooser opens; the harness hides the indicator, as the app's chooser does.
     var onPresent: (@MainActor () -> Void)?
     private var reply: (@MainActor (Candidate?) -> Void)?
+    /// The newest reply callback, kept after it answered — only for `replyAsAMisbehavingAdapter`.
+    private var newestReply: (@MainActor (Candidate?) -> Void)?
+    /// The offer on screen; `nil` when no chooser is open.
     private(set) var offeredCandidates: [Candidate]?
     private(set) var offeredTarget: BoundTarget?
 
@@ -327,15 +333,33 @@ final class FakeChooser: CandidateChooser {
         offeredCandidates = candidates
         offeredTarget = target
         self.reply = reply
+        newestReply = reply
         onPresent?()
     }
 
+    /// The user picks the offered row whose text is `text`, byte for byte; nothing happens if no such row is open.
     func choose(_ text: String) {
-        reply?(Candidate(text: text))
+        guard let offered = offeredCandidates?.first(where: { $0.text.utf8.elementsEqual(text.utf8) }) else { return }
+        answer(offered)
     }
 
+    /// Esc or click-away while the chooser is open.
     func dismiss() {
-        reply?(nil)
+        guard offeredCandidates != nil else { return }
+        answer(nil)
+    }
+
+    /// A misbehaving adapter replies with `text`, offered or not, open or not.
+    func replyAsAMisbehavingAdapter(with text: String) {
+        newestReply?(Candidate(text: text))
+    }
+
+    private func answer(_ candidate: Candidate?) {
+        let reply = reply
+        self.reply = nil
+        offeredCandidates = nil
+        offeredTarget = nil
+        reply?(candidate)
     }
 }
 

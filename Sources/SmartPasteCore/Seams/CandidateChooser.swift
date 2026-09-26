@@ -1,4 +1,5 @@
-/// The small in-app prompt shown when several same-type Candidates are plausible for the Target.
+/// The small in-app prompt shown when Jev asks the user during Narrowing: it offers the rows Jev filled it with (one
+/// or more excerpts of the Active Item, in the order found) and the user picks one or cancels.
 ///
 /// The real adapter lives in the app shell (non-activating panel); tests supply an in-memory fake.
 @MainActor
