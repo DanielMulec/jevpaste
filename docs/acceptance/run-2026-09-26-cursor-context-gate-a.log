@@ -8,9 +8,9 @@
 # SIGUSR1 = set its AXSelectedTextRange to the middle of its value (caret only), then measure.
 # Logged: numbers, AX status codes (0 ok, -25205 attribute unsupported, -25208 not implemented, -25212 no value),
 # roles, bundle ids, marker booleans and UTF-16 offsets from the cursor. Never text.
-# Fixtures (/tmp/jevpaste-cursor-51): scrollback.txt = 300 lines: 3× "# JEVPASTE-OLD-51", 296 filler, "# JEVPASTE-NEAR-51"
-# last. long.txt = 7218 chars: JEVPASTE-FARSTART-51 at 0, JEVPASTE-BEFORE-51 at 3591, JEVPASTE-AFTER-51 at 3612,
-# JEVPASTE-FAREND-51 at 7200 (middle = 3609, right after BEFORE). gate-a.html = <textarea autofocus> holding long.txt,
+# Fixtures (/tmp/jevpaste-cursor-51): scrollback.txt = 300 lines: 3 OLD-marker lines, 296 filler lines,
+# the NEAR-marker line last. long.txt = 7218 chars, filler sentences around the markers: JEVPASTE-FARSTART-51 at 0,
+# JEVPASTE-BEFORE-51 at 3591, JEVPASTE-AFTER-51 at 3612, JEVPASTE-FAREND-51 at 7200 (middle = 3609, right after BEFORE). gate-a.html = <textarea autofocus> holding long.txt,
 # caret set to the middle on load. fixture.command = cat scrollback.txt; read.
 # Helper sig.sh <bundle> <USR1|USR2>: aborts unless exactly one probe pid ≠ production pid and lsappinfo front == bundle.
 # (a) Herdr: scratch pane wC:p2K split right of my pane, `clear; cat scrollback.txt`, herdr tab/pane focus, open -a Ghostty.
@@ -104,7 +104,7 @@ signal USR2 to probe pid=68748 (production pid=88342) front=com.openai.codex at 
 #     NEAR at −17, OLD at −19903; insertion line 303. Range read 139 µs.
 # (c) TextEdit: AXTextArea, 7218 chars, cursor (0,0) as opened; after the AX setter (status 0) (3609,0): BEFORE −18,
 #     AFTER +3. Range read 40–43 µs.
-# (d) Chrome: unmeasured — Chrome had a modal consent sheet open ("Allow remote debugging?", raised by this session's
+# (d) Chrome: unmeasured — Chrome had a modal sheet open (Chrome's remote-debugging consent sheet, raised by this session's
 #     chrome-devtools MCP connection; focusedWindowRole=AXSheet, AXFocusedUIElement -25212 system-wide and on the app,
 #     enhancedUI=true): not a Chrome AX limitation. Nothing clicked; the gate-a.html tab was left open for the
 #     supervisor. The Chrome caret is measured in the step-5 live proof instead.
