@@ -37,3 +37,26 @@ its row backgrounds start at the inset like the footer. History Search panel wid
 prototype's constant), rows truncate with an ellipsis. Checked with offscreen renders (not committed).
 clipboard restored from vault before relaunch: items=1 sha256=b1348553fec3 matches=true
 09:49:28 reinstall  key import alreadyDone · launch provider=vercelAIGateway apiKeyPresent=true · trusted=true
+
+## Daniel, part 2 (relayed by the supervisor; every step reconciled from the log/DB)
+General + History Search panel after c8bf63e, Daniel: "amazing".
+(c) 10:02:30 test vercelAIGateway started · Jev answered status=200 questions=1 options=1 · test vercelAIGateway works
+(d) 10:03:22 key for vercelAIGateway removed · 10:03:37 and 10:04:08 outcome refused.noProviderKey ·
+    10:04:09 missing key clicked, opening Settings · Settings opened at key(vercelAIGateway)
+    (10:03:11 removed / 10:03:18 stored = an earlier edit of the field before the final clear)
+    A row containing the provider key was captured by the user's own copy and deleted by the user (below).
+(f) 10:07:35 and 10:08:00 full history deleted one item (HistoryStore deleted 1 item, twice): the key row and the
+    MENU-53-LATER row. Rows 171 → 169. SQL: MENU-53-LATER absent, MENU-53 present (seq 266), 0 rows equal the
+    provider key (hash compare over all rows, nothing printed). Clear History… → Cancel: no clear line, count unchanged.
+Key restore (method agreed at GATE A): app quit → clipboard vault restored (items=1 sha256=b1348553fec3 matches=true)
+    → import flag deleted → relaunch 10:08:21: key for vercelAIGateway stored · key import imported ·
+    launch provider=vercelAIGateway apiKeyPresent=true · keys/vercelAIGateway -rw------- · flag=1.
+    Launch Adoption re-recorded the user's own clipboard item under the next free copy_sequence.
+(e) Open at Login was on; Daniel set it off and on: 10:24:23 login item status notRegistered ·
+    10:24:29 login item status enabled. No restart needed (SMAppService registers immediately).
+(h) optional removal of the Keychain item from the superseded Keychain build left to Daniel;
+    at close: security find-generic-password -s com.jevpaste.JevPaste.jev-provider-key exit 0 (still present).
+
+## Cleanup
+Chrome: own tab already closed at cleanup (not in the page list); no other tab touched.
+Clipboard vault and its tool deleted from /tmp. MENU-53 row (seq 266) remains in history as a synthetic value.
