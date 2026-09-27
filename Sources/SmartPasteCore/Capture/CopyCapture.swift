@@ -7,6 +7,7 @@ import Foundation
 public final class CopyCapture {
     public private(set) var activeItem: ClipboardItem?
     private let history: any HistoryRepository
+    private let exclusion: any CaptureExclusion
     /// The wall-clock time a copy is recorded with; it only describes the entry ("12 min ago").
     private let now: @MainActor () -> Date
     private var onActiveItemChange: (@MainActor (ActiveItemChange) -> Void)?
@@ -18,14 +19,17 @@ public final class CopyCapture {
     ///   the Active Item and is recorded unless concealed. It is called once, *after* observation has started, so
     ///   a copy landing in between is adopted at launch rather than lost; the observer may report that copy once more,
     ///   which history treats as a re-copy of the same item.
+    /// - Parameter exclusion: Copies it excludes (a stored Jev Provider key) are adopted as concealed items.
     /// - Parameter now: The time each copy — the launch contents included — is recorded with.
     public init(
         clipboard: any Clipboard,
         history: any HistoryRepository,
+        exclusion: any CaptureExclusion = NoCaptureExclusion(),
         contentsAtLaunch: @MainActor () -> ClipboardItem? = { nil },
         now: @escaping @MainActor () -> Date = { Date() }
     ) {
         self.history = history
+        self.exclusion = exclusion
         self.now = now
         clipboard.startObservingChanges { [weak self] change in
             self?.clipboardChanged(change)
@@ -59,8 +63,11 @@ public final class CopyCapture {
     }
 
     /// Adoption: a copy (live, or the launch contents — Launch Adoption) becomes the Active Item and, unless
-    /// concealed, enters Clipboard History.
-    private func adopt(_ item: ClipboardItem) {
+    /// concealed or excluded (then it is adopted as concealed), enters Clipboard History.
+    private func adopt(_ copied: ClipboardItem) {
+        let item =
+            !copied.isConcealed && exclusion.excludes(copied.text)
+            ? ClipboardItem(text: copied.text, isConcealed: true) : copied
         if !item.isConcealed {
             history.record(item, copiedAt: now())
         }

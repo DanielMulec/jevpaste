@@ -48,17 +48,17 @@ Supersedes [history-ui.md](history-ui.md) (panel removed; its Core seam `select(
 - Choice persisted in UserDefaults (`jevProvider`, raw value); unknown or not-yet-built values read as the default.
   Typesafe direct is listed, disabled (radio + key row) until [Add Typesafe direct as a Jev Provider](https://github.com/DanielMulec/jevpaste/issues/54).
 - Key store (`FileJevKeyStore`, app layer, Daniel 2026-09-27): `~/.config/jevpaste/keys/<provider raw value>`, UTF-8
-  key, file 0600 in a 0700 directory; written to a new 0600 file and renamed over (atomic), empty field → file removed.
-  Keys never logged (errno only). Tests: temp directory (`FileJevKeyStoreTests`); elsewhere an in-memory fake.
-- Keychain finding (2026-09-27, macOS 26.6.2, why not the Keychain): self-signed `jevpaste-dev` has no Team ID, so a
-  generic password's partition list is the creating build's `cdhash:`. A rebuilt app (same DR, new cdhash) made
-  securityd log "ACL partition mismatch … asking user about XARA partition" and show a prompt; "Allow" is per request
-  (partition list unchanged). A probe also showed an unrelated ad-hoc same-user app reading such an item silently.
-  `KeychainJevKeyStore` stays (unused, `periphery:ignore:all`): the Keychain returns with a Team-ID-signed build.
+  key, file 0600; every write first insists the directory is a real directory owned by the user (no symlink) and
+  tightens it to 0700, then writes a new 0600 file whole (short writes/EINTR retried) and renames it over; empty → unlink.
+  Keys never logged (errno only). Tests: temp directory; elsewhere an in-memory fake.
+- Capture exclusion (Daniel 2026-09-27): a copy (live or Launch Adoption) whose trimmed text equals a stored key is
+  adopted concealed — never in history. Core seam `CaptureExclusion`; `StoredKeyCaptureExclusion` reads the store per copy.
+- Not the Keychain (2026-09-27): self-signed `jevpaste-dev` has no Team ID → each rebuild prompts (XARA partition =
+  creator cdhash). `KeychainJevKeyStore` stays unused (`periphery:ignore:all`) for a Team-ID-signed build.
 - One-time import (`JevKeyImport`, at launch): flag `jevProviderKeyImportDone` set → nothing (env file never read
   again). Else the store has a Vercel key → set flag (`storeHasKey`); else env file has `AI_GATEWAY_API_KEY` → store,
   set flag on success (`imported`), leave unset on failure (`failed`, retried next launch); else set flag (`noEnvKey`).
-  The env file is never deleted. Log: `key import <result>`, `launch provider=… apiKeyPresent=…` (booleans/enums).
+  Env file never deleted. Log: `key import <result>`, `launch provider=… apiKeyPresent=…`, "copy of a stored key kept…".
 
 **Refusal "No key for <provider> — open Settings"**: `refused(.noProviderKey(JevProvider))`, log `outcome
 refused.noProviderKey`, shown 5 s; while shown a click opens Settings on Jev Provider, key field focused, "⚠︎ No key for
@@ -80,11 +80,11 @@ Core: `HistorySearchTests` (≤ 5 newest, counts, case/diacritic, blank, trimmed
 HistoryStore: `copied_at` stamped/read, v1 → v2 keeping rows (NULL age), v3 refused. JevGateway: access ready/noKey,
 key sent as Bearer, connection test per status. App: `HistorySearchContentTests`, `HistorySearchControllerTests`
 (keys, Enter fallback, one Esc, click-away, routing, refresh on copy), `JevKeyImportTests`, `JevProviderChoiceTests`,
-`ProviderKeySettingsTests`, `FullHistoryListTests`, `NoProviderKeyRefusalTests`, `FileJevKeyStoreTests`. Live: AppKit, bar.
+`ProviderKeySettingsTests`, `FullHistoryListTests`, `NoProviderKeyRefusalTests`, `FileJevKeyStoreTests` (loose dir,
+symlink, short writes), `StoredKeyCaptureExclusionTests`; Core `CaptureExclusionTests`. Live: AppKit, bar.
 
 ## Live run (after the install gate; synthetic `JEVPASTE-MENU-53` rows only)
-0. Two `make install`s before Daniel: `key import imported` into the file, then the rebuild reads it (no prompt).
-a. Panel: placeholder, type, ↓ then a letter keeps editing, click row, reopen shows it. b. ⌘⇧V in a Chrome `data:`
-field pastes the staged value. c. Settings key present, Test ✓. d. Clear key → ⌘⇧V refusal → click → Settings on the
-key; restore by clearing the import flag and relaunching (the app re-imports from the env file; key never shown).
-e. Open at Login off/on. f. Delete the staged row; Clear History… → Cancel. g. Auto-hiding menu bar, Daniel's words.
+0. Two installs: `key import imported`, then the rebuild reads the file (no prompt). a. Panel: placeholder, type,
+↓ then a letter keeps editing, click row, reopen shows it. b. ⌘⇧V in a Chrome `data:` field pastes it. c. Key present,
+Test ✓. d. Clear key → ⌘⇧V refusal → click → Settings on the key; restore = clear the import flag, relaunch (re-import
+from the env file). e. Open at Login off/on. f. Delete the staged row; Clear History… → Cancel. g. Auto-hide bar.

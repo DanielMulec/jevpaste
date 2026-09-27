@@ -34,7 +34,10 @@ final class SmartPasteApplication {
         let presenter = IndicatorPresenter(surface: notices, clock: clock, focusReturn: focusReturn)
         let clipboard = SystemClipboard()
         let history = ClipboardHistoryOpening.open(notices: notices)
-        let capture = CopyCapture(clipboard: clipboard, history: history, contentsAtLaunch: { clipboard.currentItem() })
+        let capture = CopyCapture(
+            clipboard: clipboard, history: history, exclusion: StoredKeyCaptureExclusion(keys: keys),
+            contentsAtLaunch: { clipboard.currentItem() }
+        )
         let changes = ActiveItemChanges(capture: capture)
         // After the history notice, so a missing grant — the more urgent one — is what shows at launch.
         let settings = SettingsWindowController.assemble(
