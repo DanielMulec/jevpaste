@@ -24,21 +24,6 @@ struct FakeJevCredentials: JevCredentials {
         )
     }
 
-    @Test func theChosenGatewaysKeyIsSentWithEveryRequestOfTheAttempt() async throws {
-        let transport = StubTransport.answering(body: Fixture.evaluateResponse(choice: "x0001"))
-        let access = Self.access(keys: [.vercelAIGateway: "fake-gateway-key"], transport: transport)
-
-        guard case .ready(let service) = access.openForPasteAttempt() else {
-            Issue.record("expected the gateway to open")
-            return
-        }
-        _ = await reply(from: service)
-
-        let sent = try #require(await transport.sentRequests.first)
-        #expect(sent.url?.absoluteString == "https://ai-gateway.vercel.sh/v1/evaluate")
-        #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer fake-gateway-key")
-    }
-
     @Test(arguments: [nil, ""])
     func theChosenProviderWithoutAKeyIsReportedAndNothingIsSent(key: String?) async {
         let transport = StubTransport.answering(body: Fixture.evaluateResponse(choice: "x0001"))
@@ -54,18 +39,41 @@ struct FakeJevCredentials: JevCredentials {
         #expect(await transport.sentRequests.isEmpty)
     }
 
-    /// Typesafe direct has no adapter until "Add Typesafe direct as a Jev Provider"; Settings cannot choose it. Were
-    /// it chosen anyway, nothing goes to the Gateway in its place.
-    @Test func typesafeDirectIsNeverServedByTheGateway() {
+    /// Each provider is served through its own endpoint with its own key — never the other's, whichever keys exist.
+    @Test(arguments: [
+        (JevProvider.vercelAIGateway, "https://ai-gateway.vercel.sh/v1/evaluate", "Bearer fake-gateway-key"),
+        (.typesafeDirect, "https://api.typesafe.ai/v1/systemone", "Bearer fake-typesafe-key"),
+    ])
+    func theChosenProviderIsServedThroughItsOwnEndpointWithItsOwnKey(
+        chosen: JevProvider, url: String, authorization: String
+    ) async throws {
+        let transport = StubTransport.answering(body: Fixture.evaluateResponse(choice: "x0001"))
+        let keys: [JevProvider: String] = [.vercelAIGateway: "fake-gateway-key", .typesafeDirect: "fake-typesafe-key"]
+
+        guard
+            case .ready(let service) = Self.access(keys: keys, chosen: chosen, transport: transport)
+                .openForPasteAttempt()
+        else {
+            Issue.record("expected \(chosen) to open")
+            return
+        }
+        _ = await reply(from: service)
+
+        let sent = try #require(await transport.sentRequests.first)
+        #expect(sent.url?.absoluteString == url)
+        #expect(sent.value(forHTTPHeaderField: "Authorization") == authorization)
+    }
+
+    @Test func typesafeDirectWithoutAKeyIsReportedAndNeverServedByTheGateway() async {
+        let transport = StubTransport.answering(body: Fixture.evaluateResponse(choice: "x0001"))
         let access = Self.access(
-            keys: [.vercelAIGateway: "fake-gateway-key", .typesafeDirect: "fake-typesafe-key"], chosen: .typesafeDirect,
-            transport: StubTransport.answering(body: "{}")
-        )
+            keys: [.vercelAIGateway: "fake-gateway-key"], chosen: .typesafeDirect, transport: transport)
 
         guard case .noKey(let provider) = access.openForPasteAttempt() else {
-            Issue.record("expected typesafe direct to stay unserved")
+            Issue.record("expected typesafe direct to have no key")
             return
         }
         #expect(provider == .typesafeDirect)
+        #expect(await transport.sentRequests.isEmpty)
     }
 }

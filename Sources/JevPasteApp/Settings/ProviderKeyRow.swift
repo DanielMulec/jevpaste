@@ -18,7 +18,7 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
     private let resultField = NSTextField(wrappingLabelWithString: "")
     private var isShown = false
 
-    init(provider: JevProvider, settings: ProviderKeySettings, isEnabled: Bool) {
+    init(provider: JevProvider, settings: ProviderKeySettings) {
         self.provider = provider
         self.settings = settings
         let fields = NSStackView(views: [secureField, plainField])
@@ -31,7 +31,6 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
             field.placeholderString = "\(provider.displayName) API key"
             field.stringValue = settings.savedKey(of: provider)
             field.delegate = self
-            field.isEnabled = isEnabled
             field.translatesAutoresizingMaskIntoConstraints = false
             field.widthAnchor.constraint(equalToConstant: Self.fieldWidth).isActive = true
         }
@@ -41,10 +40,8 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
         eyeButton.toolTip = "Show key"
         eyeButton.target = self
         eyeButton.action = #selector(toggleShown)
-        eyeButton.isEnabled = isEnabled
         testButton.target = self
         testButton.action = #selector(runTest)
-        testButton.isEnabled = isEnabled
         resultField.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         resultField.preferredMaxLayoutWidth = Self.resultWidth
         resultField.translatesAutoresizingMaskIntoConstraints = false

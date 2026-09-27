@@ -1,9 +1,8 @@
 import AppKit
-import JevGateway
 import SmartPasteCore
 
-/// Settings › Jev Provider: the provider picker (only built providers can be chosen; the choice applies from the next
-/// Paste Attempt) and one key row per provider.
+/// Settings › Jev Provider: the provider picker (the choice applies from the next Paste Attempt) and one key row per
+/// provider.
 @MainActor
 final class JevProviderSettingsViewController: NSViewController {
     private let choice: JevProviderChoice
@@ -26,12 +25,10 @@ final class JevProviderSettingsViewController: NSViewController {
     override func loadView() {
         var keyViews: [NSView] = []
         for provider in JevProvider.allCases {
-            let isBuilt = JevGatewayAccess.builtProviders.contains(provider)
             let title = provider == .standard ? provider.displayName + " (default)" : provider.displayName
             let radio = NSButton(radioButtonWithTitle: title, target: self, action: #selector(radioChosen))
-            radio.isEnabled = isBuilt
             radios[provider] = radio
-            let row = ProviderKeyRow(provider: provider, settings: settings, isEnabled: isBuilt)
+            let row = ProviderKeyRow(provider: provider, settings: settings)
             rows[provider] = row
             keyViews += [SettingsLayout.heading(provider.displayName, size: 11), row.view]
         }
