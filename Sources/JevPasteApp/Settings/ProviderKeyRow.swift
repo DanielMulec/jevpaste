@@ -17,6 +17,8 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
     private let testButton = NSButton(title: "Test", target: nil, action: nil)
     private let resultField = NSTextField(wrappingLabelWithString: "")
     private var isShown = false
+    /// The secure field and the plain one behind Show; both hold the same text.
+    var keyFields: [NSTextField] { [secureField, plainField] }
 
     init(provider: JevProvider, settings: ProviderKeySettings) {
         self.provider = provider
@@ -31,6 +33,11 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
             field.placeholderString = "\(provider.displayName) API key"
             field.stringValue = settings.savedKey(of: provider)
             field.delegate = self
+            // One scrolling line: a long key (Typesafe's) must not wrap into a row the one-line field hides.
+            field.usesSingleLineMode = true
+            field.cell?.wraps = false
+            field.cell?.isScrollable = true
+            field.lineBreakMode = .byClipping
             field.translatesAutoresizingMaskIntoConstraints = false
             field.widthAnchor.constraint(equalToConstant: Self.fieldWidth).isActive = true
         }
