@@ -5,10 +5,15 @@
 public struct SuspectedSecretRules: Sendable {
     public let rules: [SuspectedSecretRule]
 
-    public static let standard = SuspectedSecretRules(rules: [
+    /// The shapes found anywhere in a text. They screen the Target Context (surrounding text, window title).
+    public static let anywhere = SuspectedSecretRules(rules: [
         .pemPrivateKey, .awsAccessKey, .gitHubToken, .slackToken, .stripeLiveKey, .stripeTestKey, .openAIStyleKey,
-        .googleAPIKey, .vercelAIGatewayKey, .jsonWebToken, .connectionStringCredentials, .opaqueToken,
+        .googleAPIKey, .vercelAIGatewayKey, .jsonWebToken, .connectionStringCredentials,
     ])
+
+    /// What refuses an Active Item: every `anywhere` shape, then the Opaque Token. Item-only: a Target Context that
+    /// is one bare token is sent unchanged.
+    public static let standard = SuspectedSecretRules(rules: anywhere.rules + [.opaqueToken])
 
     /// The first rule, in order, whose shape occurs anywhere in `text`; `nil` when none does. Linear in the text.
     public func firstMatch(in text: String) -> SuspectedSecretRule? {

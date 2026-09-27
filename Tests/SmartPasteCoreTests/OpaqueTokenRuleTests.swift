@@ -58,6 +58,15 @@ struct OpaqueTokenRuleTests {
         #expect(SuspectedSecretRule.opaqueToken.matches(text) == matches)
     }
 
+    @Test func digitsJoinedByHyphensWithoutALetterAreNotAnOpaqueToken() {
+        #expect(!SuspectedSecretRule.opaqueToken.matches("2026-0927-1234-5678"))
+    }
+
+    @Test(arguments: ["", " ", String(repeating: " \t\n\r", count: 8)])
+    func onlyWhitespaceIsNotAnOpaqueToken(text: String) {
+        #expect(!SuspectedSecretRule.opaqueToken.matches(text))
+    }
+
     @Test func sixteenBytesIsTheFloor() {
         #expect(SuspectedSecretRule.opaqueToken.matches("JEVPASTEk3y12345"))
         #expect(!SuspectedSecretRule.opaqueToken.matches("JEVPASTEk3y1234"))
@@ -76,6 +85,7 @@ struct OpaqueTokenTradeOffTests {
     ])
     func aTokenWithoutADigitIsNotAnOpaqueToken(text: String) {
         #expect(!SuspectedSecretRule.opaqueToken.matches(text))
+        #expect(SuspectedSecretRules.standard.firstMatch(in: text) == nil)
     }
 }
 

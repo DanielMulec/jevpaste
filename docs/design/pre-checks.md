@@ -28,7 +28,7 @@ Scanned over the UTF-8 bytes. "Boundary" = the byte before the match is not an A
 | `vercelAIGatewayKey` | boundary `vck_` + ≥20 `[A-Za-z0-9_-]` (Vercel AI Gateway, documented) | in a sentence + short/`xvck_` negatives |
 | `jsonWebToken` | boundary, three `.`-separated base64url segments, first two start `eyJ`, each ≥10 | positive + two-part negative |
 | `connectionStringCredentials` | `scheme://user:password@host` — non-empty password (user may be empty, `redis://:pw@`) and host, before the first `/?#`/whitespace; `host:443@other` is accepted userinfo | postgres/mongodb/redis + `https://host/a@b`, user-only, empty-password, empty-host negatives |
-| `opaqueToken` | **whole text**, trimmed of ASCII whitespace: ≥16 bytes, only `[A-Za-z0-9_-]`, ≥1 letter and ≥1 digit — see below | `OpaqueTokenRuleTests` (issue #56 corpus), `OpaqueTokenTradeOffTests` |
+| `opaqueToken` | **whole text**, trimmed of ASCII whitespace: ≥16 bytes, only `[A-Za-z0-9_-]`, ≥1 letter and ≥1 digit; **Active Item only** — see below | `OpaqueTokenRuleTests` (issue #56 corpus), `OpaqueTokenTradeOffTests` |
 
 **The whole-text rule.** Every other rule finds its shape *anywhere*; `opaqueToken` asks whether the whole Active Item
 *is* one token — a copied API key of any vendor, whatever its prefix
@@ -40,7 +40,11 @@ does. A false positive costs one keystroke. A digit is required (Gate A, 2026-09
 words, identifiers and branch names are common copies, while a ≥16-byte key without a digit is rare (base62: ~6 %
 at 16 bytes, < 0.5 % at 32) — an accepted miss. One pass after trimming: a letter sets one flag, a digit the other,
 `-`/`_` neither, any other byte (non-ASCII too) stops the scan. It is last in `standard`, so a named prefix rule
-still names the match; deleting that one entry disables it.
+still names the match; deleting that one entry disables it. **Item-only** (Daniel, review 2026-09-27): the Target
+Context is screened with `SuspectedSecretRules.anywhere` (= `standard` without it), so surrounding text or a window
+title that is one bare token — a commit hash, a ticket id — is sent unchanged: it was not copied, withholding it
+would cost Jev context, and a key shown on screen inside text is still caught by the prefix rules
+(`OpaqueTokenItemOnlyTests`).
 
 Linear time, no regex: every prefix rule reads at most its fixed minimum body after each prefix hit; the JWT and
 connection-string scans start only at boundaries / `://` and stop at the first delimiter, so no byte is re-read
@@ -54,7 +58,8 @@ take ≈ 0.6 s each serially, 17 ms of it the Opaque Token scan; the rest is the
 - `ScannedText.swift` — UTF-8 bytes + the shared linear scans (`offsets(of:)`, `startsToken(at:)`, capped `run`),
   `ByteClass`. `SuspectedSecretRule.swift` — the rule value (`name`, `matches(_:)`) and the eight prefix-token rules.
 - `StructuredSecretShapes.swift` — PEM, JWT, connection-string rules. `OpaqueTokenShape.swift` — the whole-text rule. `SuspectedSecretRules.swift` — the set
-  (`standard`, `firstMatch(in:) -> SuspectedSecretRule?`).
+  (`anywhere` for the Target Context, `standard` = `anywhere` + `opaqueToken` for the Active Item,
+  `firstMatch(in:) -> SuspectedSecretRule?`).
 - `LocalPreChecks.swift` — the Core `PreCheck` adapter: refusals 1–3 and the context screening below.
 - `Values/ScreenedTargetContext.swift` — `ScreenedTargetContext` + `PasteAttemptNote`.
 - Shell: `SmartPasteApplication` composes `LocalPreChecks()`; the interim type and its test are deleted;
@@ -65,8 +70,8 @@ take ≈ 0.6 s each serially, 17 ms of it the Opaque Token scan; the rest is the
 ## GATE A — secrets in the Target Context (not a refusal)
 1. **Where:** the `PreCheck` seam gains `screenedContext(of: BoundTarget) -> ScreenedTargetContext`; the
    coordinator calls it once at attempt start, pins the result in `RunningAttempt`, and builds every
-   `DecisionRequest` (retries too) from it. A match empties `surroundingText`; labels, placeholder, heading and
-   sibling labels are still sent (per the decision; they are not scanned). Since the Free-text Target slice the
+   `DecisionRequest` (retries too) from it. A match of an `anywhere` rule (not `opaqueToken`) empties
+   `surroundingText`; labels, placeholder, heading and sibling labels are still sent (per the decision; they are not scanned). Since the Free-text Target slice the
    window title is scanned the same way (hit → omitted, note `.windowTitleWithheld` or
    `.surroundingTextAndWindowTitleWithheld`); the app name is not scanned.
 2. **Port/outcome change (explicit):** `PasteOutcomePresenter.showOutcome(_:)` becomes

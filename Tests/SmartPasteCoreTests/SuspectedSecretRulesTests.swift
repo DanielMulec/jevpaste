@@ -13,6 +13,13 @@ struct SuspectedSecretRulesTests {
         )
     }
 
+    @Test func theTargetContextIsScreenedByEveryRuleButTheOpaqueToken() {
+        #expect(
+            SuspectedSecretRules.anywhere.rules.map(\.name)
+                == SuspectedSecretRules.standard.rules.dropLast().map(\.name))
+        #expect(SuspectedSecretRules.standard.rules.last?.name == "opaqueToken")
+    }
+
     @Test func ordinaryContentMatchesNoRule() {
         let text = """
             Name: Ada Lovelace
