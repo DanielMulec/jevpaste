@@ -70,3 +70,43 @@ struct TargetContextScreeningTests {
         #expect(screened.note == nil)
     }
 }
+
+/// The Opaque Token refuses only the Active Item (Daniel, review of "Refuse any copied API key at ⌘⇧V, whatever its
+/// vendor"): a Target Context that is one bare token — a commit hash in a terminal, a ticket id as a window title —
+/// is sent unchanged, because withholding it would cost Jev context and protect nothing that was copied.
+struct OpaqueTokenItemOnlyTests {
+    private static let bareToken = "JEVPASTEk3y0123456789abcdef"
+    private let preChecks = LocalPreChecks()
+
+    private static func target(surroundingText: String = "", windowTitle: String? = nil) -> BoundTarget {
+        BoundTarget(
+            identity: TargetIdentity(processIdentifier: 7, elementToken: 1),
+            context: TargetContext(fieldLabel: "Message", surroundingText: surroundingText, windowTitle: windowTitle),
+            isSecureField: false
+        )
+    }
+
+    @Test func anActiveItemThatIsOneBareTokenIsRefused() {
+        let item = ClipboardItem(text: Self.bareToken, isConcealed: false)
+
+        #expect(preChecks.refusal(for: item, in: Self.target()) == .suspectedSecret)
+    }
+
+    @Test func surroundingTextThatIsOneBareTokenIsSentUnchanged() {
+        let target = Self.target(surroundingText: Self.bareToken)
+
+        let screened = preChecks.screenedContext(of: target)
+
+        #expect(screened.context == target.context)
+        #expect(screened.note == nil)
+    }
+
+    @Test func aWindowTitleThatIsOneBareTokenIsSentUnchanged() {
+        let target = Self.target(windowTitle: Self.bareToken)
+
+        let screened = preChecks.screenedContext(of: target)
+
+        #expect(screened.context == target.context)
+        #expect(screened.note == nil)
+    }
+}

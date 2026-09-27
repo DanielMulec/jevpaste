@@ -3,13 +3,21 @@ import Testing
 
 /// The standard set of suspected-secret rules as the Pre-checks use it.
 struct SuspectedSecretRulesTests {
-    @Test func standardSetHoldsTheNineDecidedRules() {
+    @Test func standardSetHoldsTheDecidedRulesWithOpaqueTokenLast() {
         #expect(
             SuspectedSecretRules.standard.rules.map(\.name) == [
-                "pemPrivateKey", "awsAccessKey", "gitHubToken", "slackToken", "stripeLiveKey", "openAIStyleKey",
-                "googleAPIKey", "jsonWebToken", "connectionStringCredentials",
+                "pemPrivateKey", "awsAccessKey", "gitHubToken", "slackToken", "stripeLiveKey", "stripeTestKey",
+                "openAIStyleKey", "googleAPIKey", "vercelAIGatewayKey", "jsonWebToken", "connectionStringCredentials",
+                "opaqueToken",
             ]
         )
+    }
+
+    @Test func theTargetContextIsScreenedByEveryRuleButTheOpaqueToken() {
+        #expect(
+            SuspectedSecretRules.anywhere.rules.map(\.name)
+                == SuspectedSecretRules.standard.rules.dropLast().map(\.name))
+        #expect(SuspectedSecretRules.standard.rules.last?.name == "opaqueToken")
     }
 
     @Test func ordinaryContentMatchesNoRule() {
@@ -49,6 +57,23 @@ struct SuspectedSecretLinearTimeTests {
             _ = SuspectedSecretRules.standard.firstMatch(in: text)
         }
 
+        #expect(elapsed < .seconds(5))
+    }
+
+    /// The Opaque Token reads the whole text: one 256 KB token is refused, and the same token with one space in the
+    /// middle is not a token at all — the scan stops at the space.
+    @Test(arguments: [(false, "opaqueToken"), (true, nil)] as [(Bool, String?)])
+    func aWholeTextTokenFinishesInLinearTime(spaceInTheMiddle: Bool, firstRuleName: String?) {
+        let half = String(repeating: "a1", count: Self.size / 4)
+        let text = half + (spaceInTheMiddle ? " " : "") + half
+        let clock = ContinuousClock()
+        var found: SuspectedSecretRule?
+
+        let elapsed = clock.measure {
+            found = SuspectedSecretRules.standard.firstMatch(in: text)
+        }
+
+        #expect(found?.name == firstRuleName)
         #expect(elapsed < .seconds(5))
     }
 }

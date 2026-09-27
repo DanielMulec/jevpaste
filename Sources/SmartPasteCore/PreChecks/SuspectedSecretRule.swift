@@ -67,6 +67,10 @@ extension SuspectedSecretRule {
     public static let stripeLiveKey = prefixedToken(
         named: "stripeLiveKey", prefixes: ["sk_live_"], body: .alphanumerics, minimumBodyLength: 16
     )
+    /// Stripe test secret keys: `sk_test_` + at least 16 alphanumerics, the mirror of `stripeLiveKey`.
+    public static let stripeTestKey = prefixedToken(
+        named: "stripeTestKey", prefixes: ["sk_test_"], body: .alphanumerics, minimumBodyLength: 16
+    )
     /// OpenAI- and Anthropic-style keys: `sk-` + at least 20 base64url bytes. The broadest shape, so the token
     /// boundary matters most here: `task-…` or `desk-…` never start one.
     public static let openAIStyleKey = prefixedToken(
@@ -75,5 +79,9 @@ extension SuspectedSecretRule {
     /// Google API keys: `AIza` + 35 base64url bytes.
     public static let googleAPIKey = prefixedToken(
         named: "googleAPIKey", prefixes: ["AIza"], body: .base64URL, minimumBodyLength: 35
+    )
+    /// Vercel AI Gateway API keys: `vck_` + at least 20 base64url bytes.
+    public static let vercelAIGatewayKey = prefixedToken(
+        named: "vercelAIGatewayKey", prefixes: ["vck_"], body: .base64URL, minimumBodyLength: 20
     )
 }

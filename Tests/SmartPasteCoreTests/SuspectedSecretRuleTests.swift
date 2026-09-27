@@ -34,6 +34,8 @@ struct PrefixedTokenRuleTests {
         (.openAIStyleKey, "OPENAI_API_KEY=sk-proj-JEVPASTE000000000000000000"),
         (.openAIStyleKey, "sk-ant-api03-JEVPASTE_00000000000000"),
         (.googleAPIKey, "key=AIzaJEVPASTE000000000000000000000000000"),
+        (.vercelAIGatewayKey, "the key is vck_JEVPASTEOPQ2abcdEFGH0123456789 for the demo"),
+        (.stripeTestKey, "use sk_test_JEVPASTE00000000EXAMPLE in staging"),
     ])
     func matches(rule: SuspectedSecretRule, text: String) {
         #expect(rule.matches(text), "\(rule.name)")
@@ -45,15 +47,28 @@ struct PrefixedTokenRuleTests {
         (.awsAccessKey, "XAKIAJEVPASTE0EXAMPLE"),
         (.slackToken, "xoxz-2026000000-jevpaste-probe"),
         (.slackToken, "xoxb-short"),
-        (.stripeLiveKey, "sk_test_JEVPASTE00000000EXAMPLE"),
         (.openAIStyleKey, "sk-short"),
         (.openAIStyleKey, "Open task-list-2026-09-24-follow-up-items-for-review"),
         (.openAIStyleKey, "https://example.org/blog/risk-assessment-for-desk-workers-2026"),
         (.openAIStyleKey, "a whisk-and-bowl-recipe-collection-for-beginners"),
         (.googleAPIKey, "AIzaShortKey"),
+        (.vercelAIGatewayKey, "vck_short0123"),
+        (.vercelAIGatewayKey, "xvck_JEVPASTEOPQ2abcdEFGH0123456789"),
+        (.stripeTestKey, "sk_test_short"),
+        (.stripeTestKey, "xsk_test_JEVPASTE00000000EXAMPLE"),
     ])
     func ignores(rule: SuspectedSecretRule, text: String) {
         #expect(!rule.matches(text), "\(rule.name)")
+    }
+}
+
+/// A Stripe test key is not a live key: each has its own rule, so the log names which one matched.
+struct StripeKeyRuleTests {
+    @Test func aTestKeyIsStripeTestKeyNotStripeLiveKey() {
+        let text = "sk_test_JEVPASTE00000000EXAMPLE"
+
+        #expect(!SuspectedSecretRule.stripeLiveKey.matches(text))
+        #expect(SuspectedSecretRule.stripeTestKey.matches(text))
     }
 }
 

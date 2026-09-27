@@ -1,0 +1,59 @@
+# Live proof — Refuse any copied API key at ⌘⇧V, whatever its vendor (Opaque Token rule, issue #56).
+# Branch opaque-token. macOS 26.6.2. Installed app ~/Applications/JevPaste.app, signed jevpaste-dev.
+# Synthetic Active Items only (JEVPASTE-… tags, fake base62, a sample UUID, a …@example.org address), staged by
+# the worker with pbcopy. No key, no clipboard text of Daniel's, no window titles in this log.
+# App lines: subsystem jevpaste, process JevPaste (log show --info), times local.
+
+## Install (build 57e0adc, after Gate B)
+20:14:05 clipboard vault saved (0600): items=1 sha256=4de37a556c20
+20:14:45 old pid 76146 quit (TERM), make install, open --args --accept-signal-trigger → pid 94801
+20:14:46 key import alreadyDone · launch provider=vercelAIGateway apiKeyPresent=true ·
+         grant check at launch trusted=true · acceptance signal trigger on
+Target: one own Chrome tab, a data: page with a labelled Notes textarea and a labelled Email input, opened by
+AppleScript `open location` (the DevTools MCP was not loaded in the worker session; supervisor chose AppleScript)
+and closed by its URL at the end (closed=1). No other tab touched.
+Staging: a helper copied the next fixture ~1 s after each `outcome` line of category PasteAttempt; it logged only
+times and labels.
+
+## Which rule refuses each item
+The app logs a refusal as `outcome refused.suspectedSecret`, without the rule. The rule for each exact staged
+string is pinned by OpaqueTokenLiveProofTests.eachStagedItemIsRefusedByTheExpectedRule (make test green at
+57e0adc): standard.firstMatch(in:)?.name per cell below. Each staged string is given in full (all fake), exactly
+as in that test's arguments, printf '%s' with no trailing newline.
+
+## Daniel (relayed by the supervisor; reconciled from the log)
+(a) item (one token, no known prefix): JEVPASTE-OPQ-1-a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6 · Notes · ⌘⇧V
+20:15:38 staged a
+20:16:23.740 outcome refused.suspectedSecret
+         firstMatch = opaqueToken (pinned) · no Jev call logged · Daniel: blocked, Notes empty
+(b) item: "the key is vck_JEVPASTEOPQ2a1B2c3D4e5F6g7H8i9J0k1L2 for the demo" · Notes · ⌘⇧V
+20:16:24 staged b
+20:16:40.346 outcome refused.suspectedSecret
+         firstMatch = vercelAIGatewayKey (pinned; opaqueToken cannot match text with spaces) · no Jev call ·
+         Daniel: blocked, nothing inserted
+(c) item: two lines "JEVPASTE-OPQ-3\njev.opq3@example.org" · Email · ⌘⇧V  (regression cell)
+20:16:41 staged c
+20:16:51.373 processing indicator shown
+20:16:52.330 Jev answered provider=vercelAIGateway status=200 model=typesafe-ai/jev questions=1 options=48 bytes=3284 in 1.114 s
+20:16:52.795 Jev answered provider=vercelAIGateway status=200 model=typesafe-ai/jev questions=1 options=33 bytes=2854 in 0.464 s
+20:16:52.934 outcome inserted via=narrowing steps=2 calls=2 p=0.99 questions=1,1 stepP=0.89,0.99
+         firstMatch = nil (pinned) · Daniel: the email was pasted, ✓
+(d) item (sample UUID): 0f8fad5b-d9cb-469f-a165-70867728950e · Notes (cleared) · ⌘⇧V, then plain ⌘V
+20:16:53 staged d
+20:17:06.949 outcome refused.suspectedSecret
+         firstMatch = opaqueToken (pinned) · the accepted false positive
+         plain ⌘V: no app line (ordinary paste is not JevPaste's) · Daniel: the UUID appeared; he then cleared it
+         by reflex (not a defect) · after the steps the clipboard still held fixture d byte for byte
+         (sha256 of pbpaste == sha256 of the fixture: true) — the refusal wrote nothing to the pasteboard
+Daniel (verbatim, relayed): "For all 4 a - d as you said. all worked. but i cleared the uuid after it appeared
+again, that was automatic sorry"
+
+## Cleanup
+20:18:00 helper stopped · clipboard vault restored: items=1 sha256=4de37a556c20 (matches the 20:14:05 save) ·
+         own tab closed by URL (1) · fixture and vault files deleted · app pid 94801 left running (build 57e0adc)
+Clipboard History keeps the four synthetic items (suspected secrets stay recorded, per the v1 decision).
+
+## After the review (item-only, no reinstall)
+Daniel decided the Opaque Token refuses only the Active Item; the Target Context is screened with
+SuspectedSecretRules.anywhere. All four cells above screen or refuse the Active Item, so their outcomes are
+unchanged by that fix; the installed build stays 57e0adc until merge.
