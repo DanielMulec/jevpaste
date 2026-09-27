@@ -70,8 +70,10 @@ fixture cell ids only — never a key, its length, or any document/excerpt text.
 - `JevGatewayLiveTests`: one step-1 request per provider over a synthetic card → a piece holding the email.
 - `JevGatewayLiveReplayTests`: the 14 recorded Narrowing cells (`Fixtures/narrowing-replay.jsonl`) driven through
   Core's `Narrowing` with **live** answers per provider → per cell `outcome` (paste/nothing/ask), `same` as recorded,
-  deciding `p`, `calls`, latency.
-- `JevGatewayLiveLatencyTests`: per provider a fresh ephemeral `URLSession` → 1 cold + 5 warm step-1 calls, median.
+  chosen `p` of the last call (live and recorded), `calls`, latency. Offline, the same harness fed the recorded
+  answers ends every cell as recorded (always runs).
+- `JevGatewayLiveLimitsTests`: per provider a fresh ephemeral `URLSession` → 1 cold + 5 warm step-1 calls, median;
+  one ≈ 400,000-character request → status, `error_type`, `.tooLarge`.
 
 ## Open questions
 1. HTTP-date `retry-after` values are treated as absent (1 s). Not observed live on either provider.

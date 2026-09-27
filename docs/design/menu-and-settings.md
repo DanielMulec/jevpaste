@@ -45,8 +45,8 @@ Supersedes [history-ui.md](history-ui.md) (panel removed; its Core seam `select(
   reads the choice and its key once and returns `JevGatewayDecisionService(apiKey:transport:)`. `missingKey` and the
   env-file read leave the request path. Test: `JevGatewayAccess.testConnection(of:)` sends one step-shaped request (one
   choice question, one option) with the saved key through the same exchange → `.works` | `.failed(reason)`.
-- Choice persisted in UserDefaults (`jevProvider`, raw value); unknown or not-yet-built values read as the default.
-  Typesafe direct is listed, disabled (radio + key row) until [Add Typesafe direct as a Jev Provider](https://github.com/DanielMulec/jevpaste/issues/54).
+- Choice persisted in UserDefaults (`jevProvider`, raw value); unknown values read as the default. Typesafe direct
+  is built since [Add Typesafe direct as a Jev Provider](https://github.com/DanielMulec/jevpaste/issues/54).
 - Key store (`FileJevKeyStore`, app layer, Daniel 2026-09-27): `~/.config/jevpaste/keys/<provider raw value>`, UTF-8
   key, file 0600; every write first insists the directory is a real directory owned by the user (no symlink) and
   tightens it to 0700, then writes a new 0600 file whole (short writes/EINTR retried) and renames it over; empty → unlink.
