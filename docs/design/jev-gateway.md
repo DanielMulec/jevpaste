@@ -49,9 +49,9 @@ finding, 2026-09-26).
 - `HTTPTransport: Sendable { func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) }`;
   production `URLSessionTransport` (`URLSession.shared`). Unit tests inject a stub that records the request
   and returns canned status/headers/body — no network.
-- **Since #53** the key comes from the Keychain through `JevCredentials`: `JevGatewayAccess` reads the chosen Jev
-  Provider and its key once per Paste Attempt and hands out `JevGatewayDecisionService(apiKey:)`; no key → Core's
-  refusal, no call (`missingKey` is gone). Settings' Test = `JevGatewayAccess.testConnection(of:)` through the same
+- **Since #53** the key comes from the user-only key files (`FileJevKeyStore`, `~/.config/jevpaste/keys/`) through
+  `JevCredentials`: `JevGatewayAccess` reads the chosen Jev Provider and its key once per Paste Attempt and hands out
+  `JevGatewayDecisionService(apiKey:)`; no key → Core's refusal, no call (`missingKey` is gone). Settings' Test = `JevGatewayAccess.testConnection(of:)` through the same
   exchange ([menu-and-settings.md](menu-and-settings.md)). The env file below is only the one-time import source.
 - `GatewayCredentials(envFile: URL)` read the key at each call until #53; tests
   point it at a temporary file. Default: `~/.config/jevpaste/env`. Accepts an optional `export ` prefix and

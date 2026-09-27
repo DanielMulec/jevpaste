@@ -22,7 +22,7 @@ History file after first launch of the slice: user_version=2, rows kept, rows wi
 clipboard vault saved (0600): items=1 sha256=b1348553fec3
 pbcopy MENU-53 → newest row copy_sequence=266, text matches, copied_at set
 pbcopy MENU-53-LATER → newest row copy_sequence=267 (Active Item), MENU-53 at 266
-Chrome: own tab "JevPaste menu 53" (data: page, label "Email address", one input)
+Chrome: one own tab (data: page, one labelled input)
 
 ## Daniel, part 1 (relayed by the supervisor)
 (a) done on the second try: the first ⌘⇧V pasted the LATER row's email because (a) was not finished — LATER was
