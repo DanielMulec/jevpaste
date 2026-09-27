@@ -30,7 +30,8 @@ struct KeychainJevKeyStore: JevKeyStore {
             Self.log.error("key write failed status=\(status, privacy: .public)")
             throw JevKeyStoreFailure(status: status)
         }
-        Self.log.notice("key for \(provider.rawValue, privacy: .public) \(key.isEmpty ? "removed" : "stored")")
+        let change = key.isEmpty ? "removed" : "stored"
+        Self.log.notice("key for \(provider.rawValue, privacy: .public) \(change, privacy: .public)")
     }
 
     private static func store(_ key: String, for provider: JevProvider) -> OSStatus {
