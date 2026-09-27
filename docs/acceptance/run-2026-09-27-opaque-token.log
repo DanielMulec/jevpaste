@@ -18,26 +18,27 @@ times and labels.
 ## Which rule refuses each item
 The app logs a refusal as `outcome refused.suspectedSecret`, without the rule. The rule for each exact staged
 string is pinned by OpaqueTokenLiveProofTests.eachStagedItemIsRefusedByTheExpectedRule (make test green at
-57e0adc): standard.firstMatch(in:)?.name per cell below.
+57e0adc): standard.firstMatch(in:)?.name per cell below. Each staged string is given in full (all fake), exactly
+as in that test's arguments, printf '%s' with no trailing newline.
 
 ## Daniel (relayed by the supervisor; reconciled from the log)
-(a) item: JEVPASTE-OPQ-1- + 32 fake base62 (one token, no known prefix) · Notes · ⌘⇧V
+(a) item (one token, no known prefix): JEVPASTE-OPQ-1-a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6 · Notes · ⌘⇧V
 20:15:38 staged a
 20:16:23.740 outcome refused.suspectedSecret
          firstMatch = opaqueToken (pinned) · no Jev call logged · Daniel: blocked, Notes empty
-(b) item: "the key is vck_JEVPASTEOPQ2 + 24 fake base62 for the demo" · Notes · ⌘⇧V
+(b) item: "the key is vck_JEVPASTEOPQ2a1B2c3D4e5F6g7H8i9J0k1L2 for the demo" · Notes · ⌘⇧V
 20:16:24 staged b
 20:16:40.346 outcome refused.suspectedSecret
          firstMatch = vercelAIGatewayKey (pinned; opaqueToken cannot match text with spaces) · no Jev call ·
          Daniel: blocked, nothing inserted
-(c) item: two lines, JEVPASTE-OPQ-3 and jev.opq3@example.org · Email · ⌘⇧V  (regression cell)
+(c) item: two lines "JEVPASTE-OPQ-3\njev.opq3@example.org" · Email · ⌘⇧V  (regression cell)
 20:16:41 staged c
 20:16:51.373 processing indicator shown
 20:16:52.330 Jev answered provider=vercelAIGateway status=200 model=typesafe-ai/jev questions=1 options=48 bytes=3284 in 1.114 s
 20:16:52.795 Jev answered provider=vercelAIGateway status=200 model=typesafe-ai/jev questions=1 options=33 bytes=2854 in 0.464 s
 20:16:52.934 outcome inserted via=narrowing steps=2 calls=2 p=0.99 questions=1,1 stepP=0.89,0.99
          firstMatch = nil (pinned) · Daniel: the email was pasted, ✓
-(d) item: sample UUID 0f8fad5b-… · Notes (cleared) · ⌘⇧V, then plain ⌘V
+(d) item (sample UUID): 0f8fad5b-d9cb-469f-a165-70867728950e · Notes (cleared) · ⌘⇧V, then plain ⌘V
 20:16:53 staged d
 20:17:06.949 outcome refused.suspectedSecret
          firstMatch = opaqueToken (pinned) · the accepted false positive
@@ -51,3 +52,8 @@ again, that was automatic sorry"
 20:18:00 helper stopped · clipboard vault restored: items=1 sha256=4de37a556c20 (matches the 20:14:05 save) ·
          own tab closed by URL (1) · fixture and vault files deleted · app pid 94801 left running (build 57e0adc)
 Clipboard History keeps the four synthetic items (suspected secrets stay recorded, per the v1 decision).
+
+## After the review (item-only, no reinstall)
+Daniel decided the Opaque Token refuses only the Active Item; the Target Context is screened with
+SuspectedSecretRules.anywhere. All four cells above screen or refuse the Active Item, so their outcomes are
+unchanged by that fix; the installed build stays 57e0adc until merge.
