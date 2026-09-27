@@ -5,7 +5,8 @@ import Testing
 /// Active Item that is one token of letters and digits is a Suspected Secret, whatever its prefix. Every token
 /// here is synthetic or a well-known sample value.
 struct OpaqueTokenRuleTests {
-    /// Must refuse, as the whole item. Each case names the rule `standard` reports first.
+    /// Must refuse, as the whole item. Each case names the rule `standard` reports first: a named prefix rule wins
+    /// over the Opaque Token, which is last.
     @Test(arguments: [
         ("ts_JEVPASTE" + String(repeating: "x9Y8", count: 6), "opaqueToken"),
         ("d41d8cd98f00b204e9800998ecf8427e", "opaqueToken"),
@@ -14,6 +15,8 @@ struct OpaqueTokenRuleTests {
         ("JEVPASTE_k3y-0123456789a", "opaqueToken"),
         ("JEVP4-ASTE0-XMPL7-K3", "opaqueToken"),
         ("DE89370400440532013000", "opaqueToken"),
+        ("vck_JEVPASTE" + String(repeating: "a1B2", count: 8), "vercelAIGatewayKey"),
+        ("sk_test_JEVPASTE00000000EXAMPLE", "stripeTestKey"),
     ])
     func refusesAWholeItemToken(text: String, firstRuleName: String) {
         #expect(SuspectedSecretRule.opaqueToken.matches(text))

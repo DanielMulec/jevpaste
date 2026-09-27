@@ -6,8 +6,9 @@ struct SuspectedSecretRulesTests {
     @Test func standardSetHoldsTheDecidedRulesWithOpaqueTokenLast() {
         #expect(
             SuspectedSecretRules.standard.rules.map(\.name) == [
-                "pemPrivateKey", "awsAccessKey", "gitHubToken", "slackToken", "stripeLiveKey", "openAIStyleKey",
-                "googleAPIKey", "jsonWebToken", "connectionStringCredentials", "opaqueToken",
+                "pemPrivateKey", "awsAccessKey", "gitHubToken", "slackToken", "stripeLiveKey", "stripeTestKey",
+                "openAIStyleKey", "googleAPIKey", "vercelAIGatewayKey", "jsonWebToken", "connectionStringCredentials",
+                "opaqueToken",
             ]
         )
     }

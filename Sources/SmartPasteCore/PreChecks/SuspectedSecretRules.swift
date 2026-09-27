@@ -6,8 +6,8 @@ public struct SuspectedSecretRules: Sendable {
     public let rules: [SuspectedSecretRule]
 
     public static let standard = SuspectedSecretRules(rules: [
-        .pemPrivateKey, .awsAccessKey, .gitHubToken, .slackToken, .stripeLiveKey, .openAIStyleKey, .googleAPIKey,
-        .jsonWebToken, .connectionStringCredentials, .opaqueToken,
+        .pemPrivateKey, .awsAccessKey, .gitHubToken, .slackToken, .stripeLiveKey, .stripeTestKey, .openAIStyleKey,
+        .googleAPIKey, .vercelAIGatewayKey, .jsonWebToken, .connectionStringCredentials, .opaqueToken,
     ])
 
     /// The first rule, in order, whose shape occurs anywhere in `text`; `nil` when none does. Linear in the text.
