@@ -17,6 +17,8 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
     private let testButton = NSButton(title: "Test", target: nil, action: nil)
     private let resultField = NSTextField(wrappingLabelWithString: "")
     private var isShown = false
+    /// True while Show/Hide swaps the fields: the end-edit that swap causes is not the user leaving the field.
+    private var isSwapping = false
     /// The secure field and the plain one behind Show; both hold the same text.
     var keyFields: [NSTextField] { [secureField, plainField] }
 
@@ -86,15 +88,23 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
     }
 
     func controlTextDidEndEditing(_ notification: Notification) {
+        guard !isSwapping else { return }
         settings.editingEnded(for: provider)
     }
 
-    @objc private func toggleShown() {
+    /// Show/Hide: the other field takes over the same text, focus and selection; no save, no purge.
+    @objc func toggleShown() {
+        let selection = (isShown ? plainField : secureField).currentEditor()?.selectedRange
+        isSwapping = true
+        defer { isSwapping = false }
         isShown.toggle()
         secureField.isHidden = isShown
         plainField.isHidden = !isShown
         refresh()
         focus()
+        if let selection, let editor = (isShown ? plainField : secureField).currentEditor() {
+            editor.selectedRange = selection
+        }
     }
 
     @objc private func runTest() {
