@@ -74,7 +74,7 @@ Text whose shape matches a local rule: a known key prefix (`sk-`, `ghp_`, `AKIA`
 _Avoid_: Secret (unqualified — a marked/concealed item is a different, certain case), password detection
 
 **Opaque Token**:
-An Active Item that, trimmed, is a single run of letters with digits, `-` or `_` and no whitespace or structural characters (`.` `/` `@` `:`) — the shape of a copied API key, whatever its vendor. Treated as a Suspected Secret. Jev could not narrow such an item anyway (it has no cut points), so refusing it costs only the ⌘V that would have produced the same result.
+An Active Item that, trimmed, is a single run of at least 16 letters, digits, `-` or `_` holding at least one letter and one digit, with no whitespace or structural characters (`.` `/` `@` `:`) — the shape of a copied API key, whatever its vendor. Treated as a Suspected Secret. Jev could not narrow such an item anyway (it has no cut points), so refusing it costs only the ⌘V that would have produced the same result.
 _Avoid_: High-entropy string (no entropy is measured), random-looking text
 
 **Restore Window**:
