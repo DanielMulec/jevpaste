@@ -1,6 +1,6 @@
 import Foundation
 
-/// The Vercel AI Gateway key in a shell-style env file (`~/.config/jevpaste/env`): since keys live in the Keychain,
+/// The Vercel AI Gateway key in a shell-style env file (`~/.config/jevpaste/env`): since keys live in the key store,
 /// only the source of the one-time import at launch, and of the opt-in live test. The key is never logged.
 public struct GatewayCredentials: Sendable {
     static let keyName = "AI_GATEWAY_API_KEY"

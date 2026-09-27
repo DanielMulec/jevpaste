@@ -61,15 +61,14 @@ struct ProviderKeySettingsTests {
         #expect(ProviderKeyResult.failed(failure).text(for: .vercelAIGateway) == text)
     }
 
-    @Test func aKeyTheKeychainRefusesSaysSoInTheResultSlot() {
+    @Test func aKeyThatCannotBeSavedSaysSoInTheResultSlot() {
         keys.failsWrites = true
 
         settings.keyEdited("fake-key-1", for: .vercelAIGateway)
 
-        #expect(settings.result(for: .vercelAIGateway) == .notSaved(status: -25_299))
+        #expect(settings.result(for: .vercelAIGateway) == .notSaved(code: 13))
         #expect(
-            ProviderKeyResult.notSaved(status: -25_299).text(for: .vercelAIGateway)
-                == "✕ Could not save the key to the Keychain (error -25299)")
+            ProviderKeyResult.notSaved(code: 13).text(for: .vercelAIGateway) == "✕ Could not save the key (error 13)")
     }
 
     @Test func openedFromTheRefusalAMissingKeyIsNotedAtTheField() {

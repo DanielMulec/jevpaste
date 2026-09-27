@@ -1,4 +1,4 @@
-# Menu and Settings — History Search panel, Settings window, keys in the Keychain
+# Menu and Settings — History Search panel, Settings window, Jev Provider keys
 
 Slice: [Implement the status-item menu with History Search and the Settings window](https://github.com/DanielMulec/jevpaste/issues/53).
 Decisions: [Decide how JevPaste supports Typesafe direct alongside the Vercel AI Gateway](https://github.com/DanielMulec/jevpaste/issues/45#issuecomment-5849649811)
@@ -33,16 +33,12 @@ Supersedes [history-ui.md](history-ui.md) (panel removed; its Core seam `select(
   time the store does not keep. Schema **v2**: `ALTER TABLE clipboard_item ADD COLUMN copied_at REAL` (Unix seconds;
   NULL for rows from v1 → detail without age). `record(_:copiedAt:)`: Copy Capture stamps it from its injected `now`.
 - `HistorySearch.results(for:in:)` → newest ≤ 5 (`rowLimit`) matches, match count, history count; `nil` when blank.
-  Query trimmed of whitespace and newlines in Swift; match = case- and diacritic-insensitive substring of the whole
-  text (Foundation), as the old panel did. The panel reads `entries()` once when it opens and again on an Active Item
-  change while open, then filters in memory per keystroke.
-- Why not SQL: SQLite's `LIKE`, `lower()` and `instr` fold ASCII only ("ä" ≠ "Ä", no diacritic folding) and `trim()`
-  strips spaces only; matching the old semantics in SQL needs a C-callback function. ≤ 500 rows, one read per open
-  (the old panel read everything per keystroke). Search stays pure and tested in Core without SQLite.
+  Trimmed query, case- and diacritic-insensitive substring of the whole text, as the old panel. `entries()` is read at
+  open and on an Active Item change while open, then filtered in memory per keystroke. Not SQL: `LIKE`/`lower()`/`instr`
+  fold ASCII only ("ä" ≠ "Ä") and `trim()` strips spaces only; ≤ 500 rows; stays pure in Core.
 
 ## Jev Provider, credentials and the per-attempt read
-- Core `JevProvider` (`vercelAIGateway` "Vercel AI Gateway" — default, `typesafeDirect` "Typesafe direct").
-- Core seam `JevProviderAccess.openForPasteAttempt() -> JevProviderOpening` (`.ready(any DecisionService)` |
+- Core `JevProvider` (`vercelAIGateway` "Vercel AI Gateway" — default, `typesafeDirect` "Typesafe direct"). Core seam `JevProviderAccess.openForPasteAttempt() -> JevProviderOpening` (`.ready(any DecisionService)` |
   `.noKey(JevProvider)`), replacing `PasteAttemptPorts.decisionService`. Called **once at ⌘⇧V** (after "Nothing copied
   yet"); the service is pinned in the attempt and serves every step (decision 9). `.noKey` → refusal, no Target read.
 - JevGateway: `JevCredentials { apiKey(for: JevProvider) -> String? }`; `JevGatewayAccess(credentials:choice:transport:)`
@@ -51,11 +47,16 @@ Supersedes [history-ui.md](history-ui.md) (panel removed; its Core seam `select(
   choice question, one option) with the saved key through the same exchange → `.works` | `.failed(reason)`.
 - Choice persisted in UserDefaults (`jevProvider`, raw value); unknown or not-yet-built values read as the default.
   Typesafe direct is listed, disabled (radio + key row) until [Add Typesafe direct as a Jev Provider](https://github.com/DanielMulec/jevpaste/issues/54).
-- Keychain (`KeychainJevKeyStore`, Security framework, app layer): generic password, service `com.jevpaste.JevPaste.jev-provider-key`,
-  account = provider raw value, label "JevPaste — <provider> API key", data = UTF-8 key; add, update (`SecItemUpdate`),
-  delete when the field is emptied. Keys never logged; errors log `OSStatus` only. Tests use an in-memory fake.
+- Key store (`FileJevKeyStore`, app layer, Daniel 2026-09-27): `~/.config/jevpaste/keys/<provider raw value>`, UTF-8
+  key, file 0600 in a 0700 directory; written to a new 0600 file and renamed over (atomic), empty field → file removed.
+  Keys never logged (errno only). Tests: temp directory (`FileJevKeyStoreTests`); elsewhere an in-memory fake.
+- Keychain finding (2026-09-27, macOS 26.6.2, why not the Keychain): self-signed `jevpaste-dev` has no Team ID, so a
+  generic password's partition list is the creating build's `cdhash:`. A rebuilt app (same DR, new cdhash) made
+  securityd log "ACL partition mismatch … asking user about XARA partition" and show a prompt; "Allow" is per request
+  (partition list unchanged). A probe also showed an unrelated ad-hoc same-user app reading such an item silently.
+  `KeychainJevKeyStore` stays (unused, `periphery:ignore:all`): the Keychain returns with a Team-ID-signed build.
 - One-time import (`JevKeyImport`, at launch): flag `jevProviderKeyImportDone` set → nothing (env file never read
-  again). Else Keychain has a Vercel key → set flag (`keychainHasKey`); else env file has `AI_GATEWAY_API_KEY` → store,
+  again). Else the store has a Vercel key → set flag (`storeHasKey`); else env file has `AI_GATEWAY_API_KEY` → store,
   set flag on success (`imported`), leave unset on failure (`failed`, retried next launch); else set flag (`noEnvKey`).
   The env file is never deleted. Log: `key import <result>`, `launch provider=… apiKeyPresent=…` (booleans/enums).
 
@@ -67,7 +68,7 @@ refused.noProviderKey`, shown 5 s; while shown a click opens Settings on Jev Pro
 `NSTabViewController` `.toolbar`: **General** (Open at Login switch over `LoginItemToggle`, state read on appear;
 "approve in System Settings" note) · **Jev Provider** (radios, one-line "no silent switch" hint, per provider: secure
 field ⇄ plain field via eye button, Test, inline result "Testing…" / green "✓ Works — Jev answered through <p>." / red
-"✕ <reason>"; every edit saves to the Keychain and clears the result) · **Full History** (inset table, two-line rows,
+"✕ <reason>"; every edit saves the key and clears the result) · **Full History** (inset table, two-line rows,
 "Active" capsule following `ActiveItemChange`, ✕ per row, footer "N Clipboard Items" + "Clear History…" → sheet with
 destructive Clear History / Cancel). One instance; height follows the tab, top edge fixed; ⌘W closes, ⌘X/C/V/A/Z edit;
 closing hides the app so focus returns. Active Item changes fan out in the shell (`ActiveItemChanges`): one Core
@@ -79,11 +80,10 @@ Core: `HistorySearchTests` (≤ 5 newest, counts, case/diacritic, blank, trimmed
 HistoryStore: `copied_at` stamped/read, v1 → v2 keeping rows (NULL age), v3 refused. JevGateway: access ready/noKey,
 key sent as Bearer, connection test per status. App: `HistorySearchContentTests`, `HistorySearchControllerTests`
 (keys, Enter fallback, one Esc, click-away, routing, refresh on copy), `JevKeyImportTests`, `JevProviderChoiceTests`,
-`ProviderKeySettingsTests`, `FullHistoryListTests`, `NoProviderKeyRefusalTests`. Live only: AppKit, Keychain, bar.
+`ProviderKeySettingsTests`, `FullHistoryListTests`, `NoProviderKeyRefusalTests`, `FileJevKeyStoreTests`. Live: AppKit, bar.
 
 ## Live run (after the install gate; synthetic `JEVPASTE-MENU-53` rows only)
-0. Probe (done): an item made by a jevpaste-dev-signed app has `partition_id cdhash:<creator>`, yet a rebuilt app
-   (new cdhash) read and deleted it with `kSecUseAuthenticationUIFail`. Two `make install`s before Daniel prove it.
+0. Two `make install`s before Daniel: `key import imported` into the file, then the rebuild reads it (no prompt).
 a. Panel: placeholder, type, ↓ then a letter keeps editing, click row, reopen shows it. b. ⌘⇧V in a Chrome `data:`
 field pastes the staged value. c. Settings key present, Test ✓. d. Clear key → ⌘⇧V refusal → click → Settings on the
 key; restore by clearing the import flag and relaunching (the app re-imports from the env file; key never shown).

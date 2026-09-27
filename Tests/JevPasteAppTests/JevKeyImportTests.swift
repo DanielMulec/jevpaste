@@ -4,14 +4,14 @@ import Testing
 
 @testable import JevPasteApp
 
-/// The one-time import at launch: the Vercel AI Gateway key from the env file moves into the Keychain once; after
-/// that the env file is never consulted again, even when the Keychain key is later removed in Settings.
+/// The one-time import at launch: the Vercel AI Gateway key from the env file moves into the key store once; after
+/// that the env file is never consulted again, even when the stored key is later removed in Settings.
 @MainActor
 struct JevKeyImportTests {
     private let scratch = ScratchDefaults()
     private let envWithKey = "AI_GATEWAY_API_KEY=fake-env-key\n"
 
-    @Test func theEnvFilesKeyIsStoredInTheKeychainOnce() throws {
+    @Test func theEnvFilesKeyIsStoredOnce() throws {
         let keys = InMemoryJevKeyStore()
         let envFile = try temporaryEnvFile(containing: envWithKey)
 
@@ -24,15 +24,15 @@ struct JevKeyImportTests {
         #expect(keys.keys.isEmpty)
     }
 
-    @Test func aKeyAlreadyInTheKeychainIsKeptAndTheImportIsDone() throws {
-        let keys = InMemoryJevKeyStore(keys: [.vercelAIGateway: "fake-keychain-key"])
+    @Test func aKeyAlreadyStoredIsKeptAndTheImportIsDone() throws {
+        let keys = InMemoryJevKeyStore(keys: [.vercelAIGateway: "fake-stored-key"])
 
         let result = JevKeyImport.runOnce(
             into: keys, from: try temporaryEnvFile(containing: envWithKey), remembering: scratch.defaults
         )
 
-        #expect(result == .keychainHasKey)
-        #expect(keys.keys == [.vercelAIGateway: "fake-keychain-key"])
+        #expect(result == .storeHasKey)
+        #expect(keys.keys == [.vercelAIGateway: "fake-stored-key"])
         #expect(
             JevKeyImport.runOnce(
                 into: keys, from: try temporaryEnvFile(containing: envWithKey),
@@ -55,7 +55,7 @@ struct JevKeyImportTests {
         #expect(keys.keys.isEmpty)
     }
 
-    @Test func aFailedKeychainWriteIsRetriedAtTheNextLaunch() throws {
+    @Test func aFailedKeyStoreWriteIsRetriedAtTheNextLaunch() throws {
         let keys = InMemoryJevKeyStore()
         keys.failsWrites = true
         let envFile = try temporaryEnvFile(containing: envWithKey)

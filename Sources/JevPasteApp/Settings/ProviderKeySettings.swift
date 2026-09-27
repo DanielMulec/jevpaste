@@ -10,7 +10,7 @@ enum ProviderKeyResult: Equatable {
     case testing
     case works
     case failed(JevConnectionTestFailure)
-    case notSaved(status: Int32)
+    case notSaved(code: Int32)
 
     func text(for provider: JevProvider) -> String {
         switch self {
@@ -19,7 +19,7 @@ enum ProviderKeyResult: Equatable {
         case .testing: "Testing…"
         case .works: "✓ Works — Jev answered through \(provider.displayName)."
         case .failed(let failure): "✕ " + Self.reason(for: failure, through: provider)
-        case .notSaved(let status): "✕ Could not save the key to the Keychain (error \(status))"
+        case .notSaved(let code): "✕ Could not save the key (error \(code))"
         }
     }
 
@@ -35,7 +35,7 @@ enum ProviderKeyResult: Equatable {
     }
 }
 
-/// The key rows' logic in Settings › Jev Provider: every edit saves the key to the Keychain (an empty field removes
+/// The key rows' logic in Settings › Jev Provider: every edit saves the key to the key store (an empty field removes
 /// it) and clears the row's result; Test sends one cheap Jev call with the saved key. A result for a key that has
 /// been edited since is dropped. Keys never reach a log.
 @MainActor
@@ -71,7 +71,7 @@ final class ProviderKeySettings {
             try keys.setAPIKey(key, for: provider)
             results[provider] = ProviderKeyResult.none
         } catch {
-            results[provider] = .notSaved(status: error.status)
+            results[provider] = .notSaved(code: error.code)
         }
     }
 

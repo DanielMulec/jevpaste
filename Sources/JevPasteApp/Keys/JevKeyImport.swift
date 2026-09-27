@@ -3,17 +3,17 @@ import JevGateway
 import SmartPasteCore
 import os
 
-/// The one-time import at launch: the Vercel AI Gateway key of `~/.config/jevpaste/env` moves into the Keychain, so
-/// an existing setup carries over. Once done — imported, already in the Keychain, or no key in the file — it is
+/// The one-time import at launch: the Vercel AI Gateway key of `~/.config/jevpaste/env` moves into the key store, so
+/// an existing setup carries over. Once done — imported, already stored, or no key in the file — it is
 /// remembered and the env file is never read again. The file is never deleted.
 @MainActor
 enum JevKeyImport {
     enum Result: String, Equatable {
         case alreadyDone
-        case keychainHasKey
+        case storeHasKey
         case imported
         case noEnvKey
-        /// The Keychain refused the key; the import runs again at the next launch.
+        /// The key store refused the key; the import runs again at the next launch.
         case failed
     }
 
@@ -34,13 +34,13 @@ enum JevKeyImport {
         into keys: any JevKeyStore, from envFile: GatewayCredentials, remembering defaults: UserDefaults
     ) -> Result {
         guard !defaults.bool(forKey: doneFlag) else { return .alreadyDone }
-        guard keys.apiKey(for: .vercelAIGateway) == nil else { return .keychainHasKey }
+        guard keys.apiKey(for: .vercelAIGateway) == nil else { return .storeHasKey }
         guard let envKey = envFile.apiKey() else { return .noEnvKey }
         do {
             try keys.setAPIKey(envKey, for: .vercelAIGateway)
             return .imported
         } catch {
-            log.error("key import could not store the key status=\(error.status, privacy: .public)")
+            log.error("key import could not store the key code=\(error.code, privacy: .public)")
             return .failed
         }
     }

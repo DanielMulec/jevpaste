@@ -18,7 +18,7 @@ final class SmartPasteApplication {
     let historySearch: HistorySearchController
 
     init(statusItem: NSStatusItem, options: LaunchOptions) {
-        let keys = KeychainJevKeyStore()
+        let keys = FileJevKeyStore()
         JevKeyImport.runOnce(into: keys, from: .standard, remembering: .standard)
         let providerChoice = JevProviderChoice(defaults: .standard)
         Self.logLaunch(provider: providerChoice.provider, keys: keys)

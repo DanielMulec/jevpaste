@@ -1,12 +1,14 @@
+// periphery:ignore:all - kept for a Team-ID-signed build, where it replaces FileJevKeyStore in the composition root.
 import Foundation
 import Security
 import SmartPasteCore
 import os
 
-/// The API keys in the login Keychain: one generic password per Jev Provider, service
-/// `com.jevpaste.JevPaste.jev-provider-key`, account = the provider's raw value. The item belongs to the app that
-/// created it; builds signed with the same Signing Identity read it without a prompt (live-proven, see
-/// docs/design/menu-and-settings.md). AppKit-free glue over `SecItem*`, live-proven only; logs carry statuses only.
+/// For a Team-ID-signed build: the API keys in the login Keychain, one generic password per Jev Provider, service
+/// `com.jevpaste.JevPaste.jev-provider-key`, account = the provider's raw value. Not used by the self-signed build:
+/// without a Team ID the item's partition is the creating build's cdhash, so every rebuild asks the user to allow
+/// each read (live finding 2026-09-27, docs/design/menu-and-settings.md); the app uses `FileJevKeyStore` instead.
+/// Glue over `SecItem*`, live-proven only; logs carry statuses only.
 struct KeychainJevKeyStore: JevKeyStore {
     static let service = "com.jevpaste.JevPaste.jev-provider-key"
     private static let log = Logger(subsystem: "jevpaste", category: "Keys")
@@ -28,7 +30,7 @@ struct KeychainJevKeyStore: JevKeyStore {
         let status = key.isEmpty ? Self.removeKey(of: provider) : Self.store(key, for: provider)
         guard status == errSecSuccess else {
             Self.log.error("key write failed status=\(status, privacy: .public)")
-            throw JevKeyStoreFailure(status: status)
+            throw JevKeyStoreFailure(code: status)
         }
         let change = key.isEmpty ? "removed" : "stored"
         Self.log.notice("key for \(provider.rawValue, privacy: .public) \(change, privacy: .public)")

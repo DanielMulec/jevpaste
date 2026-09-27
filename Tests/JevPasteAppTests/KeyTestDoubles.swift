@@ -19,7 +19,7 @@ final class InMemoryJevKeyStore: JevKeyStore {
     }
 
     func setAPIKey(_ key: String, for provider: JevProvider) throws(JevKeyStoreFailure) {
-        guard !failsWrites else { throw JevKeyStoreFailure(status: -25_299) }
+        guard !failsWrites else { throw JevKeyStoreFailure(code: 13) }
         keys[provider] = key.isEmpty ? nil : key
     }
 }
