@@ -15,7 +15,6 @@ is behavioural evidence of the experience, not proof of how Jev works internally
 [copy](frames/frame_005.png), [first paste](frames/frame_010.png) and [finished form](frames/frame_022.png).
 
 Domain vocabulary (Active Item, Candidate, Paste Attempt, Bound Target, …): [`CONTEXT.md`](CONTEXT.md).
-Status: scaffold only — the app shows a menu-bar icon with a Quit item and no behaviour yet.
 
 ## Privacy
 

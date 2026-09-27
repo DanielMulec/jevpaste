@@ -86,7 +86,7 @@ public struct JevGatewayDecisionService: DecisionService {
         return urlRequest
     }
 
-    /// `Jev answered provider=typesafeDirect status=200 model=jev-1.13.0 questions=2 options=510 bytes=41234 in 0.61
+    /// `Jev answered provider=typesafeDirect status=200 model=<model id> questions=2 options=510 bytes=41234 in 0.61
     /// seconds` — the provider, numbers, a model id and fixed words only.
     private func logReply(_ exchanged: Exchanged, request: NarrowingRequest, bytes: Int, after latency: Duration) {
         let outcome: String
