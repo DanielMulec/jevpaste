@@ -24,6 +24,8 @@ field's label, placeholder, section heading and neighbouring labels, a bounded w
 of the app** and **the title of its window**. Not sent: the app's bundle identifier, the contents of other
 windows, and nearby text or a window title that looks like a secret (withheld, and the outcome says so).
 Secure fields, suspected secrets and a copy of only whitespace never reach Jev.
+A copy that is one long token of letters and digits — an API key of any vendor, but also a UUID or a git hash — counts
+as a suspected secret: ⌘⇧V refuses it and plain ⌘V pastes it.
 
 ## Jev Provider and API keys
 
