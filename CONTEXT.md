@@ -69,6 +69,14 @@ _Avoid_: Wake retry, warm-up, "press again"
 **Pre-check**:
 A local refusal evaluated before any Paste Attempt leaves the machine: no editable Target, secure field, or a concealed or suspected-secret Active Item. Refusals are visible and never contact Jev. A suspected secret in the Target Context's surrounding text is not a refusal: that text is withheld from Jev and the outcome shows a note.
 
+**Suspected Secret**:
+Text whose shape matches a local rule: a known key prefix (`sk-`, `ghp_`, `AKIA`, …), a PEM block, a JWT, inline credentials in a connection string — or an Opaque Token. As an Active Item it is refused at ⌘⇧V and never sent to Jev; as part of the Target Context it is withheld. It is still recorded in Clipboard History (only concealed items and stored Jev Provider keys are not). Detection is a visibility aid, never a guarantee; ordinary ⌘V is unaffected.
+_Avoid_: Secret (unqualified — a marked/concealed item is a different, certain case), password detection
+
+**Opaque Token**:
+An Active Item that, trimmed, is a single run of letters with digits, `-` or `_` and no whitespace or structural characters (`.` `/` `@` `:`) — the shape of a copied API key, whatever its vendor. Treated as a Suspected Secret. Jev could not narrow such an item anyway (it has no cut points), so refusing it costs only the ⌘V that would have produced the same result.
+_Avoid_: High-entropy string (no entropy is measured), random-looking text
+
 **Restore Window**:
 The brief interval after insertion during which the clipboard temporarily holds the Paste Result before the original contents are restored. A copy made by the user in this window is kept in preference to restoring.
 
