@@ -25,7 +25,8 @@ final class FullHistorySettingsViewController: NSViewController, NSTableViewData
         table.addTableColumn(NSTableColumn(identifier: .init("item")))
         table.headerView = nil
         table.rowHeight = 36
-        table.style = .inset
+        // Plain, not inset: the rows' backgrounds start at the content inset, in line with the footer below.
+        table.style = .plain
         table.usesAlternatingRowBackgroundColors = true
         table.dataSource = self
         table.delegate = self
@@ -36,12 +37,8 @@ final class FullHistorySettingsViewController: NSViewController, NSTableViewData
         countField.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         countField.textColor = .secondaryLabelColor
         let footer = NSStackView(views: [countField, NSView(), clearButton])
-        for part in [scroll, footer] as [NSView] {
-            part.translatesAutoresizingMaskIntoConstraints = false
-            part.widthAnchor.constraint(equalToConstant: SettingsLayout.contentWidth).isActive = true
-        }
+        view = SettingsLayout.page([scroll, footer], spacing: 8, fullWidth: [scroll, footer])
         scroll.heightAnchor.constraint(equalToConstant: Self.listHeight).isActive = true
-        view = SettingsLayout.column([scroll, footer], spacing: 8)
     }
 
     override func viewWillAppear() {

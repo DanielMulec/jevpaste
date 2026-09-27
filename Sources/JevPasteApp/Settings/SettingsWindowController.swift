@@ -8,7 +8,7 @@ import os
 @MainActor
 final class SettingsWindowController: NSObject, NSWindowDelegate {
     private static let log = Logger(subsystem: "jevpaste", category: "Settings")
-    private static let width = 620.0
+    private static let width = SettingsLayout.pageWidth
 
     private let general: NSViewController
     private let jevProvider: JevProviderSettingsViewController
@@ -30,6 +30,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         case .jevProvider, .key: tabs.selectedTabViewItemIndex = 1
         case .fullHistory: tabs.selectedTabViewItemIndex = 2
         }
+        tabs.fitWindowToSelectedTab()
         NSApp.activate()
         window.makeKeyAndOrderFront(nil)
         if case .key(let provider) = section { jevProvider.focusKey(of: provider) }
@@ -76,7 +77,14 @@ final class SettingsTabViewController: NSTabViewController {
 
     override func tabView(_ tabView: NSTabView, didSelect tabViewItem: NSTabViewItem?) {
         super.tabView(tabView, didSelect: tabViewItem)
-        guard let window = view.window, let content = tabViewItem?.viewController?.view else { return }
+        fitWindowToSelectedTab()
+    }
+
+    /// Also on open: selecting the tab that is already selected reports no change.
+    func fitWindowToSelectedTab() {
+        let selected =
+            tabViewItems.indices.contains(selectedTabViewItemIndex) ? tabViewItems[selectedTabViewItemIndex] : nil
+        guard let window = view.window, let content = selected?.viewController?.view else { return }
         content.layoutSubtreeIfNeeded()
         let size = NSSize(width: window.contentLayoutRect.width, height: content.fittingSize.height)
         var frame = window.frameRect(forContentRect: NSRect(origin: .zero, size: size))

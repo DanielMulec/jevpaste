@@ -21,9 +21,7 @@ final class GeneralSettingsViewController: NSViewController {
         loginSwitch.target = self
         loginSwitch.action = #selector(switchToggled)
         let row = NSStackView(views: [NSTextField(labelWithString: "Open at Login"), NSView(), loginSwitch])
-        row.translatesAutoresizingMaskIntoConstraints = false
-        row.widthAnchor.constraint(equalToConstant: SettingsLayout.contentWidth).isActive = true
-        view = SettingsLayout.column([row, approvalNote])
+        view = SettingsLayout.page([row, approvalNote], fullWidth: [row])
     }
 
     override func viewWillAppear() {

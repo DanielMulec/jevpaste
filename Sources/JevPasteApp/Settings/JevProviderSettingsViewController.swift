@@ -35,12 +35,12 @@ final class JevProviderSettingsViewController: NSViewController {
             rows[provider] = row
             keyViews += [SettingsLayout.heading(provider.displayName, size: 11), row.view]
         }
-        let radioColumn = SettingsLayout.column(JevProvider.allCases.compactMap { radios[$0] }, spacing: 6, inset: 0)
+        let radioColumn = SettingsLayout.column(JevProvider.allCases.compactMap { radios[$0] }, spacing: 6)
         let hint = SettingsLayout.note(
             "Every Smart Paste goes through the chosen Jev Provider. Without its key, ⌘⇧V refuses — it never switches "
                 + "to the other provider. A change applies from the next ⌘⇧V."
         )
-        view = SettingsLayout.column(
+        view = SettingsLayout.page(
             [SettingsLayout.heading("Jev Provider"), radioColumn, hint, SettingsLayout.heading("API keys")] + keyViews
         )
     }

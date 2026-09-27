@@ -6,7 +6,7 @@ import AppKit
 /// key (#37). Keys arrive as the field's editing commands; losing key is reported as click-away.
 @MainActor
 final class HistorySearchPanel: NSObject, HistorySearchSurface, NSSearchFieldDelegate {
-    private static let width = 420.0
+    private static let width = 320.0
 
     private let panel = StatusItemPanel(becomesKey: true, level: .popUpMenu)
     private let field = EditingSearchField()
