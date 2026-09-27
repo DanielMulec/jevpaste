@@ -78,3 +78,18 @@ struct OpaqueTokenTradeOffTests {
         #expect(!SuspectedSecretRule.opaqueToken.matches(text))
     }
 }
+
+/// The exact Active Items of the live proof in `docs/acceptance/run-*-opaque-token.log`. The app's log says only
+/// `refused.suspectedSecret`; this pins which rule refuses each one.
+struct OpaqueTokenLiveProofTests {
+    @Test(
+        arguments: [
+            ("JEVPASTE-OPQ-1-a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6", "opaqueToken"),
+            ("the key is vck_JEVPASTEOPQ2a1B2c3D4e5F6g7H8i9J0k1L2 for the demo", "vercelAIGatewayKey"),
+            ("JEVPASTE-OPQ-3\njev.opq3@example.org", nil),
+            ("0f8fad5b-d9cb-469f-a165-70867728950e", "opaqueToken"),
+        ] as [(String, String?)])
+    func eachStagedItemIsRefusedByTheExpectedRule(text: String, firstRuleName: String?) {
+        #expect(SuspectedSecretRules.standard.firstMatch(in: text)?.name == firstRuleName)
+    }
+}
