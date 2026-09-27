@@ -18,6 +18,8 @@ final class PasteAttemptHarness {
     let targetResolver: FakeTargetResolver
     let inserter: FakeInserter
     let jev = FakeDecisionService()
+    /// The Vercel AI Gateway, chosen and keyed, reaches `jev`.
+    let jevProvider: FakeJevProviderAccess
     let history = FakeHistoryRepository()
     let presenter: FakePresenter
     let chooser = FakeChooser()
@@ -39,9 +41,10 @@ final class PasteAttemptHarness {
         presenter = FakePresenter(clock: clock)
         chooser.onPresent = { [presenter] in presenter.hideWhileChoosing() }
         capture = CopyCapture(clipboard: clipboard, history: history)
+        jevProvider = FakeJevProviderAccess(servicesByKeyedProvider: [.vercelAIGateway: jev])
         let ports = PasteAttemptPorts(
             hotkey: hotkey, clipboard: clipboard, targetResolver: targetResolver, inserter: inserter,
-            decisionService: jev, clock: clock, presenter: presenter, chooser: chooser
+            jevProvider: jevProvider, clock: clock, presenter: presenter, chooser: chooser
         )
         let rules = PasteAttemptRules(
             narrowingPolicy: .r2b,

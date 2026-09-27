@@ -89,10 +89,10 @@ import Testing
     @Test func fileFromANewerSchemaIsRefusedAndLeftUntouched() throws {
         var connection: OpaquePointer?
         #expect(sqlite3_open(file.fileURL.path, &connection) == SQLITE_OK)
-        #expect(sqlite3_exec(connection, "PRAGMA user_version = 2", nil, nil, nil) == SQLITE_OK)
+        #expect(sqlite3_exec(connection, "PRAGMA user_version = 3", nil, nil, nil) == SQLITE_OK)
         sqlite3_close(connection)
 
-        #expect(throws: HistoryStoreFailure.unsupportedSchemaVersion(2)) {
+        #expect(throws: HistoryStoreFailure.unsupportedSchemaVersion(3)) {
             try file.openRepository()
         }
     }

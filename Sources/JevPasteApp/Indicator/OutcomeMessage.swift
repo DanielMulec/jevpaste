@@ -39,6 +39,8 @@ struct OutcomeMessage: Equatable {
 
     private static let successDuration = Duration.seconds(1)
     private static let reasonDuration = Duration.milliseconds(2500)
+    /// Long enough to read the refusal and click it, which opens Settings.
+    private static let missingKeyDuration = Duration.seconds(5)
 
     init(_ outcome: PasteAttemptOutcome, note: PasteAttemptNote?) {
         let message = OutcomeMessage(outcome)
@@ -69,6 +71,12 @@ struct OutcomeMessage: Equatable {
             )
         case .noSuitableMatch:
             self.init(reason: IndicatorContent(symbolName: "questionmark.circle", text: "No suitable match"))
+        case .refused(.noProviderKey(let provider)):
+            self.init(
+                content: IndicatorContent(
+                    symbolName: "key", text: "No key for \(provider.displayName) — open Settings"),
+                displayDuration: Self.missingKeyDuration
+            )
         case .refused(let refusal):
             self.init(reason: IndicatorContent(symbolName: "nosign", text: Self.reason(for: refusal)))
         case .cancelled:
@@ -96,6 +104,7 @@ struct OutcomeMessage: Equatable {
         case .targetNotReady: "targetNotReady"
         case .secureField: "secureField"
         case .suspectedSecret: "suspectedSecret"
+        case .noProviderKey: "noProviderKey"
         }
     }
 
@@ -115,6 +124,7 @@ struct OutcomeMessage: Equatable {
         case .targetNotReady(let applicationName): "\(applicationName) isn't ready — press ⌘⇧V again"
         case .secureField: "Secure field — not supported"
         case .suspectedSecret: "Suspected secret — blocked"
+        case .noProviderKey(let provider): "No key for \(provider.displayName)"
         }
     }
 

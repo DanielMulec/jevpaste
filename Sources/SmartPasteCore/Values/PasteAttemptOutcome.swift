@@ -10,6 +10,8 @@ public enum PreCheckRefusal: Equatable, Sendable {
     case secureField
     /// The Active Item is concealed or looks like a secret.
     case suspectedSecret
+    /// The chosen Jev Provider has no API key; Settings takes one.
+    case noProviderKey(JevProvider)
 }
 
 /// Why a Paste Attempt failed after it passed the Pre-checks. Nothing was inserted.

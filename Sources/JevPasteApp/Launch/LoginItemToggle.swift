@@ -18,26 +18,20 @@ protocol LoginItemService {
     func openLoginItemsSettings()
 }
 
-/// How the "Open at Login" menu item looks, independent of AppKit.
-struct LoginItemMenuState: Equatable {
-    enum Check {
-        case checked
-        case unchecked
-        /// Registered, but waiting for Daniel's approval in System Settings: shown as a mixed state.
-        case awaitingApproval
-    }
-
-    let title: String
-    let check: Check
+/// Where the "Open at Login" switch in Settings › General stands, independent of AppKit.
+enum LoginItemSwitchState: Equatable {
+    case enabled
+    case disabled
+    /// Registered, but waiting for approval in System Settings: the switch is on and a note says where to approve.
+    case awaitingApproval
 }
 
-/// "Open at Login" in the status-item menu. Nothing is stored here: the state is read from the system every time
-/// the menu opens, so it is right after a relaunch or a change in System Settings.
+/// "Open at Login" in Settings › General. Nothing is stored here: the state is read from the system every time the
+/// tab shows, so it is right after a relaunch or a change in System Settings.
 @MainActor
 final class LoginItemToggle {
     private static let log = Logger(subsystem: "jevpaste", category: "Launch")
     private static let noticeDuration = Duration.seconds(5)
-    private static let title = "Open at Login"
 
     private let service: any LoginItemService
     private let notices: IndicatorNoticeSurface
@@ -47,12 +41,11 @@ final class LoginItemToggle {
         self.notices = notices
     }
 
-    var menuState: LoginItemMenuState {
+    var switchState: LoginItemSwitchState {
         switch service.status {
-        case .enabled: LoginItemMenuState(title: Self.title, check: .checked)
-        case .requiresApproval:
-            LoginItemMenuState(title: Self.title + " — approve in System Settings", check: .awaitingApproval)
-        case .notRegistered, .notFound: LoginItemMenuState(title: Self.title, check: .unchecked)
+        case .enabled: .enabled
+        case .requiresApproval: .awaitingApproval
+        case .notRegistered, .notFound: .disabled
         }
     }
 

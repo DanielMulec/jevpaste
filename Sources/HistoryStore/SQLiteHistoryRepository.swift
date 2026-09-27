@@ -40,7 +40,7 @@ public final class SQLiteHistoryRepository: HistoryRepository {
         }
     }
 
-    public func record(_ item: ClipboardItem) {
+    public func record(_ item: ClipboardItem, copiedAt: Date) {
         guard !item.isConcealed else {
             Self.log.info("record refused: concealed item")
             return
@@ -51,16 +51,15 @@ public final class SQLiteHistoryRepository: HistoryRepository {
                 return
             }
             let evicted = perform("record") { () throws(HistoryStoreFailure) in
-                try table.record(item.text, under: key)
+                try table.record(item.text, copiedAt: copiedAt, under: key)
             }
             Self.logEviction(evicted)
         }
     }
 
-    public func items() -> [ClipboardItem] {
+    public func entries() -> [HistoryEntry] {
         queue.sync {
-            let texts = perform("items") { () throws(HistoryStoreFailure) in try table.textsNewestFirst() }
-            return (texts ?? []).map { ClipboardItem(text: $0) }
+            perform("items") { () throws(HistoryStoreFailure) in try table.entriesNewestFirst() } ?? []
         }
     }
 

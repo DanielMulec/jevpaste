@@ -30,6 +30,10 @@ final class IndicatorPresenter: PasteOutcomePresenter {
     private let clock: any PasteAttemptClock
     private var state = State.hidden
     private var onCancel: (@MainActor () -> Void)?
+    /// Opens Settings at a Jev Provider's key; a click on "No key for <provider> — open Settings" calls it.
+    var opensSettingsToKey: (@MainActor (JevProvider) -> Void)?
+    /// The provider named by the missing-key refusal while it is shown; `nil` otherwise.
+    private var providerWithoutKeyShown: JevProvider?
     private var pendingHide: (any ScheduledAction)?
     private let offerSession: KeyPanelSession<OfferAnswer>
 
@@ -82,6 +86,7 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         let line = Self.outcomeLogLine(outcome, note: note, path: path, wakeWait: wakeWait)
         Self.log.notice("\(line, privacy: .public)")
         show(OutcomeMessage(outcome, note: note))
+        if case .refused(.noProviderKey(let provider)) = outcome { providerWithoutKeyShown = provider }
     }
 
     /// Takes key focus for Enter or Esc; the answer goes to Core once focus is back in the Bound Target's app.
@@ -96,6 +101,7 @@ final class IndicatorPresenter: PasteOutcomePresenter {
         onCancel = nil
         pendingHide?.cancel()
         pendingHide = nil
+        providerWithoutKeyShown = nil
         state = .offering
         surface.displayTakingKeyFocus(.noSuitableMatchOffer)
         Self.log.notice("offer shown")
@@ -153,12 +159,14 @@ final class IndicatorPresenter: PasteOutcomePresenter {
     private func display(_ content: IndicatorContent, as newState: State) {
         pendingHide?.cancel()
         pendingHide = nil
+        providerWithoutKeyShown = nil
         state = newState
         surface.display(content)
     }
 
     private func hide() {
         state = .hidden
+        providerWithoutKeyShown = nil
         surface.hide()
     }
 
@@ -167,6 +175,12 @@ final class IndicatorPresenter: PasteOutcomePresenter {
     }
 
     private func indicatorClicked() {
+        if let provider = providerWithoutKeyShown {
+            Self.log.notice("missing key clicked, opening Settings")
+            hide()
+            opensSettingsToKey?(provider)
+            return
+        }
         guard isCancellable, let onCancel else { return }
         Self.log.notice("cancel clicked")
         onCancel()

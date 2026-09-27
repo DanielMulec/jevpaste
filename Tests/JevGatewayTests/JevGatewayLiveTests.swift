@@ -19,7 +19,8 @@ import Testing
         )
         let request = StepPlanner(copy: copy, context: context, policy: .r2b).stepRequest(on: copy[...]).request
         let started = ContinuousClock.now
-        let narrowingReply = await reply(from: JevGatewayDecisionService(), to: request)
+        let apiKey = try #require(GatewayCredentials.standard.apiKey())
+        let narrowingReply = await reply(from: JevGatewayDecisionService(apiKey: apiKey), to: request)
         let latency = ContinuousClock.now - started
         FileHandle.standardError.write(Data("[live-jev] \(narrowingReply); wall-clock latency \(latency)\n".utf8))
 

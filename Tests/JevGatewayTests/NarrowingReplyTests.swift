@@ -6,7 +6,7 @@ import Testing
 
 private func reply(toBody body: String, status: Int = 200) async throws -> NarrowingReply {
     let transport = StubTransport.answering(status: status, body: body)
-    return await reply(from: try Fixture.service(transport: transport))
+    return await reply(from: Fixture.service(transport: transport))
 }
 
 /// The two 400 bodies the spike recorded when Jev refused the size (`results/raw.jsonl`, cell `N04_probe`), cut to
@@ -101,13 +101,13 @@ private enum RecordedRefusal {
 
     @Test func aTransportErrorFails() async throws {
         let transport = StubTransport(.transportError)
-        #expect(await reply(from: try Fixture.service(transport: transport)) == .failed)
+        #expect(await reply(from: Fixture.service(transport: transport)) == .failed)
     }
 
     @Test func theRequestIsOnePostWithTheKeyAndTheBody() async throws {
         let transport = StubTransport.answering(body: Fixture.evaluateResponse(choice: "x0001"))
 
-        _ = await reply(from: try Fixture.service(transport: transport))
+        _ = await reply(from: Fixture.service(transport: transport))
 
         let sent = try #require(await transport.sentRequests.first)
         #expect(sent.httpMethod == "POST")

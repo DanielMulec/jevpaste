@@ -31,6 +31,8 @@ struct RunningAttempt {
 
 /// What consulting Jev needs across the steps of Narrowing.
 struct JevConsultation {
+    /// The chosen Jev Provider's service, opened at ⌘⇧V: every request of the attempt goes through it.
+    let decisionService: any DecisionService
     /// The Target Context as screened at ⌘⇧V: what every request sends, and the note the outcome carries.
     let contextToSend: ScreenedTargetContext
     /// When the 5 s clock runs out: it covers every step and every rate-limit wait.

@@ -1,15 +1,13 @@
 import AppKit
 
 /// Owns the status item (the app icon's glyph as a template image, `StatusItem.png` from the bundle, falling back to
-/// the SF Symbol `doc.on.clipboard` when the bundle lacks it, e.g. under `swift run`; and a short menu: "Clipboard
-/// History…", "Open at Login", "Quit") and starts Smart Paste.
+/// the SF Symbol `doc.on.clipboard` when the bundle lacks it, e.g. under `swift run`) and starts Smart Paste. The item
+/// has no `NSMenu`: a click opens the History Search panel, which stands in for the menu.
 @MainActor
 final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     private let options: LaunchOptions
     private var statusItem: NSStatusItem?
     private var smartPaste: SmartPasteApplication?
-    // periphery:ignore - held for the app's lifetime: the menu keeps its delegate and item target weakly.
-    private var loginItemMenu: LoginItemMenu?
 
     init(options: LaunchOptions) {
         self.options = options
@@ -18,12 +16,12 @@ final class MenuBarDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = Self.statusItemImage()
+        item.button?.target = self
+        item.button?.action = #selector(statusItemClicked)
+        // Opens on mouse-down, as a menu does.
+        item.button?.sendAction(on: [.leftMouseDown])
         statusItem = item
-        let application = SmartPasteApplication(statusItem: item, options: options)
-        smartPaste = application
-        let loginItemMenu = LoginItemMenu(toggle: application.loginItem)
-        self.loginItemMenu = loginItemMenu
-        item.menu = makeMenu(loginItem: loginItemMenu)
+        smartPaste = SmartPasteApplication(statusItem: item, options: options)
     }
 
     /// A template image so macOS tints it for light, dark and auto-hiding menu bars; `@2x` is picked up by name.
@@ -37,25 +35,7 @@ final class MenuBarDelegate: NSObject, NSApplicationDelegate {
         return image
     }
 
-    private func makeMenu(loginItem: LoginItemMenu) -> NSMenu {
-        let menu = NSMenu()
-        menu.delegate = loginItem
-        let history = NSMenuItem(title: "Clipboard History…", action: #selector(openHistory), keyEquivalent: "")
-        history.target = self
-        menu.addItem(history)
-        menu.addItem(.separator())
-        menu.addItem(loginItem.item)
-        menu.addItem(.separator())
-        menu.addItem(
-            NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        )
-        return menu
-    }
-
-    /// Opens the history panel once the menu has closed, so the menu's own tracking end does not take its key focus.
-    @objc private func openHistory() {
-        Task { @MainActor [weak self] in
-            self?.smartPaste?.historyPanel.open()
-        }
+    @objc private func statusItemClicked() {
+        smartPaste?.historySearch.toggle()
     }
 }

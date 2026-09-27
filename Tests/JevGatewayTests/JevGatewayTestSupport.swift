@@ -62,8 +62,6 @@ enum Fixture {
         ]
     )
 
-    static let keyFileText = "AI_GATEWAY_API_KEY=test-key-value\n"
-
     /// A Jev answer in the shape the spike recorded (`round2/results/raw.jsonl`), reduced to the fields the adapter
     /// reads plus some noise; probabilities deliberately not in option order.
     static func evaluateResponse(choice: String, probability: Double = 0.97) -> String {
@@ -80,18 +78,14 @@ enum Fixture {
         return file
     }
 
-    static func service(
-        transport: StubTransport,
-        keyFileText: String = keyFileText
-    ) throws -> JevGatewayDecisionService {
-        let credentials = GatewayCredentials(envFile: try keyFile(containing: keyFileText))
-        return JevGatewayDecisionService(credentials: credentials, transport: transport)
+    static func service(transport: StubTransport) -> JevGatewayDecisionService {
+        JevGatewayDecisionService(apiKey: "test-key-value", transport: transport)
     }
 }
 
 /// Starts one request through the seam and waits for its single reply.
 func reply(
-    from service: JevGatewayDecisionService,
+    from service: any DecisionService,
     to request: NarrowingRequest = Fixture.request
 ) async -> NarrowingReply {
     await withCheckedContinuation { continuation in

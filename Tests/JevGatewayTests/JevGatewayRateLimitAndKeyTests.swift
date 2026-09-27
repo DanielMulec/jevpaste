@@ -8,7 +8,7 @@ private let rateLimitBody = #"{"error":{"type":"rate_limit_exceeded"}}"#
 
 private func reply(to429WithHeaders headers: [String: String]) async throws -> NarrowingReply {
     let transport = StubTransport.answering(status: 429, headers: headers, body: rateLimitBody)
-    return await reply(from: try Fixture.service(transport: transport))
+    return await reply(from: Fixture.service(transport: transport))
 }
 
 @Suite struct JevGatewayRateLimitTests {
@@ -39,28 +39,16 @@ private func reply(to429WithHeaders headers: [String: String]) async throws -> N
     }
 }
 
-@Suite struct JevGatewayKeyTests {
-    private let answer = Fixture.evaluateResponse(choice: "x0001")
-
-    @Test func aMissingKeyFileFailsWithoutACall() async {
-        let transport = StubTransport.answering(body: answer)
+/// The env file is only the one-time import source for the Keychain; these pin how it is read.
+@Suite struct GatewayEnvFileTests {
+    @Test func aMissingKeyFileHasNoKey() {
         let missingFile = FileManager.default.temporaryDirectory.appending(path: "absent-\(UUID().uuidString).env")
-        let service = JevGatewayDecisionService(
-            credentials: GatewayCredentials(envFile: missingFile),
-            transport: transport
-        )
-
-        #expect(await reply(from: service) == .failed)
-        #expect(await transport.sentRequests.isEmpty)
+        #expect(GatewayCredentials(envFile: missingFile).apiKey() == nil)
     }
 
     @Test(arguments: ["", "OTHER_KEY=value\n", "AI_GATEWAY_API_KEY=\n", "AI_GATEWAY_API_KEY=  \n"])
-    func aKeyFileWithoutAKeyFailsWithoutACall(keyFileText: String) async throws {
-        let transport = StubTransport.answering(body: answer)
-        let service = try Fixture.service(transport: transport, keyFileText: keyFileText)
-
-        #expect(await reply(from: service) == .failed)
-        #expect(await transport.sentRequests.isEmpty)
+    func aKeyFileWithoutAKeyHasNoKey(keyFileText: String) throws {
+        #expect(GatewayCredentials(envFile: try Fixture.keyFile(containing: keyFileText)).apiKey() == nil)
     }
 
     @Test(arguments: [

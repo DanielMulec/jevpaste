@@ -1,19 +1,20 @@
 import AppKit
 
-/// The borderless floating panel that jevpaste shows below the status item. It never activates the app when
-/// clicked and is never main. The Candidate Chooser's and the history panel's may become key, the indicator's only
-/// while it offers to paste everything after No Suitable Match; each reports when it stops being key.
+/// The borderless panel that jevpaste shows below the status item. It never activates the app when clicked and is
+/// never main. The Candidate Chooser's and the History Search panel's may become key, the indicator's only while it
+/// offers to paste everything after No Suitable Match; each reports when it stops being key. Floating by default; the
+/// History Search panel sits at the menu level, like the menu it stands in for.
 final class StatusItemPanel: NSPanel {
     var onResignKey: (@MainActor () -> Void)?
     /// Whether the panel may become key; the indicator switches it on only for its offer.
     var becomesKey: Bool
 
-    init(becomesKey: Bool) {
+    init(becomesKey: Bool, level: NSWindow.Level = .floating) {
         self.becomesKey = becomesKey
         super.init(
             contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true
         )
-        level = .floating
+        self.level = level
         hidesOnDeactivate = false
         isReleasedWhenClosed = false
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
@@ -29,17 +30,35 @@ final class StatusItemPanel: NSPanel {
         super.resignKey()
         onResignKey?()
     }
+
+    /// Takes the content's fitting size, growing or shrinking downwards: the top edge stays where it is.
+    func resizeKeepingTopEdge() {
+        guard let contentView else { return }
+        let top = frame.maxY
+        setContentSize(contentView.fittingSize)
+        setFrameTopLeftPoint(NSPoint(x: frame.minX, y: top))
+    }
 }
 
 /// The rounded background of jevpaste's panels, holding one view that fills it: the dark HUD material for the
-/// indicator and the chooser; the history panel passes `.popover`, which follows light and dark appearance.
+/// indicator and the chooser; the History Search panel passes `.menu` with a tint.
 final class HUDBackgroundView: NSVisualEffectView {
-    init(filledBy content: NSView, material: NSVisualEffectView.Material = .hudWindow, cornerRadius: Double = 8) {
+    init(
+        filledBy content: NSView, material: NSVisualEffectView.Material = .hudWindow, cornerRadius: Double = 8,
+        tint: NSColor? = nil
+    ) {
         super.init(frame: .zero)
         self.material = material
         state = .active
         wantsLayer = true
         layer?.cornerRadius = cornerRadius
+        layer?.masksToBounds = tint != nil
+        if let tint {
+            let tintView = NSView()
+            tintView.wantsLayer = true
+            tintView.layer?.backgroundColor = tint.cgColor
+            addFillingSubview(tintView)
+        }
         addFillingSubview(content)
     }
 

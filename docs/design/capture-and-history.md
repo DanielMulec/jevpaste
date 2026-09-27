@@ -4,6 +4,9 @@ Slice: [Add clipboard capture and persistent history](https://github.com/DanielM
 [Implement the SQLite history repository](https://github.com/DanielMulec/jevpaste/issues/23) and the
 [Tracer bullet](https://github.com/DanielMulec/jevpaste/issues/24). Core ports unchanged; no history UI.
 
+> **Since #53**: `CopyCapture(…, now:)` stamps every recorded copy with a wall-clock time for History Search's age
+> ([menu-and-settings.md](menu-and-settings.md)); the Clipboard History panel is replaced by History Search + Full History.
+
 ## Composition (`SmartPasteApplication`, only the history/capture lines change)
 - `panel` → `IndicatorNoticeSurface(wrapping: panel, clock:)` → `IndicatorPresenter(surface: noticeSurface, …)`.
   The presenter line changes only its `surface:` argument; `chooser:` and the presenter files stay untouched.

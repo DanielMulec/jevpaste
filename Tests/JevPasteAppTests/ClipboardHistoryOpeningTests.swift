@@ -58,8 +58,8 @@ struct ClipboardHistoryOpeningTests {
     @Test func unavailableHistoryKeepsNothing() {
         let history = UnavailableHistoryRepository()
 
-        history.record(ClipboardItem(text: "Wren Castellan"))
+        history.record(ClipboardItem(text: "Wren Castellan"), copiedAt: Date())
 
-        #expect(history.items().isEmpty)
+        #expect(history.entries().isEmpty)
     }
 }

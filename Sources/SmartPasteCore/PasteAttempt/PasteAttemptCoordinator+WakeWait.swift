@@ -77,6 +77,8 @@ struct AttemptStart {
     let number: Int
     let item: ClipboardItem
     let pressedAt: ContinuousClock.Instant
+    /// The chosen Jev Provider's service, opened at ⌘⇧V.
+    let decisionService: any DecisionService
     /// How long the Wake Wait lasted; `nil` when the focus was readable at ⌘⇧V.
     var wakeWait: Duration?
     /// Whether the waking indicator is up, so the processing indicator replaces it at once rather than after 150 ms.
