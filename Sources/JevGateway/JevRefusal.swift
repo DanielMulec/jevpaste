@@ -3,8 +3,8 @@ import SmartPasteCore
 
 /// Recognises Jev refusing a request's size: HTTP 400 whose body carries `{"error_type":"max_tokens_exceeded"}` —
 /// as the Gateway's error message itself, or, in its fallback form ("typesafe returned status 400"), as the error of
-/// one of its provider attempts; TypeSafe's own body is that object. Both Gateway forms were recorded by the
-/// Narrowing spike (`results/raw.jsonl`, cell `N04_probe`).
+/// one of its provider attempts; TypeSafe's own body is that object, at the top or under `detail` (where its other
+/// errors sit). Both Gateway forms were recorded by the Narrowing spike (`results/raw.jsonl`, cell `N04_probe`).
 enum JevRefusal {
     static let tooLargeErrorType = "max_tokens_exceeded"
 
@@ -13,7 +13,7 @@ enum JevRefusal {
         let error = json["error"]
         let attempts = json["providerMetadata"]?["gateway"]?["routing"]?["modelAttempts"]?.arrayElements ?? []
         let providerErrors = attempts.flatMap { $0["providerAttempts"]?.arrayElements ?? [] }.map { $0["error"] }
-        let places = [json, error?["message"], error?["param"]?["error"]] + providerErrors
+        let places = [json, json["detail"], error?["message"], error?["param"]?["error"]] + providerErrors
         return places.contains { $0.map(namesTooLarge) == true }
     }
 

@@ -10,11 +10,42 @@ import Testing
 struct ProviderKeySettingsTests {
     private let keys = InMemoryJevKeyStore()
     private let tests = PendingConnectionTests()
+    private let excluded = ExcludedTexts()
     private let settings: ProviderKeySettings
 
     init() {
-        settings = ProviderKeySettings(keys: keys) { [tests] provider, reply in tests.pending.append((provider, reply))
-        }
+        settings = ProviderKeySettings(
+            keys: keys, excludeFromHistory: { [excluded] in excluded.texts.append($0) },
+            runTest: { [tests] provider, reply in tests.pending.append((provider, reply)) }
+        )
+    }
+
+    /// A key is usually copied — and so recorded in Clipboard History — before it is pasted here. Once the field is
+    /// left (or tested, or Settings closes) the saved key is taken out of history; intermediate keystrokes are not.
+    @Test func whenEditingEndsTheSavedKeyIsTakenOutOfHistory() {
+        settings.keyEdited("f", for: .typesafeDirect)
+        settings.keyEdited("fake-typesafe-key-54", for: .typesafeDirect)
+        #expect(excluded.texts.isEmpty)
+
+        settings.editingEnded(for: .typesafeDirect)
+
+        #expect(excluded.texts == ["fake-typesafe-key-54"])
+    }
+
+    @Test func testingAlsoTakesTheSavedKeyOutOfHistory() {
+        settings.keyEdited("fake-typesafe-key-54", for: .typesafeDirect)
+
+        settings.test(.typesafeDirect)
+
+        #expect(excluded.texts == ["fake-typesafe-key-54"])
+    }
+
+    @Test func anEmptiedFieldTakesNothingOutOfHistory() {
+        settings.keyEdited("", for: .typesafeDirect)
+
+        settings.editingEnded(for: .typesafeDirect)
+
+        #expect(excluded.texts.isEmpty)
     }
 
     @Test func anEditIsSavedAndAnEmptiedFieldRemovesTheKey() {
@@ -49,16 +80,25 @@ struct ProviderKeySettingsTests {
         #expect(settings.result(for: .vercelAIGateway) == .none)
     }
 
+    /// Every result names the provider it tested, so Typesafe direct's row never reads like the Gateway's.
     @Test(arguments: [
-        (JevConnectionTestFailure.noKey, "✕ No key saved"),
-        (.keyRejected(status: 401), "✕ Key not accepted (HTTP 401)"),
-        (.rateLimited, "✕ Jev asked us to wait — try again in a moment"),
-        (.noConnection, "✕ No connection to Vercel AI Gateway"),
-        (.httpStatus(500), "✕ Vercel AI Gateway answered HTTP 500"),
-        (.unexpectedAnswer, "✕ Jev's answer was not the one offered"),
+        (JevConnectionTestFailure.noKey, "✕ No key saved for Typesafe direct"),
+        (.keyRejected(status: 403), "✕ Typesafe direct did not accept the key (HTTP 403)"),
+        (.rateLimited, "✕ Typesafe direct asked us to wait — try again in a moment"),
+        (.noConnection, "✕ No connection to Typesafe direct"),
+        (.httpStatus(422), "✕ Typesafe direct answered HTTP 422"),
+        (.unexpectedAnswer, "✕ Jev's answer through Typesafe direct was not the one offered"),
     ])
-    func aFailedTestSaysWhy(failure: JevConnectionTestFailure, text: String) {
-        #expect(ProviderKeyResult.failed(failure).text(for: .vercelAIGateway) == text)
+    func aFailedTestSaysWhyAndNamesTheProvider(failure: JevConnectionTestFailure, text: String) {
+        #expect(ProviderKeyResult.failed(failure).text(for: .typesafeDirect) == text)
+    }
+
+    @Test func theGatewaysRowNamesTheGateway() {
+        #expect(
+            ProviderKeyResult.failed(.keyRejected(status: 401)).text(for: .vercelAIGateway)
+                == "✕ Vercel AI Gateway did not accept the key (HTTP 401)")
+        #expect(
+            ProviderKeyResult.works.text(for: .typesafeDirect) == "✓ Works — Jev answered through Typesafe direct.")
     }
 
     @Test func aKeyThatCannotBeSavedSaysSoInTheResultSlot() {
@@ -88,4 +128,8 @@ struct ProviderKeySettingsTests {
 @MainActor
 final class PendingConnectionTests {
     var pending: [(provider: JevProvider, reply: @MainActor (JevConnectionTestResult) -> Void)] = []
+}
+
+final class ExcludedTexts {
+    var texts: [String] = []
 }

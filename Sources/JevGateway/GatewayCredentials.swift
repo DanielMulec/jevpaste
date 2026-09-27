@@ -1,7 +1,7 @@
 import Foundation
 
 /// The Vercel AI Gateway key in a shell-style env file (`~/.config/jevpaste/env`): since keys live in the key store,
-/// only the source of the one-time import at launch, and of the opt-in live test. The key is never logged.
+/// only the source of the one-time import at launch (the live tests read the key files). The key is never logged.
 public struct GatewayCredentials: Sendable {
     static let keyName = "AI_GATEWAY_API_KEY"
 
@@ -15,9 +15,6 @@ public struct GatewayCredentials: Sendable {
     public init(envFile: URL) {
         self.envFile = envFile
     }
-
-    /// Whether a key is available, without revealing it.
-    public var hasAPIKey: Bool { apiKey() != nil }
 
     /// The key from the first non-empty `AI_GATEWAY_API_KEY=` line, or `nil` if the file or the key is missing.
     public func apiKey() -> String? {

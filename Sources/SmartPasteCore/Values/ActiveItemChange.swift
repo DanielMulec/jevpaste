@@ -5,6 +5,8 @@ public struct ActiveItemChange: Equatable, Sendable {
         case copied
         /// An explicit selection from Clipboard History inside the app.
         case selected
+        /// The same item, now concealed: its text was just excluded (a Jev Provider key stored in Settings).
+        case excluded
     }
 
     public let item: ClipboardItem

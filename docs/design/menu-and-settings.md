@@ -45,14 +45,16 @@ Supersedes [history-ui.md](history-ui.md) (panel removed; its Core seam `select(
   reads the choice and its key once and returns `JevGatewayDecisionService(apiKey:transport:)`. `missingKey` and the
   env-file read leave the request path. Test: `JevGatewayAccess.testConnection(of:)` sends one step-shaped request (one
   choice question, one option) with the saved key through the same exchange → `.works` | `.failed(reason)`.
-- Choice persisted in UserDefaults (`jevProvider`, raw value); unknown or not-yet-built values read as the default.
-  Typesafe direct is listed, disabled (radio + key row) until [Add Typesafe direct as a Jev Provider](https://github.com/DanielMulec/jevpaste/issues/54).
+- Choice persisted in UserDefaults (`jevProvider`, raw value); unknown values read as the default. Typesafe direct
+  is built since [Add Typesafe direct as a Jev Provider](https://github.com/DanielMulec/jevpaste/issues/54).
 - Key store (`FileJevKeyStore`, app layer, Daniel 2026-09-27): `~/.config/jevpaste/keys/<provider raw value>`, UTF-8
   key, file 0600; every write first insists the directory is a real directory owned by the user (no symlink) and
   tightens it to 0700, then writes a new 0600 file whole (short writes/EINTR retried) and renames it over; empty → unlink.
   Keys never logged (errno only). Tests: temp directory; elsewhere an in-memory fake.
 - Capture exclusion (Daniel 2026-09-27): a copy (live or Launch Adoption) whose trimmed text equals a stored key is
   adopted concealed — never in history. Core seam `CaptureExclusion`; `StoredKeyCaptureExclusion` reads the store per copy.
+  A key copied *before* it was stored (the usual entry, #54) is taken out when editing ends (field left, Test, tab/window
+  closed): `CopyCapture.excludeFromHistory` deletes its entry and conceals a matching Active Item (cause `.excluded`).
 - Not the Keychain (2026-09-27): self-signed `jevpaste-dev` has no Team ID → each rebuild prompts (XARA partition =
   creator cdhash). `KeychainJevKeyStore` stays unused (`periphery:ignore:all`) for a Team-ID-signed build.
 - One-time import (`JevKeyImport`, at launch): flag `jevProviderKeyImportDone` set → nothing (env file never read

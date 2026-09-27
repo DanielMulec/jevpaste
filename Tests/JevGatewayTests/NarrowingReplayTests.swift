@@ -30,7 +30,7 @@ struct NarrowingReplayTests {
                 Issue.record("call \(number): expected a request, got \(action)")
                 return
             }
-            let body = String(bytes: EvaluateRequestBody.data(for: request), encoding: .utf8)
+            let body = String(bytes: EvaluateRequestBody.data(for: request, model: "typesafe-ai/jev"), encoding: .utf8)
             #expect(body == call.request, "call \(number) differs from the spike's request")
             let answers = try EvaluateResponse.answers(from: call.responseBody, to: request).get()
             action = narrowing.receive(answers)

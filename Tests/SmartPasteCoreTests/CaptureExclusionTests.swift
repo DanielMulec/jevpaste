@@ -42,6 +42,33 @@ struct CaptureExclusionTests {
         #expect(history.items() == [ClipboardItem(text: "Wren Castellan")])
     }
 
+    /// A key copied before it was stored (the usual way into Settings) was recorded then; storing it takes it out.
+    @Test func aTextExcludedLaterLeavesHistoryAndTheActiveItemHoldingItBecomesConcealed() {
+        let capture = capture()
+        var changes: [ActiveItemChange] = []
+        capture.observeActiveItemChanges { changes.append($0) }
+        clipboard.simulateForeignCopy("Wren Castellan")
+        clipboard.simulateForeignCopy("fake-later-key-0001\n")
+
+        capture.excludeFromHistory("fake-later-key-0001")
+
+        #expect(history.items() == [ClipboardItem(text: "Wren Castellan")])
+        let concealed = ClipboardItem(text: "fake-later-key-0001\n", isConcealed: true)
+        #expect(capture.activeItem == concealed)
+        #expect(changes.last == ActiveItemChange(item: concealed, cause: .excluded))
+    }
+
+    @Test func excludingATextThatIsNotTheActiveItemLeavesTheActiveItemAlone() {
+        let capture = capture()
+        clipboard.simulateForeignCopy("fake-later-key-0001")
+        clipboard.simulateForeignCopy("Wren Castellan")
+
+        capture.excludeFromHistory("  fake-later-key-0001 ")
+
+        #expect(history.items() == [ClipboardItem(text: "Wren Castellan")])
+        #expect(capture.activeItem == ClipboardItem(text: "Wren Castellan"))
+    }
+
     @Test func anAlreadyConcealedCopyIsNotAskedAbout() {
         _ = capture(contentsAtLaunch: ClipboardItem(text: "correct horse battery staple", isConcealed: true))
 

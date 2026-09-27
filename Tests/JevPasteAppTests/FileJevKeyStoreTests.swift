@@ -30,6 +30,17 @@ final class FileJevKeyStoreTests {
         #expect(store.apiKey(for: .typesafeDirect) == nil)
     }
 
+    @Test func typesafeDirectsKeyIsItsOwnFileBesideTheGateways() throws {
+        let store = FileJevKeyStore(directory: directory)
+
+        try store.setAPIKey("fake-gateway-key", for: .vercelAIGateway)
+        try store.setAPIKey("fake-typesafe-key", for: .typesafeDirect)
+
+        #expect(try permissions(of: directory.appendingPathComponent("typesafeDirect")) == 0o600)
+        #expect(FileJevKeyStore(directory: directory).apiKey(for: .typesafeDirect) == "fake-typesafe-key")
+        #expect(FileJevKeyStore(directory: directory).apiKey(for: .vercelAIGateway) == "fake-gateway-key")
+    }
+
     @Test func theMissingDirectoryIsCreatedForTheUserOnlyAndTheFileIsReadableByTheUserOnly() throws {
         try FileJevKeyStore(directory: directory).setAPIKey("fake-file-key", for: .vercelAIGateway)
 

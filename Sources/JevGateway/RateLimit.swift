@@ -1,21 +1,28 @@
 import Foundation
 
-/// How long an HTTP 429 asks us to wait, from its `retry-after` header.
+/// How long a rate limit (429) or an overload (Typesafe direct's 529) asks us to wait, from its headers.
 enum RateLimit {
-    /// The free tier allows about one call per second, so that is the wait when the header gives none.
+    /// The wait when no header gives one: one retry fits comfortably inside the Paste Attempt's 5 s clock.
     static let defaultRetryAfter: Duration = .seconds(1)
     /// Far beyond the Paste Attempt's 5 s clock; longer waits carry no more meaning and could overflow.
     static let longestRetryAfterSeconds: Double = 60
 
-    /// Delta-seconds (whole or fractional, not negative), clamped to 60 s. Anything else — HTTP dates, NaN,
-    /// infinities, negatives — is the default.
+    /// `retry-after-ms` (milliseconds, TypeSafe's SDKs read it first), else `retry-after` (delta-seconds, whole or
+    /// fractional), each finite and not negative, clamped to 60 s. Anything else — HTTP dates, NaN, infinities,
+    /// negatives, words — is the default.
     static func retryAfter(of response: HTTPURLResponse) -> Duration {
-        guard
-            let header = response.value(forHTTPHeaderField: "retry-after"),
-            let seconds = Double(header.trimmingCharacters(in: .whitespaces)),
-            seconds.isFinite, seconds >= 0
-        else { return defaultRetryAfter }
+        let milliseconds = number(in: response, header: "retry-after-ms").map { $0 / 1000 }
+        guard let seconds = milliseconds ?? number(in: response, header: "retry-after") else {
+            return defaultRetryAfter
+        }
         let clampedSeconds = min(seconds, longestRetryAfterSeconds)
         return .milliseconds(Int((clampedSeconds * 1000).rounded()))
+    }
+
+    private static func number(in response: HTTPURLResponse, header: String) -> Double? {
+        guard let value = response.value(forHTTPHeaderField: header),
+            let number = Double(value.trimmingCharacters(in: .whitespaces)), number.isFinite, number >= 0
+        else { return nil }
+        return number
     }
 }

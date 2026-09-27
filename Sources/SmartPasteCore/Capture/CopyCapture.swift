@@ -52,6 +52,21 @@ public final class CopyCapture {
         onActiveItemChange = onChange
     }
 
+    /// A text excluded only now (a Jev Provider key just stored — usually copied, and so recorded, before): its
+    /// Clipboard History entry is deleted, and an Active Item with the same identity (trimmed text) becomes concealed,
+    /// so it is neither shown nor sent. Anything else stays as it is.
+    public func excludeFromHistory(_ text: String) {
+        let excluded = ClipboardItem(text: text)
+        history.delete(excluded)
+        guard let active = activeItem, !active.isConcealed, Self.identity(of: active) == Self.identity(of: excluded)
+        else { return }
+        activate(ClipboardItem(text: active.text, isConcealed: true), cause: .excluded)
+    }
+
+    private static func identity(of item: ClipboardItem) -> String {
+        item.text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// Declares that `changeCount` came from our own write, so observing it produces no Clipboard Item.
     func markOwnWrite(_ changeCount: Int) {
         ownChangeCounts.insert(changeCount)

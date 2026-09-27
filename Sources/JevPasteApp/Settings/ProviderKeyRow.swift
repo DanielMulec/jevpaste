@@ -17,8 +17,12 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
     private let testButton = NSButton(title: "Test", target: nil, action: nil)
     private let resultField = NSTextField(wrappingLabelWithString: "")
     private var isShown = false
+    /// True while Show/Hide swaps the fields: the end-edit that swap causes is not the user leaving the field.
+    private var isSwapping = false
+    /// The secure field and the plain one behind Show; both hold the same text.
+    var keyFields: [NSTextField] { [secureField, plainField] }
 
-    init(provider: JevProvider, settings: ProviderKeySettings, isEnabled: Bool) {
+    init(provider: JevProvider, settings: ProviderKeySettings) {
         self.provider = provider
         self.settings = settings
         let fields = NSStackView(views: [secureField, plainField])
@@ -31,7 +35,11 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
             field.placeholderString = "\(provider.displayName) API key"
             field.stringValue = settings.savedKey(of: provider)
             field.delegate = self
-            field.isEnabled = isEnabled
+            // One scrolling line: a long key (Typesafe's) must not wrap into a row the one-line field hides.
+            field.usesSingleLineMode = true
+            field.cell?.wraps = false
+            field.cell?.isScrollable = true
+            field.lineBreakMode = .byClipping
             field.translatesAutoresizingMaskIntoConstraints = false
             field.widthAnchor.constraint(equalToConstant: Self.fieldWidth).isActive = true
         }
@@ -41,10 +49,8 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
         eyeButton.toolTip = "Show key"
         eyeButton.target = self
         eyeButton.action = #selector(toggleShown)
-        eyeButton.isEnabled = isEnabled
         testButton.target = self
         testButton.action = #selector(runTest)
-        testButton.isEnabled = isEnabled
         resultField.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         resultField.preferredMaxLayoutWidth = Self.resultWidth
         resultField.translatesAutoresizingMaskIntoConstraints = false
@@ -81,12 +87,24 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
         refresh()
     }
 
-    @objc private func toggleShown() {
+    func controlTextDidEndEditing(_ notification: Notification) {
+        guard !isSwapping else { return }
+        settings.editingEnded(for: provider)
+    }
+
+    /// Show/Hide: the other field takes over the same text, focus and selection; no save, no purge.
+    @objc func toggleShown() {
+        let selection = (isShown ? plainField : secureField).currentEditor()?.selectedRange
+        isSwapping = true
+        defer { isSwapping = false }
         isShown.toggle()
         secureField.isHidden = isShown
         plainField.isHidden = !isShown
         refresh()
         focus()
+        if let selection, let editor = (isShown ? plainField : secureField).currentEditor() {
+            editor.selectedRange = selection
+        }
     }
 
     @objc private func runTest() {

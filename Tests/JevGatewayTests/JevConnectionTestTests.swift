@@ -13,13 +13,16 @@ import Testing
         """
 
     private static func test(
-        keys: [JevProvider: String] = [.vercelAIGateway: "fake-gateway-key"], transport: StubTransport
+        _ provider: JevProvider = .vercelAIGateway,
+        keys: [JevProvider: String] = [.vercelAIGateway: "fake-gateway-key", .typesafeDirect: "fake-typesafe-key"],
+        transport: StubTransport
     ) async -> JevConnectionTestResult {
+        // The chosen provider is the other one: Test checks the row's provider, whatever is chosen.
         let access = JevGatewayAccess(
             credentials: FakeJevCredentials(keys: keys), chosenProvider: { .vercelAIGateway }, transport: transport
         )
         return await withCheckedContinuation { continuation in
-            access.testConnection(of: .vercelAIGateway) { continuation.resume(returning: $0) }
+            access.testConnection(of: provider) { continuation.resume(returning: $0) }
         }
     }
 
@@ -57,5 +60,38 @@ import Testing
         let transport = StubTransport.answering(body: #"{"answers":{"connection_test":{"choice":"other"}}}"#)
 
         #expect(await Self.test(transport: transport) == .failed(.unexpectedAnswer))
+    }
+
+    @Test func typesafeDirectIsTestedThroughItsOwnEndpointWithItsOwnKey() async throws {
+        let transport = StubTransport.answering(body: Self.answer)
+
+        #expect(await Self.test(.typesafeDirect, transport: transport) == .works)
+        let sent = try #require(await transport.sentRequests.first)
+        #expect(sent.url?.absoluteString == "https://api.typesafe.ai/v1/systemone")
+        #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer fake-typesafe-key")
+    }
+
+    /// Typesafe direct answers a missing or unknown key with 403 and its auth error under `detail`.
+    @Test(arguments: [
+        (
+            403, #"{"detail":{"error_type":"authentication_error","message":"Must supply an API key!"}}"#,
+            JevConnectionTestResult.failed(.keyRejected(status: 403))
+        ),
+        (401, #"{"detail":{"error_type":"authentication_error"}}"#, .failed(.keyRejected(status: 401))),
+        (422, #"{"detail":[{"loc":["body"],"msg":"x","type":"missing"}]}"#, .failed(.httpStatus(422))),
+        (529, #"{"detail":{"error_type":"overloaded_error"}}"#, .failed(.rateLimited)),
+    ])
+    func typesafeDirectsErrorsSayWhatWentWrong(status: Int, body: String, result: JevConnectionTestResult) async {
+        let transport = StubTransport.answering(status: status, body: body)
+
+        #expect(await Self.test(.typesafeDirect, transport: transport) == result)
+    }
+
+    @Test func typesafeDirectWithoutASavedKeySendsNothing() async {
+        let transport = StubTransport.answering(body: Self.answer)
+
+        #expect(
+            await Self.test(.typesafeDirect, keys: [.vercelAIGateway: "k"], transport: transport) == .failed(.noKey))
+        #expect(await transport.sentRequests.isEmpty)
     }
 }

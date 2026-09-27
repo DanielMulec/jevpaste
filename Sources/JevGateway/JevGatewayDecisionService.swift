@@ -2,26 +2,24 @@ import Foundation
 import SmartPasteCore
 import os
 
-/// The `DecisionService` adapter that asks Jev through the Vercel AI Gateway: one `POST /v1/evaluate` per Narrowing
-/// request, with all of its choice questions, answered once on the main actor. It holds the key read when the Paste
-/// Attempt opened the Jev Provider (`JevGatewayAccess`).
+/// The `DecisionService` adapter that asks Jev through one Jev Provider: one `POST` to the provider's endpoint per
+/// Narrowing request, with all of its choice questions, answered once on the main actor. It holds the provider and
+/// the key read when the Paste Attempt opened it (`JevGatewayAccess`); what differs per provider is `JevEndpoint`.
 ///
 /// No retry, no timeout and no size limit of its own — the Paste Attempt owns the first two, Jev enforces the third.
 /// Diagnostics carry status, counts, bytes and latency only; never the key, the source document, the Target Context
 /// or any excerpt.
 public struct JevGatewayDecisionService: DecisionService {
-    private static let endpoint: URL = {
-        guard let url = URL(string: "https://ai-gateway.vercel.sh/v1/evaluate") else {
-            preconditionFailure("The Jev evaluate endpoint literal is a valid URL")
-        }
-        return url
-    }()
     private static let log = Logger(subsystem: "jevpaste", category: "JevGateway")
 
+    private let provider: JevProvider
+    private let endpoint: JevEndpoint
     private let apiKey: String
     private let transport: any HTTPTransport
 
-    public init(apiKey: String, transport: any HTTPTransport = URLSessionTransport()) {
+    public init(provider: JevProvider, apiKey: String, transport: any HTTPTransport = URLSessionTransport()) {
+        self.provider = provider
+        endpoint = JevEndpoint.of(provider)
         self.apiKey = apiKey
         self.transport = transport
     }
@@ -37,30 +35,40 @@ public struct JevGatewayDecisionService: DecisionService {
     ) {
         Task {
             let started = ContinuousClock.now
-            let body = EvaluateRequestBody.data(for: request)
-            let (narrowingReply, status) = await exchange(request, body: body)
-            Self.logReply(narrowingReply, status: status, request: request, bytes: body.count, after: .now - started)
-            await reply(narrowingReply, status)
+            let body = EvaluateRequestBody.data(for: request, model: endpoint.model)
+            let exchanged = await exchange(request, body: body)
+            logReply(exchanged, request: request, bytes: body.count, after: .now - started)
+            await reply(exchanged.reply, exchanged.status)
         }
     }
 
-    /// The reply and the HTTP status it came from (`nil` when no response arrived).
-    private func exchange(_ request: NarrowingRequest, body: Data) async -> (NarrowingReply, Int?) {
-        guard let (responseBody, response) = try? await transport.send(Self.urlRequest(body: body, apiKey: apiKey))
-        else { return (Self.failed(.transport), nil) }
+    /// What one request came back with: the reply, the HTTP status (`nil` when no response arrived) and, on a 200,
+    /// the model that answered.
+    private struct Exchanged {
+        let reply: NarrowingReply
+        let status: Int?
+        var answeredModel: String?
+    }
+
+    private func exchange(_ request: NarrowingRequest, body: Data) async -> Exchanged {
+        guard let (responseBody, response) = try? await transport.send(urlRequest(body: body))
+        else { return Exchanged(reply: Self.failed(.transport), status: nil) }
         let status = response.statusCode
         switch status {
         case 200:
+            let model = EvaluateResponse.answeredModel(in: responseBody)
             switch EvaluateResponse.answers(from: responseBody, to: request) {
-            case .success(let answers): return (.answered(answers), status)
-            case .failure(let failure): return (Self.failed(failure), status)
+            case .success(let answers):
+                return Exchanged(reply: .answered(answers), status: status, answeredModel: model)
+            case .failure(let failure):
+                return Exchanged(reply: Self.failed(failure), status: status, answeredModel: model)
             }
-        case 429:
-            return (.rateLimited(retryAfter: RateLimit.retryAfter(of: response)), status)
+        case 429, endpoint.overloadStatus:
+            return Exchanged(reply: .rateLimited(retryAfter: RateLimit.retryAfter(of: response)), status: status)
         case 400 where JevRefusal.isTooLarge(responseBody):
-            return (.tooLarge, status)
+            return Exchanged(reply: .tooLarge, status: status)
         default:
-            return (Self.failed(.httpStatus(status)), status)
+            return Exchanged(reply: Self.failed(.httpStatus(status)), status: status)
         }
     }
 
@@ -69,8 +77,8 @@ public struct JevGatewayDecisionService: DecisionService {
         return .failed
     }
 
-    private static func urlRequest(body: Data, apiKey: String) -> URLRequest {
-        var urlRequest = URLRequest(url: endpoint)
+    private func urlRequest(body: Data) -> URLRequest {
+        var urlRequest = URLRequest(url: endpoint.url)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("Bearer " + apiKey, forHTTPHeaderField: "Authorization")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -78,23 +86,24 @@ public struct JevGatewayDecisionService: DecisionService {
         return urlRequest
     }
 
-    /// `Jev answered status=200 questions=2 options=510 bytes=41234 in 0.61 seconds` — numbers and fixed words only.
-    private static func logReply(
-        _ reply: NarrowingReply, status: Int?, request: NarrowingRequest, bytes: Int, after latency: Duration
-    ) {
+    /// `Jev answered provider=typesafeDirect status=200 model=<model id> questions=2 options=510 bytes=41234 in 0.61
+    /// seconds` — the provider, numbers, a model id and fixed words only.
+    private func logReply(_ exchanged: Exchanged, request: NarrowingRequest, bytes: Int, after latency: Duration) {
         let outcome: String
-        switch reply {
+        switch exchanged.reply {
         case .answered: outcome = "answered"
         case .rateLimited(let retryAfter): outcome = "rate limited, retry after \(retryAfter)"
         case .tooLarge: outcome = "refused the size"
         case .failed: outcome = "failed"
         }
-        let statusText = status.map(String.init) ?? "none"
+        let statusText = exchanged.status.map(String.init) ?? "none"
+        let model = exchanged.answeredModel ?? "none"
         let options = request.questions.reduce(0) { $0 + $1.options.count }
         let elapsed = String(describing: latency)
-        log.info(
+        Self.log.info(
             """
-            Jev \(outcome, privacy: .public) status=\(statusText, privacy: .public) \
+            Jev \(outcome, privacy: .public) provider=\(provider.rawValue, privacy: .public) \
+            status=\(statusText, privacy: .public) model=\(model, privacy: .public) \
             questions=\(request.questions.count) options=\(options) bytes=\(bytes) in \(elapsed, privacy: .public)
             """
         )

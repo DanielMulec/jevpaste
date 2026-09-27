@@ -9,6 +9,8 @@ import SmartPasteCore
 final class InMemoryJevKeyStore: JevKeyStore {
     private(set) var keys: [JevProvider: String]
     var failsWrites = false
+    /// Every `setAPIKey` call, successful or not.
+    private(set) var writes = 0
 
     init(keys: [JevProvider: String] = [:]) {
         self.keys = keys
@@ -19,6 +21,7 @@ final class InMemoryJevKeyStore: JevKeyStore {
     }
 
     func setAPIKey(_ key: String, for provider: JevProvider) throws(JevKeyStoreFailure) {
+        writes += 1
         guard !failsWrites else { throw JevKeyStoreFailure(code: 13) }
         keys[provider] = key.isEmpty ? nil : key
     }

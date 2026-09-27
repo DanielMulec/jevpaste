@@ -1,7 +1,7 @@
 # jevpaste
 
 A personal macOS menu-bar app for smart paste. Copy a block of text — a résumé, an email signature, a
-message — then press **⌘⇧V** in a text field: jevpaste asks Jev (through the Vercel AI Gateway) which exact
+message — then press **⌘⇧V** in a text field: jevpaste asks Jev (through the Jev Provider you chose) which exact
 excerpt of the copied text belongs in that field, and pastes only that excerpt. The Paste Result is always one
 exact, contiguous, verbatim excerpt of the Active Item; the app chooses *which* text and never authors any.
 Ordinary ⌘V is unchanged, the original clipboard is preserved, and a local Clipboard History allows reusing
@@ -15,16 +15,31 @@ is behavioural evidence of the experience, not proof of how Jev works internally
 [copy](frames/frame_005.png), [first paste](frames/frame_010.png) and [finished form](frames/frame_022.png).
 
 Domain vocabulary (Active Item, Candidate, Paste Attempt, Bound Target, …): [`CONTEXT.md`](CONTEXT.md).
-Status: scaffold only — the app shows a menu-bar icon with a Quit item and no behaviour yet.
 
 ## Privacy
 
 Nothing leaves the Mac until you press ⌘⇧V. Then one request per Narrowing step (usually one or two), and one per
-row when Jev fills the Candidate Chooser, goes to Jev through the Vercel AI Gateway: the whole Active Item, the excerpts it may choose from, and the Target Context — the
+row when Jev fills the Candidate Chooser, goes to Jev through the chosen Jev Provider: the whole Active Item, the excerpts it may choose from, and the Target Context — the
 field's label, placeholder, section heading and neighbouring labels, a bounded window of nearby text, **the name
 of the app** and **the title of its window**. Not sent: the app's bundle identifier, the contents of other
 windows, and nearby text or a window title that looks like a secret (withheld, and the outcome says so).
 Secure fields, suspected secrets and a copy of only whitespace never reach Jev.
+
+## Jev Provider and API keys
+
+Pick the Jev Provider in **Settings… › Jev Provider**, and paste its API key into its row there (**Test** sends
+one tiny Jev request). Every request of a Smart Paste goes through the provider chosen when it started; without
+a key for it ⌘⇧V refuses — it never switches to the other provider.
+
+| | Vercel AI Gateway (default) | Typesafe direct |
+|---|---|---|
+| key from | Vercel dashboard → AI Gateway → API Keys | [console.typesafe.ai/keys](https://console.typesafe.ai/keys) |
+| key file | `~/.config/jevpaste/keys/vercelAIGateway` | `~/.config/jevpaste/keys/typesafeDirect` |
+| billing | $5/month free, then Gateway credits | prepaid credits that expire after 12 months |
+| served by | TypeSafe, or DigitalOcean (added 2026-09-24, not zero-data-retention) | TypeSafe only |
+
+Same price per token either way. Key files are user-only (0600, directory 0700); a copy of a stored key never
+enters Clipboard History. An `AI_GATEWAY_API_KEY=` line in `~/.config/jevpaste/env` is imported once at launch.
 
 ## Prerequisites
 
@@ -69,9 +84,9 @@ trust keys on the designated requirement, which is anchored to that certificate,
 [Establish a signing identity that keeps the Accessibility grant across rebuilds](https://github.com/DanielMulec/jevpaste/issues/13).
 Keychain layout and recovery (`scripts/restore-signing-keychain.sh`): [`docs/signing.md`](docs/signing.md).
 
-**Local secrets, not in the repository:** `~/.config/jevpaste/` holds the Jev gateway key (`env`), the signing
-key and certificate (`signing/`) and the signing keychain password. Nothing there is ever committed, and the
-app's diagnostic logs never contain payloads or credentials.
+**Local secrets, not in the repository:** `~/.config/jevpaste/` holds the Jev Provider keys (`keys/`, and the
+Gateway key's import source `env`), the signing key and certificate (`signing/`) and the signing keychain
+password. Nothing there is ever committed, and the app's diagnostic logs never contain payloads or credentials.
 
 ## Repository layout
 
@@ -81,7 +96,7 @@ implements some of them; tests use in-memory fakes as the second adapter at ever
 | module | responsibility | depends on |
 |---|---|---|
 | `SmartPasteCore` | Paste Attempt state machine, Candidate extraction, Pre-checks, Jev decision validation, history retention; declares `DecisionService`, `HistoryRepository`, `Clipboard`, `Hotkey`, `TargetResolver`, `Inserter` | nothing (no AppKit, networking or SQLite) |
-| `JevGateway` | `DecisionService` adapter: Jev through the Vercel AI Gateway | `SmartPasteCore`, Foundation |
+| `JevGateway` | `DecisionService` adapter: Jev through either Jev Provider (Vercel AI Gateway, Typesafe direct) | `SmartPasteCore`, Foundation |
 | `HistoryStore` | `HistoryRepository` adapter: SQLite | `SmartPasteCore` |
 | `MacInterop` | `Clipboard`, `Hotkey`, `TargetResolver`, `Inserter` adapters: pasteboard, global shortcut, Accessibility | `SmartPasteCore`, AppKit / ApplicationServices |
 | `JevPasteApp` | menu-bar shell, indicator, Candidate Chooser, wiring | all of the above |
