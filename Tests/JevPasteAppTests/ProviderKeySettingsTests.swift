@@ -49,16 +49,25 @@ struct ProviderKeySettingsTests {
         #expect(settings.result(for: .vercelAIGateway) == .none)
     }
 
+    /// Every result names the provider it tested, so Typesafe direct's row never reads like the Gateway's.
     @Test(arguments: [
-        (JevConnectionTestFailure.noKey, "✕ No key saved"),
-        (.keyRejected(status: 401), "✕ Key not accepted (HTTP 401)"),
-        (.rateLimited, "✕ Jev asked us to wait — try again in a moment"),
-        (.noConnection, "✕ No connection to Vercel AI Gateway"),
-        (.httpStatus(500), "✕ Vercel AI Gateway answered HTTP 500"),
-        (.unexpectedAnswer, "✕ Jev's answer was not the one offered"),
+        (JevConnectionTestFailure.noKey, "✕ No key saved for Typesafe direct"),
+        (.keyRejected(status: 403), "✕ Typesafe direct did not accept the key (HTTP 403)"),
+        (.rateLimited, "✕ Typesafe direct asked us to wait — try again in a moment"),
+        (.noConnection, "✕ No connection to Typesafe direct"),
+        (.httpStatus(422), "✕ Typesafe direct answered HTTP 422"),
+        (.unexpectedAnswer, "✕ Jev's answer through Typesafe direct was not the one offered"),
     ])
-    func aFailedTestSaysWhy(failure: JevConnectionTestFailure, text: String) {
-        #expect(ProviderKeyResult.failed(failure).text(for: .vercelAIGateway) == text)
+    func aFailedTestSaysWhyAndNamesTheProvider(failure: JevConnectionTestFailure, text: String) {
+        #expect(ProviderKeyResult.failed(failure).text(for: .typesafeDirect) == text)
+    }
+
+    @Test func theGatewaysRowNamesTheGateway() {
+        #expect(
+            ProviderKeyResult.failed(.keyRejected(status: 401)).text(for: .vercelAIGateway)
+                == "✕ Vercel AI Gateway did not accept the key (HTTP 401)")
+        #expect(
+            ProviderKeyResult.works.text(for: .typesafeDirect) == "✓ Works — Jev answered through Typesafe direct.")
     }
 
     @Test func aKeyThatCannotBeSavedSaysSoInTheResultSlot() {

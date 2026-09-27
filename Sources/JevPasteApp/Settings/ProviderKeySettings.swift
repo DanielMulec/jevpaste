@@ -23,14 +23,16 @@ enum ProviderKeyResult: Equatable {
         }
     }
 
+    /// Every reason names the provider, so the two rows never read alike.
     private static func reason(for failure: JevConnectionTestFailure, through provider: JevProvider) -> String {
-        switch failure {
-        case .noKey: "No key saved"
-        case .keyRejected(let status): "Key not accepted (HTTP \(status))"
-        case .rateLimited: "Jev asked us to wait — try again in a moment"
-        case .noConnection: "No connection to \(provider.displayName)"
-        case .httpStatus(let status): "\(provider.displayName) answered HTTP \(status)"
-        case .unexpectedAnswer: "Jev's answer was not the one offered"
+        let name = provider.displayName
+        return switch failure {
+        case .noKey: "No key saved for \(name)"
+        case .keyRejected(let status): "\(name) did not accept the key (HTTP \(status))"
+        case .rateLimited: "\(name) asked us to wait — try again in a moment"
+        case .noConnection: "No connection to \(name)"
+        case .httpStatus(let status): "\(name) answered HTTP \(status)"
+        case .unexpectedAnswer: "Jev's answer through \(name) was not the one offered"
         }
     }
 }

@@ -8,9 +8,13 @@ import Testing
 /// A copy of a stored Jev Provider key never reaches Clipboard History; the log says only that a copy matched.
 @MainActor
 struct StoredKeyCaptureExclusionTests {
-    private let keys = InMemoryJevKeyStore(keys: [.vercelAIGateway: "fake-stored-key-5301"])
+    private let keys = InMemoryJevKeyStore(
+        keys: [.vercelAIGateway: "fake-stored-key-5301", .typesafeDirect: "fake-typesafe-key-5401"]
+    )
 
-    @Test(arguments: ["fake-stored-key-5301", "  fake-stored-key-5301\n"])
+    @Test(arguments: [
+        "fake-stored-key-5301", "  fake-stored-key-5301\n", "fake-typesafe-key-5401", "\tfake-typesafe-key-5401 ",
+    ])
     func aCopyOfAStoredKeyIsExcluded(copied: String) {
         #expect(StoredKeyCaptureExclusion(keys: keys).excludes(copied))
     }
