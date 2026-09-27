@@ -36,6 +36,6 @@ public struct JevGatewayAccess: JevProviderAccess {
             return nil
         }
         guard let apiKey = credentials.apiKey(for: provider), !apiKey.isEmpty else { return nil }
-        return JevGatewayDecisionService(apiKey: apiKey, transport: transport)
+        return JevGatewayDecisionService(provider: provider, apiKey: apiKey, transport: transport)
     }
 }

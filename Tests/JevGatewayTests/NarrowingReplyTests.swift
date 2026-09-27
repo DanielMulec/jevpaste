@@ -114,7 +114,7 @@ private enum RecordedRefusal {
         #expect(sent.url?.absoluteString == "https://ai-gateway.vercel.sh/v1/evaluate")
         #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer test-key-value")
         #expect(sent.value(forHTTPHeaderField: "Content-Type") == "application/json")
-        #expect(sent.httpBody == EvaluateRequestBody.data(for: Fixture.request))
+        #expect(sent.httpBody == EvaluateRequestBody.data(for: Fixture.request, model: "typesafe-ai/jev"))
         #expect(await transport.sentRequests.count == 1)
     }
 }

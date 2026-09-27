@@ -78,8 +78,10 @@ enum Fixture {
         return file
     }
 
-    static func service(transport: StubTransport) -> JevGatewayDecisionService {
-        JevGatewayDecisionService(apiKey: "test-key-value", transport: transport)
+    static func service(
+        provider: JevProvider = .vercelAIGateway, transport: StubTransport
+    ) -> JevGatewayDecisionService {
+        JevGatewayDecisionService(provider: provider, apiKey: "test-key-value", transport: transport)
     }
 }
 

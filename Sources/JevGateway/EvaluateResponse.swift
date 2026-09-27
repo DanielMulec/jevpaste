@@ -2,8 +2,20 @@ import Foundation
 import SmartPasteCore
 
 /// Jev's answers to one `200` evaluation: per question, the chosen option id and every option's probability in the
-/// order Jev listed them. Everything else in the body (confidence, usage, provider metadata) is ignored.
+/// order Jev listed them — the same on every Jev Provider. Everything else in the body (confidence, usage in either
+/// spelling, provider metadata) is ignored; the answered model is read for the log only.
 enum EvaluateResponse {
+    private static let modelIDCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".-_/"))
+    private static let longestModelID = 40
+
+    /// The `model` that answered, as an id fit for the log: only ASCII letters, digits and `.-_/`, at most 40 of them;
+    /// `nil` when the body names none.
+    static func answeredModel(in body: Data) -> String? {
+        guard let model = OrderedJSONParser.parse(body)?["model"]?.stringValue else { return nil }
+        let idScalars = model.unicodeScalars.filter { $0.isASCII && modelIDCharacters.contains($0) }
+        return String(String.UnicodeScalarView(idScalars.prefix(longestModelID)))
+    }
+
     static func answers(
         from body: Data, to request: NarrowingRequest
     ) -> Result<[String: ChoiceAnswer], JevGatewayFailure> {

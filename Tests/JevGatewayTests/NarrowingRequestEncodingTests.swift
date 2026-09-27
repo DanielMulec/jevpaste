@@ -60,7 +60,7 @@ private enum FrozenWording {
 
 /// The body as Jev receives it, read back as a JSON value.
 private func sent(_ request: NarrowingRequest) throws -> OrderedJSON {
-    try #require(OrderedJSONParser.parse(EvaluateRequestBody.data(for: request)))
+    try #require(OrderedJSONParser.parse(EvaluateRequestBody.data(for: request, model: "typesafe-ai/jev")))
 }
 
 private func question(_ id: String, of request: NarrowingRequest) throws -> OrderedJSON {
@@ -159,7 +159,8 @@ struct NarrowingRequestEncodingTests {
     }
 
     @Test func theBodyIsTheModelThenCoresStateAndQuestionsInOrder() {
-        let body = String(bytes: EvaluateRequestBody.data(for: Fixture.request), encoding: .utf8)
+        let body = String(
+            bytes: EvaluateRequestBody.data(for: Fixture.request, model: "typesafe-ai/jev"), encoding: .utf8)
 
         let expected =
             #"{"model":"typesafe-ai/jev","state":{"#
