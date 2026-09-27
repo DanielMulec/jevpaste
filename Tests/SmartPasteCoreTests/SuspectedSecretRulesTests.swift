@@ -3,11 +3,11 @@ import Testing
 
 /// The standard set of suspected-secret rules as the Pre-checks use it.
 struct SuspectedSecretRulesTests {
-    @Test func standardSetHoldsTheNineDecidedRules() {
+    @Test func standardSetHoldsTheDecidedRulesWithOpaqueTokenLast() {
         #expect(
             SuspectedSecretRules.standard.rules.map(\.name) == [
                 "pemPrivateKey", "awsAccessKey", "gitHubToken", "slackToken", "stripeLiveKey", "openAIStyleKey",
-                "googleAPIKey", "jsonWebToken", "connectionStringCredentials",
+                "googleAPIKey", "jsonWebToken", "connectionStringCredentials", "opaqueToken",
             ]
         )
     }

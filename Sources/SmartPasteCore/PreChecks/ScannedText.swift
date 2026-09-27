@@ -39,6 +39,20 @@ struct ScannedText {
         bytes.indices.contains(offset) ? bytes[offset] : nil
     }
 
+    /// The bytes without leading and trailing ASCII whitespace (space, tab, line feed, carriage return, vertical tab,
+    /// form feed). Linear: each end moves inwards once.
+    func trimmingWhitespace() -> ArraySlice<UInt8> {
+        var start = bytes.startIndex
+        var end = bytes.endIndex
+        while start < end, bytes[start].isASCIIWhitespace {
+            start += 1
+        }
+        while end > start, bytes[end - 1].isASCIIWhitespace {
+            end -= 1
+        }
+        return bytes[start..<end]
+    }
+
     /// How many bytes from `offset` on belong to `byteClass`, counting at most `limit`, so a caller that only
     /// needs a minimum length never reads further than that.
     func run(of byteClass: ByteClass, from offset: Int, upTo limit: Int) -> Int {
@@ -54,6 +68,10 @@ struct ScannedText {
 enum ByteClass {
     /// `A–Z`, `0–9`.
     case upperAlphanumerics
+    /// `A–Z`, `a–z`.
+    case letters
+    /// `0–9`.
+    case digits
     /// `A–Z`, `a–z`, `0–9`.
     case alphanumerics
     /// Alphanumerics and `_`.
@@ -74,6 +92,8 @@ enum ByteClass {
     func contains(_ byte: UInt8) -> Bool {
         switch self {
         case .upperAlphanumerics: byte.isUpperCaseLetter || byte.isDigit
+        case .letters: byte.isAlphanumeric && !byte.isDigit
+        case .digits: byte.isDigit
         case .alphanumerics: byte.isAlphanumeric
         case .wordCharacters: byte.isAlphanumeric || byte == UInt8(ascii: "_")
         case .alphanumericsAndHyphen: byte.isAlphanumeric || byte == UInt8(ascii: "-")
@@ -91,6 +111,9 @@ enum ByteClass {
 extension UInt8 {
     fileprivate var isUpperCaseLetter: Bool { (UInt8(ascii: "A")...UInt8(ascii: "Z")).contains(self) }
     fileprivate var isDigit: Bool { (UInt8(ascii: "0")...UInt8(ascii: "9")).contains(self) }
+    fileprivate var isASCIIWhitespace: Bool {
+        self == UInt8(ascii: " ") || (UInt8(ascii: "\t")...UInt8(ascii: "\r")).contains(self)
+    }
     fileprivate var isAlphanumeric: Bool {
         isUpperCaseLetter || isDigit || (UInt8(ascii: "a")...UInt8(ascii: "z")).contains(self)
     }
