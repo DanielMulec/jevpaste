@@ -40,10 +40,12 @@ final class SmartPasteApplication {
         )
         let changes = ActiveItemChanges(capture: capture)
         // After the history notice, so a missing grant — the more urgent one — is what shows at launch.
+        let keySettings = ProviderKeySettings(keys: keys, excludeFromHistory: capture.excludeFromHistory) {
+            jevAccess.testConnection(of: $0, reply: $1)
+        }
         let settings = SettingsWindowController.assemble(
-            loginItem: LoginItemToggle(service: MainAppLoginItemService(), notices: notices),
-            keys: keys, choice: providerChoice, jevAccess: jevAccess,
-            fullHistory: FullHistoryList(history: history, capture: capture, changes: changes)
+            loginItem: LoginItemToggle(service: MainAppLoginItemService(), notices: notices), choice: providerChoice,
+            keySettings: keySettings, fullHistory: FullHistoryList(history: history, capture: capture, changes: changes)
         )
         presenter.opensSettingsToKey = { settings.open(.key($0)) }
         historySearch = HistorySearchController(

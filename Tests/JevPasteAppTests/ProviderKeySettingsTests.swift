@@ -10,11 +10,42 @@ import Testing
 struct ProviderKeySettingsTests {
     private let keys = InMemoryJevKeyStore()
     private let tests = PendingConnectionTests()
+    private let excluded = ExcludedTexts()
     private let settings: ProviderKeySettings
 
     init() {
-        settings = ProviderKeySettings(keys: keys) { [tests] provider, reply in tests.pending.append((provider, reply))
-        }
+        settings = ProviderKeySettings(
+            keys: keys, excludeFromHistory: { [excluded] in excluded.texts.append($0) },
+            runTest: { [tests] provider, reply in tests.pending.append((provider, reply)) }
+        )
+    }
+
+    /// A key is usually copied — and so recorded in Clipboard History — before it is pasted here. Once the field is
+    /// left (or tested, or Settings closes) the saved key is taken out of history; intermediate keystrokes are not.
+    @Test func whenEditingEndsTheSavedKeyIsTakenOutOfHistory() {
+        settings.keyEdited("f", for: .typesafeDirect)
+        settings.keyEdited("fake-typesafe-key-54", for: .typesafeDirect)
+        #expect(excluded.texts.isEmpty)
+
+        settings.editingEnded(for: .typesafeDirect)
+
+        #expect(excluded.texts == ["fake-typesafe-key-54"])
+    }
+
+    @Test func testingAlsoTakesTheSavedKeyOutOfHistory() {
+        settings.keyEdited("fake-typesafe-key-54", for: .typesafeDirect)
+
+        settings.test(.typesafeDirect)
+
+        #expect(excluded.texts == ["fake-typesafe-key-54"])
+    }
+
+    @Test func anEmptiedFieldTakesNothingOutOfHistory() {
+        settings.keyEdited("", for: .typesafeDirect)
+
+        settings.editingEnded(for: .typesafeDirect)
+
+        #expect(excluded.texts.isEmpty)
     }
 
     @Test func anEditIsSavedAndAnEmptiedFieldRemovesTheKey() {
@@ -97,4 +128,8 @@ struct ProviderKeySettingsTests {
 @MainActor
 final class PendingConnectionTests {
     var pending: [(provider: JevProvider, reply: @MainActor (JevConnectionTestResult) -> Void)] = []
+}
+
+final class ExcludedTexts {
+    var texts: [String] = []
 }

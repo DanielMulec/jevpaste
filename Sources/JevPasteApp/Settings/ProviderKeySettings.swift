@@ -39,7 +39,9 @@ enum ProviderKeyResult: Equatable {
 
 /// The key rows' logic in Settings › Jev Provider: every edit saves the key to the key store (an empty field removes
 /// it) and clears the row's result; Test sends one cheap Jev call with the saved key. A result for a key that has
-/// been edited since is dropped. Keys never reach a log.
+/// been edited since is dropped. When editing ends (the field is left, Test, Settings closes) the saved key is taken
+/// out of Clipboard History — it was usually copied, and so recorded, before it was pasted here. Keys never reach a
+/// log.
 @MainActor
 final class ProviderKeySettings {
     typealias ConnectionTest = @MainActor (JevProvider, @escaping @MainActor (JevConnectionTestResult) -> Void) -> Void
@@ -48,14 +50,19 @@ final class ProviderKeySettings {
 
     private let keys: any JevKeyStore
     private let runTest: ConnectionTest
+    private let excludeFromHistory: @MainActor (String) -> Void
     private var results: [JevProvider: ProviderKeyResult] = [:]
     /// Counts edits per provider, so a test answer for an older key is recognised.
     private var editCounts: [JevProvider: Int] = [:]
     /// Called after a row's result changed (a test answered).
     var onResultChange: (@MainActor (JevProvider) -> Void)?
 
-    init(keys: any JevKeyStore, runTest: @escaping ConnectionTest) {
+    init(
+        keys: any JevKeyStore, excludeFromHistory: @escaping @MainActor (String) -> Void,
+        runTest: @escaping ConnectionTest
+    ) {
         self.keys = keys
+        self.excludeFromHistory = excludeFromHistory
         self.runTest = runTest
     }
 
@@ -77,7 +84,15 @@ final class ProviderKeySettings {
         }
     }
 
+    /// The field was left or Settings closed: the saved key, if any, leaves Clipboard History (`CopyCapture`).
+    func editingEnded(for provider: JevProvider) {
+        guard let key = keys.apiKey(for: provider) else { return }
+        excludeFromHistory(key)
+        Self.log.notice("key for \(provider.rawValue, privacy: .public) kept out of history")
+    }
+
     func test(_ provider: JevProvider) {
+        editingEnded(for: provider)
         let edits = editCounts[provider, default: 0]
         results[provider] = .testing
         Self.log.notice("test \(provider.rawValue, privacy: .public) started")

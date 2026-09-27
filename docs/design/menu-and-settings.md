@@ -53,6 +53,8 @@ Supersedes [history-ui.md](history-ui.md) (panel removed; its Core seam `select(
   Keys never logged (errno only). Tests: temp directory; elsewhere an in-memory fake.
 - Capture exclusion (Daniel 2026-09-27): a copy (live or Launch Adoption) whose trimmed text equals a stored key is
   adopted concealed — never in history. Core seam `CaptureExclusion`; `StoredKeyCaptureExclusion` reads the store per copy.
+  A key copied *before* it was stored (the usual entry, #54) is taken out when editing ends (field left, Test, tab/window
+  closed): `CopyCapture.excludeFromHistory` deletes its entry and conceals a matching Active Item (cause `.excluded`).
 - Not the Keychain (2026-09-27): self-signed `jevpaste-dev` has no Team ID → each rebuild prompts (XARA partition =
   creator cdhash). `KeychainJevKeyStore` stays unused (`periphery:ignore:all`) for a Team-ID-signed build.
 - One-time import (`JevKeyImport`, at launch): flag `jevProviderKeyImportDone` set → nothing (env file never read

@@ -52,6 +52,14 @@ final class JevProviderSettingsViewController: NSViewController {
         }
     }
 
+    /// Leaving the tab or closing Settings ends editing: saved keys leave Clipboard History.
+    override func viewWillDisappear() {
+        super.viewWillDisappear()
+        for provider in JevProvider.allCases {
+            settings.editingEnded(for: provider)
+        }
+    }
+
     /// Opened from "No key for <provider> — open Settings": the note at the field, and the caret in it.
     func focusKey(of provider: JevProvider) {
         settings.openedForMissingKey(of: provider)

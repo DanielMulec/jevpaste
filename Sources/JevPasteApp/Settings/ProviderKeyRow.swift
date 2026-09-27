@@ -78,6 +78,10 @@ final class ProviderKeyRow: NSObject, NSTextFieldDelegate {
         refresh()
     }
 
+    func controlTextDidEndEditing(_ notification: Notification) {
+        settings.editingEnded(for: provider)
+    }
+
     @objc private func toggleShown() {
         isShown.toggle()
         secureField.isHidden = isShown

@@ -1,5 +1,4 @@
 import AppKit
-import JevGateway
 import os
 
 /// The Settings window: one instance, standard toolbar tabs — General, Jev Provider, Full History. Its height
@@ -110,12 +109,9 @@ final class SettingsWindow: NSWindow {
 extension SettingsWindowController {
     /// The Settings window over the app's real parts; built once at launch, its window on first open.
     static func assemble(
-        loginItem: LoginItemToggle, keys: any JevKeyStore, choice: JevProviderChoice, jevAccess: JevGatewayAccess,
+        loginItem: LoginItemToggle, choice: JevProviderChoice, keySettings: ProviderKeySettings,
         fullHistory: FullHistoryList
     ) -> SettingsWindowController {
-        let keySettings = ProviderKeySettings(keys: keys) { provider, reply in
-            jevAccess.testConnection(of: provider, reply: reply)
-        }
         return SettingsWindowController(
             general: GeneralSettingsViewController(loginItem: loginItem),
             jevProvider: JevProviderSettingsViewController(choice: choice, settings: keySettings),
