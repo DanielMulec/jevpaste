@@ -41,6 +41,23 @@ struct FileJevKeyStore: JevKeyStore {
 
     /// 0 on success, else the errno of the step that failed.
     private func write(_ key: String, to file: URL) -> Int32 {
+        let directoryFailure = preparedDirectory()
+        guard directoryFailure == 0 else { return directoryFailure }
+        let temporary = directory.appending(path: ".\(file.lastPathComponent).\(UUID().uuidString)")
+        let descriptor = open(temporary.path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0o600)
+        guard descriptor >= 0 else { return errno }
+        let writeError = Self.writeAll(Array(key.utf8)) { buffer, count in Foundation.write(descriptor, buffer, count) }
+        guard close(descriptor) == 0, writeError == 0, rename(temporary.path, file.path) == 0 else {
+            let failure = writeError == 0 ? errno : writeError
+            unlink(temporary.path)
+            return failure
+        }
+        return 0
+    }
+
+    /// Creates the directory if missing, then insists it is a real directory (not a symbolic link) owned by the user
+    /// and tightens it to 0700 — also when it already existed with a looser mode. 0 on success, else an errno.
+    private func preparedDirectory() -> Int32 {
         do {
             try FileManager.default.createDirectory(
                 at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700]
@@ -48,16 +65,29 @@ struct FileJevKeyStore: JevKeyStore {
         } catch {
             return Int32((error as NSError).code)
         }
-        let temporary = directory.appending(path: ".\(file.lastPathComponent).\(UUID().uuidString)")
-        let descriptor = open(temporary.path, O_WRONLY | O_CREAT | O_EXCL, 0o600)
-        guard descriptor >= 0 else { return errno }
-        let bytes = Array(key.utf8)
-        let written = bytes.withUnsafeBytes { Foundation.write(descriptor, $0.baseAddress, $0.count) }
-        let writeError = written == bytes.count ? 0 : errno
-        guard close(descriptor) == 0, writeError == 0, rename(temporary.path, file.path) == 0 else {
-            let failure = writeError == 0 ? errno : writeError
-            unlink(temporary.path)
-            return failure
+        var status = stat()
+        guard lstat(directory.path, &status) == 0 else { return errno }
+        guard status.st_mode & S_IFMT == S_IFDIR else { return ENOTDIR }
+        guard status.st_uid == getuid() else { return EPERM }
+        guard status.st_mode & 0o777 != 0o700 else { return 0 }
+        return chmod(directory.path, 0o700) == 0 ? 0 : errno
+    }
+
+    /// Writes every byte through `write`, retrying after a short write or EINTR. 0 on success; else the write's errno,
+    /// or EIO when a write makes no progress without saying why — never 0 for an incomplete key.
+    static func writeAll(
+        _ bytes: [UInt8], through write: (UnsafeRawPointer?, Int) -> Int
+    ) -> Int32 {
+        var offset = 0
+        while offset < bytes.count {
+            let written = bytes.withUnsafeBytes { write($0.baseAddress?.advanced(by: offset), $0.count - offset) }
+            if written > 0 {
+                offset += written
+            } else if written < 0, errno == EINTR {
+                continue
+            } else {
+                return written < 0 && errno != 0 ? errno : EIO
+            }
         }
         return 0
     }
