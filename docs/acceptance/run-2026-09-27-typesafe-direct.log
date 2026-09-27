@@ -1,0 +1,122 @@
+# Live proof — Add Typesafe direct as a Jev Provider (issue #54), decision 8 of "Decide how JevPaste supports
+# Typesafe direct alongside the Vercel AI Gateway".
+# Branch typesafe-direct. macOS 26.6.2. Installed app ~/Applications/JevPaste.app, signed jevpaste-dev.
+# Synthetic item only: JEVPASTE-TS-54 (2 lines: the tag, …@example.org). No key, no key length or prefix, no
+# clipboard text, no window titles in this log. App lines: subsystem jevpaste, process JevPaste (log show --info).
+
+## Install 1 (build 3cb6b43, Gate B)
+11:23 clipboard vault saved (0600): items=1 sha256=ebd4f04915f1
+11:24:00 old pid 29236 quit (TERM), make install, open --args --accept-signal-trigger → pid 49537
+         key import alreadyDone · launch provider=vercelAIGateway apiKeyPresent=true ·
+         grant check at launch trusted=true · acceptance signal trigger on
+
+## Daniel, part 1 (relayed by the supervisor)
+(a) Settings › Jev Provider: Typesafe radio and key row enabled; key pasted; Test.
+11:27:14 key for typesafeDirect stored · 11:27:15 removed · 11:27:18 stored (edits while pasting)
+11:27:29 test typesafeDirect started
+11:27:29 Jev answered provider=typesafeDirect status=200 model=jev-1.13.0 questions=1 options=1 bytes=225 in 0.439 s
+11:27:29 test typesafeDirect works        → row shows "✓ Works — Jev answered through Typesafe direct."
+11:27:42 second Test: status=200 model=jev-1.13.0 in 0.291 s · test typesafeDirect works
+keys/typesafeDirect -rw------- (beside keys/vercelAIGateway -rw-------)
+
+Finding: no "copy of a stored key kept out of history" line. Read-only count (sqlite, text never printed): rows
+whose trimmed text equals the stored Typesafe key = 1, rows copied since 11:24 = 1 (the same row). The key was on
+the clipboard before it was stored (it was the 11:24 Launch Adoption), and the exclusion only knew stored keys.
+11:28:49 one row equal to the newly stored key, recorded before the key existed, deleted by the worker
+         (PRAGMA secure_delete=ON; matched inside sqlite, no output) → rows equal to either stored key: 0 / 0.
+Fix 363039c (supervisor go): when key editing ends (field left, Test, tab or window closed) the saved key leaves
+Clipboard History and a matching Active Item is concealed — CopyCapture.excludeFromHistory, log "key for <p> kept
+out of history". Tests: CaptureExclusionTests (2), ProviderKeySettingsTests (3).
+
+## Install 2 (build 363039c)
+clipboard vault restored (matches=true), old pid 49537 quit, make install, relaunch → pid 55359
+11:39:21 key import alreadyDone · launch provider=vercelAIGateway apiKeyPresent=true ·
+         copy of a stored key kept out of history (Launch Adoption: the restored clipboard is a stored key) ·
+         grant check at launch trusted=true · acceptance signal trigger on
+Staging: pbcopy JEVPASTE-TS-54 → newest history row copy_sequence=272 (Active Item); Chrome: one own tab
+(data: page, one labelled Email input).
+
+## Daniel, part 2 (relayed by the supervisor; reconciled from the log)
+(b) Typesafe direct chosen, ⌘W, ⌘⇧V in the Chrome Email field
+11:49:15 key for vercelAIGateway / typesafeDirect kept out of history (Settings closed) · HistoryStore deleted 0 / 0
+11:49:22.534 Jev answered provider=typesafeDirect status=200 model=jev-1.13.0 questions=1 options=48 bytes=3232 in 0.463 s
+11:49:22.838 Jev answered provider=typesafeDirect status=200 model=jev-1.13.0 questions=1 options=34 bytes=2851 in 0.303 s
+11:49:22.980 outcome inserted via=narrowing steps=2 calls=2 p=0.98 questions=1,1 stepP=0.94,0.98
+(c) Vercel AI Gateway chosen, ⌘W, field cleared, ⌘⇧V
+11:50:28.469 Jev answered provider=vercelAIGateway status=200 model=typesafe-ai/jev questions=1 options=48 bytes=3237 in 1.112 s
+11:50:28.846 Jev answered provider=vercelAIGateway status=200 model=typesafe-ai/jev questions=1 options=34 bytes=2856 in 0.376 s
+11:50:28.975 outcome inserted via=narrowing steps=2 calls=2 p=0.99 questions=1,1 stepP=0.92,0.99
+Daniel (verbatim): "typesafe felt instant compared to vercel" · "vercel's definitely slower"
+(d) Typesafe key cleared, Test, key pasted back, Test
+11:51:06 key for typesafeDirect removed · 11:51:07 test typesafeDirect failed(noKey) → "✕ No key saved for Typesafe direct"
+11:51:43 key for typesafeDirect stored · 11:51:45 HistoryStore deleted 1 item · key for typesafeDirect kept out of history
+         (the re-pasted key's copy, recorded when copied, taken out by the 363039c fix)
+11:51:45 Jev answered provider=typesafeDirect status=200 model=jev-1.13.0 options=1 in 0.312 s · test typesafeDirect works
+sqlite after (d): rows equal to the stored Typesafe key 0, to the stored Gateway key 0.
+UX defect (Daniel's screenshot): the long Typesafe key wrapped inside the one-line secure field ("••"). Fix 24941d2:
+both key fields single-line, no wrap, scrollable, clipping; ProviderKeyRowTests red first (200-char key 104 pt vs 24 pt).
+11:55:04 install 3 (24941d2): vault restored (matches=true), pid 55359 quit, relaunch → pid 60334 ·
+         launch provider=vercelAIGateway apiKeyPresent=true · trusted=true · signal trigger on
+Daniel (verbatim): "looks clean AF, all 1 line in both fields now"
+
+## Live measurements from the worker's shell (JEVPASTE_LIVE_JEV=1, keys read from ~/.config/jevpaste/keys/<provider>)
+Command: JEVPASTE_LIVE_JEV=1 swift test <CLT linker flags> --filter JevGatewayLive (run 0), then
+--filter JevGatewayLiveReplayTests (runs 1–5). Output lines are labelled numbers, cell ids and 8-hex digests only.
+
+### (i) The 14 recorded Narrowing cells, live through both providers
+run 0 (first full run, 11:57), per cell: outcome · as recorded · p of the last call's chosen option(s) (recorded) · calls · latency ms
+cell                       | Vercel AI Gateway                                    | Typesafe direct
+A04_hausnummer             | paste   same p=0.97 (0.98) calls=2 648+327           | paste   same p=0.97 (0.98) calls=2 266+254
+S04_phone                  | paste   same p=0.99 (0.99) calls=3 452+890+334       | paste   same p=0.99 (0.99) calls=3 298+252+287
+A13_passwort_NEG           | nothing same p=0.93 (0.71) calls=1 396               | nothing same p=0.94 (0.71) calls=1 327
+T01_email_two_lines        | ask     same p=0.59 (0.60) calls=1 363               | ask     same p=0.53 (0.60) calls=1 333
+R05_about                  | paste   same p=0.59/0.79 (0.55/0.85) calls=2 475+423 | paste   same p=0.45/0.82 (0.55/0.85) calls=2 351+357
+C02_motivation             | paste   same p=0.61/0.77 (0.69/0.85) calls=3 556+726+397 | paste   same p=0.69/0.80 (0.69/0.85) calls=3 428+283+304
+B06_biography              | paste   DIFF p=0.42/0.44/0.48 (0.38/0.54/0.48) calls=2 783+392 | paste   DIFF p=0.40/0.41 (0.38/0.54/0.48) calls=2 337+255
+K01_three_emails           | ask     same p=0.91/0.96/0.98 (0.91/0.95/0.97) calls=1 828 | ask     same p=0.91/0.93/0.97 (0.91/0.95/0.97) calls=1 401
+N01_address_line_ort       | paste   same p=0.99 (1.00) calls=2 512+590           | paste   same p=1.00 (1.00) calls=2 259+261
+N02_url_chat               | paste   same p=0.52 (0.45) calls=1 379               | paste   same p=0.44 (0.45) calls=1 388
+N03_list_300_lines         | paste   same p=0.90/0.92 (0.79/0.92/0.49) calls=4 943+857+807+468 | paste   same p=0.82/0.91/0.29 (0.79/0.92/0.49) calls=4 561+407+399+450
+H06_company_description    | paste   same p=0.59/0.76/0.84/0.92 (0.59/0.73/0.82/0.89) calls=3 641+402+839 | paste   same p=0.54/0.73/0.84/0.90 (0.59/0.73/0.82/0.89) calls=3 334+267+409
+H11_two_emails_catering    | ask     same p=0.52 (0.54) calls=1 500               | ask     same p=0.76 (0.54) calls=1 281
+W02_terminal_prompt        | paste   same p=0.78/0.85 (0.76/0.83) calls=1 439     | paste   same p=0.76/0.85 (0.76/0.83) calls=1 355
+
+tally, runs 0–4 (strict: the recorded outcome), outcome per run; paste digest = SHA-256 of the result, 8 hex
+  B06_biography            vercelAIGateway  recorded-match 1/5: paste, nothing, paste:2bcda570, paste:2bcda570, paste:2bcda570
+  B06_biography            typesafeDirect   recorded-match 3/5: paste, paste:2bcda570, nothing, nothing, nothing
+  N03_list_300_lines       vercelAIGateway  recorded-match 5/5: paste, paste:9655f003, paste:9655f003, paste:9655f003, paste:9655f003
+  N03_list_300_lines       typesafeDirect   recorded-match 4/5: paste, paste:9655f003, nothing, paste:9655f003, paste:9655f003
+  every other cell × provider: recorded-match 5/5
+
+per run, cells as recorded (strict): Gateway 13, 14, 13, 13, 13 · Typesafe 13, 13, 13, 14, 14
+Only two cells ever differ, both near-ties on both providers (recorded p 0.38/0.54/0.48 for B06):
+B06_biography flips between nothing (recorded) and one paste; runs 1–4 every paste on either provider is the same
+excerpt, sha8 2bcda570 (run 0 predates the digest field). N03_list_300_lines ended nothing once (Typesafe run 2, p 0.38).
+The other 12 cells: the recorded outcome on all 10 provider-runs.
+Verdict: 12 cells stable and identical on both providers; B06 and N03 are near-tie cells that flip on both providers
+across runs — the providers agree in distribution.
+Decision (supervisor): near-tie cells are tolerated in the live replay (B06 also accepts paste:2bcda570, N03 also
+accepts nothing, annotated in JevGatewayLiveReplayTests.nearTieAlternatives); the recorded fixture is unchanged.
+run 5 under that rule: Gateway accepted 14/14 (B06 nothing), Typesafe accepted 14/14 (B06 paste:2bcda570); test passed.
+Every replay call, runs 0–5: Gateway 161 calls median 464 ms p90 778 max 943 · Typesafe 157 calls median 349 ms
+p90 461 max 612.
+
+### (ii) 429 / 529 and the direct error forms — offline, by fixture (make test)
+TypesafeDirectReplyTests.aRateLimitWaitsWhatTheHeadersSayMillisecondsFirst (retry-after-ms, both, retry-after,
+neither, non-numeric, clamp) · .overloadedIsARateLimitWithTheSameWait (529) · .jevRefusingTheSizeIsTooLarge ·
+.anyOtherErrorFails (401/403/400/402/422/500/503) · NarrowingReplyTests.anErrorStatusOtherThan400And429Fails (Gateway
+529 stays .failed) · JevConnectionTestTests.typesafeDirectsErrorsSayWhatWentWrong.
+
+### (iii) Cold and warm latency (JevGatewayLiveLimitsTests, fresh ephemeral URLSession, synthetic step-1 card)
+Gateway   cold 808 ms · warm 326, 627, 480, 367, 628 · warm median 480 ms
+Typesafe  cold 343 ms · warm 244, 436, 268, 246, 259 · warm median 259 ms
+One step (JevGatewayLiveTests): Gateway 512 ms p=0.71 · Typesafe 409 ms p=0.75, both chose the piece with the email.
+
+### Oversized probe (402,703 request bytes, synthetic filler)
+Gateway   status=400 error_type=max_tokens_exceeded → .tooLarge
+Typesafe  status=400 error_type=max_tokens_exceeded → .tooLarge (the direct refusal form, confirmed live)
+
+## Restore
+Clipboard vault restored before install 3 (sha256 ebd4f04915f1, matches=true); no worker pbcopy since; digest at the
+end equals the saved vault. The Chrome data: tab is the worker's own. App left running: pid 60334, provider
+vercelAIGateway (Daniel's last choice).
