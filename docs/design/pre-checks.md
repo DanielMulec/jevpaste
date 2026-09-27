@@ -25,10 +25,9 @@ Scanned over the UTF-8 bytes. "Boundary" = the byte before the match is not an A
 | `stripeTestKey` | boundary `sk_test_` + ≥16 `[A-Za-z0-9]` (mirror of `stripeLiveKey`) | in a sentence + short negative |
 | `openAIStyleKey` | boundary `sk-` + ≥20 `[A-Za-z0-9_-]` (OpenAI, Anthropic); recall over precision — a standalone `sk-` slug is an accepted false positive | positive + `task-…`/short negatives + `OpenAIStyleKeyTradeOffTests` |
 | `googleAPIKey` | boundary `AIza` + ≥35 `[A-Za-z0-9_-]` | positive + short negative |
-| `jsonWebToken` | boundary, three `.`-separated base64url segments, first two start `eyJ`, each ≥10 | positive + two-part negative |
 | `vercelAIGatewayKey` | boundary `vck_` + ≥20 `[A-Za-z0-9_-]` (Vercel AI Gateway, documented) | in a sentence + short/`xvck_` negatives |
+| `jsonWebToken` | boundary, three `.`-separated base64url segments, first two start `eyJ`, each ≥10 | positive + two-part negative |
 | `connectionStringCredentials` | `scheme://user:password@host` — non-empty password (user may be empty, `redis://:pw@`) and host, before the first `/?#`/whitespace; `host:443@other` is accepted userinfo | postgres/mongodb/redis + `https://host/a@b`, user-only, empty-password, empty-host negatives |
-
 | `opaqueToken` | **whole text**, trimmed of ASCII whitespace: ≥16 bytes, only `[A-Za-z0-9_-]`, ≥1 letter and ≥1 digit — see below | `OpaqueTokenRuleTests` (issue #56 corpus), `OpaqueTokenTradeOffTests` |
 
 **The whole-text rule.** Every other rule finds its shape *anywhere*; `opaqueToken` asks whether the whole Active Item
