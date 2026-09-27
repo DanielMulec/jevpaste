@@ -70,7 +70,7 @@ _Avoid_: Wake retry, warm-up, "press again"
 A local refusal evaluated before any Paste Attempt leaves the machine: no editable Target, secure field, or a concealed or suspected-secret Active Item. Refusals are visible and never contact Jev. A suspected secret in the Target Context's surrounding text is not a refusal: that text is withheld from Jev and the outcome shows a note.
 
 **Suspected Secret**:
-Text whose shape matches a local rule: a known key prefix (`sk-`, `ghp_`, `AKIA`, …), a PEM block, a JWT, inline credentials in a connection string — or an Opaque Token. As an Active Item it is refused at ⌘⇧V and never sent to Jev; as part of the Target Context it is withheld. It is still recorded in Clipboard History (only concealed items and stored Jev Provider keys are not). Detection is a visibility aid, never a guarantee; ordinary ⌘V is unaffected.
+Text whose shape matches a local rule: a known key prefix (`sk-`, `ghp_`, `AKIA`, …), a PEM block, a JWT, inline credentials in a connection string — or an Opaque Token. As an Active Item it is refused at ⌘⇧V and never sent to Jev; as part of the Target Context it is withheld — except the Opaque Token, which is judged on the Active Item only (a bare token in nearby text or a window title is sent unchanged). It is still recorded in Clipboard History (only concealed items and stored Jev Provider keys are not). Detection is a visibility aid, never a guarantee; ordinary ⌘V is unaffected.
 _Avoid_: Secret (unqualified — a marked/concealed item is a different, certain case), password detection
 
 **Opaque Token**:
